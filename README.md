@@ -38,21 +38,3 @@ npm install
 # Run the development server
 
 npm run dev
-
-# If you prefer to use SWC for Fast Refresh:
-
-npm install @vitejs/plugin-react-swc
-
-# Update vite.config.js to use SWC instead of Babel
-
-# Edit vite.config.js file:
-
-# import { defineConfig } from 'vite';
-
-# import react from '@vitejs/plugin-react-swc'; # Use SWC plugin
-
-# Export configuration:
-
-export default defineConfig({
-plugins: [react()],
-});
