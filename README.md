@@ -28,7 +28,7 @@ Ensure that you have [Node.js](https://nodejs.org/) version 16.8 or higher insta
 
 # Clone the repository
 
-git clone https://github.com/your-repository-name
+git clone https://github.com/hoangphuc2905/fe_group05_kttkpm.git
 cd your-repository-name
 
 # Install dependencies
