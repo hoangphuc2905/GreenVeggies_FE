@@ -50,7 +50,7 @@ const AdminMenu = ({ colorBgContainer }) => {
 
   return (
     <Sider
-      className="fixed max-h-screen"
+      className="fixed max-h-screen h-fit"
       style={{ background: colorBgContainer }}
     >
       <div className="text-[#7A8699] size-5 font-thin mx-6 my-5">Menu</div>
