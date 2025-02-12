@@ -27,7 +27,7 @@ const { Search } = Input;
 
 const getUsers = async (key) => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/${key}`);
+    const response = await axios.get(`http://localhost:8001/api/${key}`);
     return response.data;
   } catch (error) {
     console.error(error);
@@ -123,7 +123,7 @@ const ListUser = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <Layout className="-mt-9">
+    <Layout className="-mt-9 overflow-hidden">
       <Breadcrumb
         items={[
           {
@@ -145,10 +145,10 @@ const ListUser = () => {
         ]}
         className="py-5"
       />
-      <div className="bg-[#ffff] ms min-h-screen p-6 overflow-auto">
+      <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
         <Flex gap="middle" vertical>
           <Flex gap="middle">
-            <div className="text-2xl text-[#82AE46] font-bold">
+            <div className="text-2xl text-[#82AE46] font-bold mt-3">
               Danh sách người dùng
             </div>
           </Flex>
@@ -187,10 +187,12 @@ const ListUser = () => {
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
           <Table
+            size="middle"
             dataSource={users}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             rowKey="_id"
             pagination={{ pageSize: 5 }}
+            className="hover:cursor-pointer"
             onRow={(record) => ({
               onClick: () => showUserDetails(record),
             })}

@@ -17,7 +17,7 @@ const Main = () => {
 
   return (
     <Router>
-      <Layout style={{ minHeight: "100vh" }}>
+      <Layout className="" style={{ minHeight: "100vh" }}>
         <AdminHeader />
         
         <Layout style={{ marginTop: "64px" }}>
