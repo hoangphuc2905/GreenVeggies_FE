@@ -20,6 +20,7 @@ import {
   ShopOutlined,
 } from "@ant-design/icons";
 import userRender from "../userRender/userRender";
+import { useNavigate } from "react-router-dom";
 
 const { Search } = Input;
 
@@ -38,6 +39,14 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Mapping trạng thái thành text dễ hiểu
+  const statusMapping = {
+    available: { text: "Còn hàng", color: "green" },
+    unavailable: { text: "Ngừng bán", color: "red" },
+    out_of_stock: { text: "Hết hàng", color: "orange" },
+  };
 
   const options = [
     {
@@ -66,6 +75,14 @@ const Products = () => {
       product.name.toLowerCase().includes(value.toLowerCase())
     );
     setProducts(filteredProducts);
+  };
+
+  const navigate = useNavigate();
+
+  const handlerClickProduct = (product) => {
+    setSelectedProduct(product);
+    navigate(`/products/${product._id}`);
+    console.log(product);
   };
 
   return (
@@ -123,6 +140,9 @@ const Products = () => {
             rowKey="productID"
             pagination={{ pageSize: 5 }}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+            onRow={(record) => ({
+              onClick: () => handlerClickProduct(record),
+            })}
           >
             <Column
               title="#"
@@ -130,15 +150,27 @@ const Products = () => {
               align="center"
               render={(_, __, index) => index + 1}
             />
-            <Column title="Mã sản phẩm" dataIndex="productID" key="productID" align="center" />
-            <Column title="Tên sản phẩm" dataIndex="name" key="name" align="center" />
+            <Column
+              title="Mã sản phẩm"
+              dataIndex="productID"
+              key="productID"
+              align="center"
+            />
+            <Column
+              title="Tên sản phẩm"
+              dataIndex="name"
+              key="name"
+              align="center"
+            />
             <Column
               title="Hình ảnh"
               dataIndex="imageUrl"
               key="imageUrl"
               align="center"
               render={(imageUrl) => {
-                const firstImage = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
+                const firstImage = Array.isArray(imageUrl)
+                  ? imageUrl[0]
+                  : imageUrl;
                 return (
                   <div className="flex justify-center items-center">
                     {firstImage ? (
@@ -154,20 +186,65 @@ const Products = () => {
                 );
               }}
             />
-            <Column title="Danh mục" dataIndex="category" key="category" align="center" render={(category) => category?.name || "--|--"} />
-            <Column title="Giá (VNĐ)" dataIndex="price" key="price" align="center" render={(text, record) => `${text.toLocaleString()} / ${record.unit}`} />
-            <Column title="Xuất xứ" dataIndex="origin" key="origin" align="center" />
-            <Column title="Số lượng" dataIndex="quantity" key="quantity" align="center" render={(text, record) => `${text.toLocaleString()} ${record.unit}`} />
-            <Column title="Đã bán" dataIndex="sold" key="sold" align="center" render={(text, record) => `${text.toLocaleString()} ${record.unit}`} />
-            <Column title="Đánh giá" dataIndex="review" key="review" align="center" render={(text) => text || "-"} />
+            <Column
+              title="Danh mục"
+              dataIndex="category"
+              key="category"
+              align="center"
+              render={(category) => category?.name || "--|--"}
+            />
+            <Column
+              title="Giá (VNĐ)"
+              dataIndex="price"
+              key="price"
+              align="center"
+              render={(text, record) =>
+                `${text.toLocaleString()} / ${record.unit}`
+              }
+            />
+            <Column
+              title="Xuất xứ"
+              dataIndex="origin"
+              key="origin"
+              align="center"
+            />
+            <Column
+              title="Số lượng"
+              dataIndex="quantity"
+              key="quantity"
+              align="center"
+              render={(text, record) =>
+                `${text.toLocaleString()} ${record.unit}`
+              }
+            />
+            <Column
+              title="Đã bán"
+              dataIndex="sold"
+              key="sold"
+              align="center"
+              render={(text, record) =>
+                `${text.toLocaleString()} ${record.unit}`
+              }
+            />
+            <Column
+              title="Đánh giá"
+              dataIndex="review"
+              key="review"
+              align="center"
+              render={(text) => text || "-"}
+            />
             <Column
               title="Tình trạng"
               dataIndex="status"
               key="status"
               align="center"
               render={(status) => {
-                let color = status === "available" ? "green" : status === "out_of_stock" ? "red" : "gray";
-                return <Tag color={color}>{status.toUpperCase()}</Tag>;
+                const statusInfo = statusMapping[status];
+                return (
+                  <Tag color={statusInfo?.color}>
+                    {statusInfo?.text}
+                  </Tag>
+                );
               }}
             />
             <Column
@@ -176,8 +253,16 @@ const Products = () => {
               align="center"
               render={() => (
                 <Space size="middle">
-                  <Button type="primary" icon={<EditFilled />} className="bg-green-500 text-white" />
-                  <Button type="primary" icon={<DeleteFilled />} className="bg-red-500 text-white" />
+                  <Button
+                    type="primary"
+                    icon={<EditFilled />}
+                    className="bg-green-500 text-white"
+                  />
+                  <Button
+                    type="primary"
+                    icon={<DeleteFilled />}
+                    className="bg-red-500 text-white"
+                  />
                 </Space>
               )}
             />
