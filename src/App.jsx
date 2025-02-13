@@ -1,14 +1,26 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/user/Home";
-import Product from "./pages/user/Product";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import AdminRouter from "./routes/AdminRouter";
+import UserRouter from "./routes/UserRouter";
 
-export default function App() {
+const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/product" element={<Product />} />
+        <Route path="/admin/*" element={<AdminRouter />} />
+
+        <Route path="/*" element={<UserRouter />} />
+
+        {/* <Route path="/auth/*" element={<AuthRouter />} /> */}
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
-}
+};
+
+export default App;

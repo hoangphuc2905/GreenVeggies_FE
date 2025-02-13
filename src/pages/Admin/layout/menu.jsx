@@ -30,7 +30,7 @@ const AdminSidebar = ({ colorBgContainer }) => {
       key: "products",
       icon: <ShoppingOutlined />,
       label: "Sản phẩm",
-      onClick: () => navigate("/products"),
+      onClick: () => navigate("/admin/products"),
     },
     {
       key: "user-management",
@@ -40,7 +40,7 @@ const AdminSidebar = ({ colorBgContainer }) => {
         {
           key: "user-list",
           label: "Danh sách User",
-          onClick: () => navigate("/user-list"),
+          onClick: () => navigate("/admin/user-list"),
           icon: <FontAwesomeIcon icon={faClipboardList} />,
         },
         { key: "add-user", label: "Tạo User mới", icon: <UserAddOutlined /> },
@@ -51,8 +51,7 @@ const AdminSidebar = ({ colorBgContainer }) => {
   return (
     <Sider
       className="fixed max-h-screen h-fit z-50"
-      style={{ background: colorBgContainer }}
-    >
+      style={{ background: colorBgContainer }}>
       <div className="text-[#7A8699] size-5 font-thin mx-6 my-5">Menu</div>
       <Menu
         className="admin-menu h-screen" // Đổi class để tránh trùng lặp
