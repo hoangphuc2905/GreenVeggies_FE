@@ -9,11 +9,11 @@ import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import { Layout, Menu } from "antd";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import "./menu.css";
+import "./menu.css"; // Sử dụng file CSS mới để tránh trùng
 
 const { Sider } = Layout;
 
-const AdminMenu = ({ colorBgContainer }) => {
+const AdminSidebar = ({ colorBgContainer }) => {
   const navigate = useNavigate();
 
   const menuItems = [
@@ -50,13 +50,12 @@ const AdminMenu = ({ colorBgContainer }) => {
 
   return (
     <Sider
-      className="fixed max-h-screen h-fit"
+      className="fixed max-h-screen h-fit z-50"
       style={{ background: colorBgContainer }}
     >
       <div className="text-[#7A8699] size-5 font-thin mx-6 my-5">Menu</div>
       <Menu
-      className="h-screen"
-        theme="light"
+        className="admin-menu h-screen" // Đổi class để tránh trùng lặp
         mode="inline"
         defaultOpenKeys={["default-page"]}
         items={menuItems}
@@ -74,8 +73,8 @@ const AdminMenu = ({ colorBgContainer }) => {
   );
 };
 
-AdminMenu.propTypes = {
+AdminSidebar.propTypes = {
   colorBgContainer: PropTypes.string.isRequired,
 };
 
-export default AdminMenu;
+export default AdminSidebar;
