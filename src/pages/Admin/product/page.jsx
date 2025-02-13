@@ -94,7 +94,7 @@ const Products = () => {
             title: <HomeOutlined />,
           },
           {
-            href: "/products",
+            href: "/admin/products",
             title: (
               <>
                 <ShopOutlined />
@@ -129,8 +129,7 @@ const Products = () => {
             <Button
               type="primary"
               className="bg-blue-500 text-white font-bold"
-              icon={<PlusCircleOutlined />}
-            >
+              icon={<PlusCircleOutlined />}>
               Thêm sản phẩm
             </Button>
           </Flex>
@@ -142,8 +141,7 @@ const Products = () => {
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             onRow={(record) => ({
               onClick: () => handlerClickProduct(record),
-            })}
-          >
+            })}>
             <Column
               title="#"
               key="index"
@@ -240,11 +238,7 @@ const Products = () => {
               align="center"
               render={(status) => {
                 const statusInfo = statusMapping[status];
-                return (
-                  <Tag color={statusInfo?.color}>
-                    {statusInfo?.text}
-                  </Tag>
-                );
+                return <Tag color={statusInfo?.color}>{statusInfo?.text}</Tag>;
               }}
             />
             <Column

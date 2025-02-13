@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-import Header from "./layouts/header";
-import Footer from "./layouts/footer";
-import Menu from "./layouts/Menu";
-import bgImage from "../../../src/assets/bg_1.png";
-
+import Header from "../layouts/header";
+import Footer from "../layouts/footer";
+import Menu from "../layouts/Menu";
+import bgImage from "../../../assets/bg_1.png";
 const Product = () => {
   const [products, setProducts] = useState([]);
 
