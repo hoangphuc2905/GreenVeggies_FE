@@ -1,0 +1,37 @@
+/* Màu chữ mặc định cho menu */
+.admin-menu .ant-menu-item {
+  color: #7A8699 !important;
+}
+
+/* Màu chữ khi hover */
+.admin-menu .ant-menu-item:hover {
+  color: #82AE47 !important;
+}
+
+/* Màu chữ cho tiêu đề submenu */
+.admin-menu .ant-menu-submenu-title {
+  color: #7A8699 !important;
+}
+
+/* Màu chữ khi hover trên tiêu đề submenu */
+.admin-menu .ant-menu-submenu-title:hover {
+  color: #82AE47 !important;
+}
+
+/* Màu chữ khi mục menu được chọn */
+.admin-menu .ant-menu-item-selected {
+  color: #82AE47 !important;
+  background-color: #CFE0B9 !important;
+}
+
+/* Màu chữ khi mục menu được chọn và hover */
+.admin-menu .ant-menu-item-selected:hover {
+  color: #82AE47 !important;
+  background-color: #CFE0B9 !important;
+}
+
+/* Màu nền tổng thể của menu */
+.admin-menu {
+  background-color: #fff !important;
+  border-radius: 8px;
+}
