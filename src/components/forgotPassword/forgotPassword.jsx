@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpForm }) => {
-    const [email, setEmail] = useState("");
+const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFormqmk }) => {
+    const [emailqmk, setEmailqmk] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -12,7 +12,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
 
         try {
             // Gọi API gửi OTP
-            const response = await fetch(`http://localhost:8009/api/auth/forgot-password?email=${email}`, {
+            const response = await fetch(`http://localhost:8009/api/auth/forgot-password?email=${emailqmk}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -24,7 +24,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
             if (response.ok) {
                 alert(data.message);
                 closeForgotPasswordForm(); // Đóng form quên mật khẩu
-                openOtpForm(); // Mở form OTP
+                openOtpFormqmk(emailqmk); // Mở form OTP
             } else {
                 setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
@@ -66,8 +66,8 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                     <input
                         type="email"
                         name="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        value={emailqmk}
+                        onChange={(e) => setEmailqmk(e.target.value)}
                         placeholder="Email"
                         className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
                         required

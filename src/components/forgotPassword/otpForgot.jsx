@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
 
-const OtpForm = ({ goBack, closeOtpForm, openResetPasswordForm }) => {
+const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+    const inputRefs = useRef([]);
+
+    console.log('Email gui OTP:', emailqmk); // Kiểm tra email
 
     const handleOtpChange = (e, index) => {
         const value = e.target.value;
@@ -10,19 +13,63 @@ const OtpForm = ({ goBack, closeOtpForm, openResetPasswordForm }) => {
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
+
+        // Tự động chuyển focus sang ô tiếp theo khi có giá trị
+        if (value && index < otp.length - 1) {
+            inputRefs.current[index + 1].focus();
+        }
     };
 
-    const handleSubmit = (e) => {
+    const handleKeyDown = (e, index) => {
+        // Khi nhấn phím Backspace, chuyển focus sang ô trước
+        if (e.key === "Backspace" && otp[index] === "") {
+            if (index > 0) {
+                inputRefs.current[index - 1].focus();
+            }
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        alert("OTP đã được xác nhận!");
+        // Kết hợp các ký tự OTP thành một chuỗi
+        const otpValue = otp.join("");
 
-        closeOtpForm(); // Đóng form OTP
-        openResetPasswordForm(); // Mở form Reset Password
+        // Kiểm tra OTP đầy đủ chưa
+        if (otpValue.length !== 6) {
+            alert("Vui lòng nhập đầy đủ mã OTP.");
+            return;
+        }
+
+        // Gửi yêu cầu xác thực OTP đến API
+        try {
+            const response = await fetch(
+                `http://localhost:8009/api/auth/verify-otp?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("OTP đã được xác nhận!");
+                closeOtpForm(); // Đóng form OTP
+                openResetPasswordForm(); // Mở form Reset Password
+            } else {
+                alert(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            alert("Lỗi kết nối, vui lòng thử lại.");
+        }
     };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
+
             {/* Nút quay lại ở góc trên bên trái */}
             <button
                 onClick={goBack}
@@ -49,17 +96,20 @@ const OtpForm = ({ goBack, closeOtpForm, openResetPasswordForm }) => {
 
             <div className="w-full md:w-1/2 p-6">
                 <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
-                <h3 className="text-xl font-bold mb-4 text-black text-center">Nhập mã OTP</h3>
+                <h3 className="text-xl font-bold mb-4 text-black text-center">Nhập mã OTP QMK</h3>
                 <p className="text-center text-gray-500 mb-3">Nhập mã OTP đã gửi đến email của bạn</p>
+                <p className="text-center text-gray-500 mb-3">Email: <span className="font-semibold">{emailqmk}</span></p> {/* Hiển thị email */}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="flex justify-center space-x-2">
                         {otp.map((digit, index) => (
                             <input
                                 key={index}
+                                ref={(el) => (inputRefs.current[index] = el)}
                                 type="text"
                                 value={digit}
                                 onChange={(e) => handleOtpChange(e, index)}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
                                 className="w-12 h-12 text-center border-2 border-gray-300 rounded-lg"
                                 maxLength="1"
                                 required
@@ -79,4 +129,4 @@ const OtpForm = ({ goBack, closeOtpForm, openResetPasswordForm }) => {
     );
 };
 
-export default OtpForm;
+export default OtpFormqmk;
