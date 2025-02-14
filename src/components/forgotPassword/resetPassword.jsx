@@ -1,21 +1,54 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
 
-const ResetPasswordForm = ({ goBack, closeResetPasswordForm }) => {
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+const ResetPasswordForm = ({ goBack, closeResetPasswordForm, email }) => {
+    const [newPassword, setNewPassword] = useState(""); // Mật khẩu mới
+    const [confirmPassword, setConfirmPassword] = useState(""); // Xác nhận mật khẩu
+    const [loading, setLoading] = useState(false); // Trạng thái tải
+    const [error, setError] = useState(""); // Thông báo lỗi
+    const [success, setSuccess] = useState(""); // Thông báo thành công
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError(""); // Reset lỗi khi gửi lại
+        setSuccess(""); // Reset thành công khi gửi lại
 
         // Kiểm tra nếu mật khẩu và xác nhận mật khẩu trùng nhau
         if (newPassword !== confirmPassword) {
-            alert("Mật khẩu và xác nhận mật khẩu không khớp!");
+            setError("Mật khẩu và xác nhận mật khẩu không khớp!");
+            setLoading(false);
             return;
         }
 
-        alert("Mật khẩu đã được thay đổi thành công!");
-        closeResetPasswordForm(); // Đóng form Reset Password
+        // Gửi yêu cầu cập nhật mật khẩu đến API
+        try {
+            const response = await fetch(
+                `http://localhost:8009/api/auth/update-password?email=${encodeURIComponent(email)}&newPassword=${encodeURIComponent(newPassword)}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json", // Gửi yêu cầu dưới dạng JSON
+                    },
+                }
+            );
+
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (response.ok) {
+                setSuccess("Mật khẩu đã được thay đổi thành công!");
+                setTimeout(() => {
+                    closeResetPasswordForm(); // Đóng form sau khi thành công
+                }, 2000);
+            } else {
+                setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            setError("Lỗi kết nối, vui lòng thử lại.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -49,13 +82,16 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm }) => {
                 <h3 className="text-xl font-bold mb-4 text-black text-center">Đặt lại mật khẩu</h3>
                 <p className="text-center text-gray-500 mb-3">Nhập mật khẩu mới cho tài khoản</p>
 
+                {error && <div className="text-red-500 text-center mb-3">{error}</div>}
+                {success && <div className="text-green-500 text-center mb-3">{success}</div>}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input
                         type="password"
                         name="newPassword"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Nhập mật khẩu"
+                        placeholder="Nhập mật khẩu mới"
                         className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
                         required
                     />
@@ -64,7 +100,7 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm }) => {
                         name="confirmPassword"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Xác nhận mật khẩu"
+                        placeholder="Xác nhận mật khẩu mới"
                         className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
                         required
                     />
@@ -72,8 +108,9 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm }) => {
                     <button
                         type="submit"
                         className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                        disabled={loading}
                     >
-                        Continue
+                        {loading ? "Đang thay đổi..." : "Continue"}
                     </button>
                 </form>
             </div>

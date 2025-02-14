@@ -12,24 +12,24 @@ import { useState } from "react";
 import RegisterForm from "../../../components/register/register";
 import LoginForm from "../../../components/login/login";
 import ResetPasswordForm from "../../../components/forgotPassword/resetPassword";
-import OtpForm from "../../../components/forgotPassword/otpForgot";
+import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
-import SignupForm from "../../../components/register/RegisterForm";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 
 const Header = () => {
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
-  const [showOtpForm, setShowOtpForm] = useState(false);
+  const [showOtpFormqmk, setShowOtpFormqmk] = useState(false);
   const [showOtpFormdk, setShowOtpFormdk] = useState(false);
   const [showForgotPasswordForm, setShowForgotPasswordForm] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [showSignupForm, setShowSignupForm] = useState(false);
   const [email, setEmail] = useState("");
+  const [emailqmk, setEmailqmk] = useState("");
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
-  const closeOtpForm = () => setShowOtpForm(false);
+  const closeOtpFormqmk = () => setShowOtpForm(false);
   const closeOtpFormdk = () => setShowOtpFormdk(false);
   const closeForgotPasswordForm = () => setShowForgotPasswordForm(false);
   const closeRegisterForm = () => setShowRegisterForm(false);
@@ -64,6 +64,14 @@ const Header = () => {
     setShowRegisterForm(false);
     setShowOtpFormdk(true);
   };
+
+  // Mở OTP form qmk với email
+  const openOtpFormqmk = (email) => {
+    setEmailqmk(emailqmk);
+    setShowForgotPasswordForm(false);
+    setShowOtpFormqmk(true);
+  }
+
 
   return (
     <header className="bg-[#82AE46] w-screen flex items-center shadow-md p-2 fixed top-0 z-10 z-index-50">
@@ -155,13 +163,13 @@ const Header = () => {
       {/* Overlay mờ khi modal xuất hiện */}
       {(showLoginForm ||
         showForgotPasswordForm ||
-        showOtpForm ||
+        showOtpFormqmk ||
         showOtpFormdk ||
         showRegisterForm ||
         showResetPasswordForm ||
         showSignupForm) && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
-      )}
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
+        )}
 
       {/* Modal Register Form */}
       {showRegisterForm && (
@@ -196,22 +204,24 @@ const Header = () => {
         <div className="fixed inset-0 z-20 flex justify-center items-center">
           <ResetPasswordForm
             closeResetPasswordForm={closeResetPasswordForm}
+            openOtpFormqmk={openOtpFormqmk}
             goBack={() => {
               setShowResetPasswordForm(false);
-              setShowOtpForm(true);
+              setShowOtpFormqmk(true); // Quay lại OtpFormqmk
             }}
           />
         </div>
       )}
 
       {/* Form OTP */}
-      {showOtpForm && (
+      {showOtpFormqmk && (
         <div className="fixed inset-0 z-20 flex justify-center items-center">
-          <OtpForm
-            closeOtpForm={closeOtpForm}
+          <OtpFormqmk
+            emailqmk={emailqmk} // Truyền email vào OtpForm
+            closeOtpFormdk={closeOtpFormdk}
             openResetPasswordForm={openResetPasswordForm} // Gọi hàm này khi nhấn Continue
             goBack={() => {
-              setShowOtpForm(false);
+              setShowOtpFormqmk(false);
               setShowForgotPasswordForm(true); // Quay lại ForgotPasswordForm
             }}
           />
@@ -251,9 +261,9 @@ const Header = () => {
               setShowForgotPasswordForm(false);
               setShowLoginForm(true);
             }}
-            openOtpForm={() => {
+            openOtpFormqmk={() => {
               setShowForgotPasswordForm(false);
-              setShowOtpForm(true);
+              setShowOtpFormqmk(true);
             }}
           />
         </div>
