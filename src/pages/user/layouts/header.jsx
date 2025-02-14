@@ -8,7 +8,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import { Badge, Space } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RegisterForm from "../../../components/register/register";
 import LoginForm from "../../../components/login/login";
 import ResetPasswordForm from "../../../components/forgotPassword/resetPassword";
@@ -16,6 +16,7 @@ import OtpForm from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import SignupForm from "../../../components/register/RegisterForm";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
+import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
 
 const Header = () => {
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -26,6 +27,7 @@ const Header = () => {
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [showSignupForm, setShowSignupForm] = useState(false);
   const [email, setEmail] = useState("");
+  const [user, setUser] = useState(null); // Thêm trạng thái để lưu thông tin người dùng
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
@@ -65,66 +67,113 @@ const Header = () => {
     setShowOtpFormdk(true);
   };
 
+  // Hàm xử lý đăng nhập thành công
+  const handleLoginSuccess = async (userData) => {
+    try {
+      const userInfo = await getUserInfo(userData.user.id, userData.token); // Gọi API lấy thông tin người dùng
+      console.log("User info:", userInfo); // Kiểm tra dữ liệu API trả về
+      setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
+      setShowLoginForm(false);
+      localStorage.setItem("token", userData.token);
+      localStorage.setItem("userId", userData.user.id); // Lưu id vào localStorage
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    console.log("Token:", token);
+    console.log("UserId:", userId);
+    if (token && userId) {
+      getUserInfo(userId, token)
+        .then((userInfo) => {
+          console.log("Fetched user:", userInfo); // Kiểm tra user lấy từ API
+          setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
+        })
+        .catch((error) => {
+          console.error("Error fetching user:", error);
+        });
+    }
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo(0, 0);
+  };
+
   return (
-    <header className="bg-[#82AE46] w-screen flex items-center shadow-md p-2 fixed top-0 z-10 z-index-50">
+    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
       <div className="container mx-auto flex w-full justify-between items-center">
         <div className="flex items-center">
-          <FontAwesomeIcon icon={faPhone} className="text-white text-l" />
-          <div className="text-white text-xl font-bold ml-2">
+          <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
+          <div className="text-white text-l font-bold ml-2">
             +84 333 319 121
           </div>
         </div>
 
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPaperPlane} className="text-white text-l" />
-          <div className="text-white text-xl font-bold ml-2">
+          <div className="text-white text-l font-bold ml-2">
             khoinhokboddy@gmail.com
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <button
-            className="text-white text-xl font-bold bg-[#82AE46] px-4 py-2 rounded"
-            onClick={() => setShowLoginForm(true)}>
-            <FontAwesomeIcon icon={faUser} className="text-white text-l" /> Đăng
-            nhập/ Đăng ký
-          </button>
+          {user ? (
+            <div className="text-white text-l font-bold">
+              Xin chào, {user.username}
+            </div>
+          ) : (
+            <button
+              className="text-white text-l font-bold bg-[#82AE46] px-4 py-2 rounded"
+              onClick={() => setShowLoginForm(true)}>
+              <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
+              Đăng nhập/ Đăng ký
+            </button>
+          )}
         </div>
 
-        <div className="fixed top-[60px] bg-white w-screen left-0 shadow-md z-10">
+        <div className="fixed top-[50px] bg-white w-screen left-0 shadow-md z-10">
           <div className="container flex justify-between items-center center mx-auto">
-            <h1 className="text-[#82AE46] text-4xl py-2 font-bold">
+            <h1 className="text-[#82AE46] text-3xl py-2 font-bold">
               GreenVeggies
             </h1>
 
             <nav>
               <ul className="flex">
-                <li className="mx-4 py-2">
-                  <Link to="/" className="font-bold">
+                <li className="mx-4 py-2 text-sm mt-1">
+                  <Link to="/" className="font-bold " onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
                 </li>
-                <li className="mx-4 py-2">
-                  <Link to="/product" className="font-bold">
+                <li className="mx-4 py-2 text-sm mt-1">
+                  <Link
+                    to="/product"
+                    className="font-bold"
+                    onClick={scrollToTop}>
                     CỬA HÀNG
                   </Link>
                 </li>
-                <li className="mx-4 py-2">
-                  <Link to="/news" className="font-bold">
+                <li className="mx-4 py-2 text-sm mt-1">
+                  <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
                 </li>
-                <li className="mx-4 py-2">
-                  <Link to="/posts" className="font-bold">
+                <li className="mx-4 py-2 text-sm mt-1">
+                  <Link to="/posts" className="font-bold" onClick={scrollToTop}>
                     BÀI VIẾT
                   </Link>
                 </li>
-                <li className="mx-4 py-2">
-                  <Link to="/contact" className="font-bold">
+                <li className="mx-4 py-2 text-sm mt-1">
+                  <Link
+                    to="/contact"
+                    className="font-bold"
+                    onClick={scrollToTop}>
                     LIÊN HỆ
                   </Link>
                 </li>
-                <li className="mx-4 py-2">
-                  <Link to="/cart" className="font-bold">
+                <li className="mx-4 py-2 text-sm mt-1">
+                  <Link to="/cart" className="font-bold" onClick={scrollToTop}>
                     <Space size="middle">
                       <Badge count={0} showZero>
                         <FontAwesomeIcon
@@ -139,7 +188,7 @@ const Header = () => {
                   <input
                     type="text"
                     placeholder="Tìm kiếm"
-                    className="px-3 py-2 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 w-[200px] bg-[#D9D9D9]"
+                    className="px-3 py-2 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 w-[300px] bg-[#D9D9D9]"
                   />
                   <FontAwesomeIcon
                     icon={faMagnifyingGlass}
@@ -187,6 +236,7 @@ const Header = () => {
               setShowLoginForm(false);
               setShowRegisterForm(true); // Chuyển sang Register Form khi chọn Sign up
             }}
+            onLoginSuccess={handleLoginSuccess} // Truyền hàm xử lý đăng nhập thành công
           />
         </div>
       )}
