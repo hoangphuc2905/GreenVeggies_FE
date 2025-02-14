@@ -29,25 +29,34 @@ const SignupForm = ({ switchToLogin }) => {
         setError("");
         setSuccess("");
 
-        const formDataToSend = new FormData();
-        formDataToSend.append("email", formData.email);
-        formDataToSend.append("username", formData.username);
-        formDataToSend.append("phone", formData.phone);
-        formDataToSend.append("dateOfBirth", formData.dateOfBirth);
-        formDataToSend.append("password", formData.password);
-        if (formData.image) {
-            formDataToSend.append("avatar", formData.image);
+        // Kiểm tra nếu các trường bắt buộc không có giá trị
+        if (!formData.email || !formData.phone || !formData.username || !formData.password || !formData.dateOfBirth) {
+            setError("Vui lòng nhập đầy đủ các trường: email, phone, username, password, dateOfBirth.");
+            setLoading(false);
+            return;
         }
-        formDataToSend.append("address", formData.address);
+
+        const requestBody = {
+            email: formData.email,
+            username: formData.username,
+            phone: formData.phone,
+            dateOfBirth: formData.dateOfBirth,
+            password: formData.password,
+            address: formData.address, // Chỉ gửi khi có giá trị
+            avatar: formData.image ? formData.image.name : null, // Gửi tên ảnh nếu có
+        };
 
         try {
             const response = await fetch("http://localhost:8009/api/auth/register", {
                 method: "POST",
-                body: formDataToSend,
+                headers: {
+                    "Content-Type": "application/json", // Đảm bảo gửi dữ liệu ở dạng JSON
+                },
+                body: JSON.stringify(requestBody),
             });
 
             const data = await response.json();
-            console.log('Response data:', data); // Log the response data
+            console.log('Response data:', data);
 
             if (response.ok) {
                 setSuccess("Đăng ký thành công!");
@@ -147,7 +156,6 @@ const SignupForm = ({ switchToLogin }) => {
                         onChange={handleChange}
                         placeholder="Address"
                         className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                        required
                     />
 
                     <button
