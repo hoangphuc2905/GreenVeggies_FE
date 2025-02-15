@@ -22,7 +22,6 @@ export const getProducts = async () => {
   }
 };
 
-<<<<<<< HEAD
 const productAPI = axios.create({
   baseURL: API_PRODUCT_URL,
   headers: {
@@ -62,8 +61,6 @@ export const insertProduct = async (data) => {
   }
 };
 
-=======
-// Hàm lấy thông tin người dùng cụ thể
 export const getUserInfo = async (id, token) => {
   try {
     const response = await axios.get(`${API_URL_USER}/user/${id}`, {
@@ -78,6 +75,5 @@ export const getUserInfo = async (id, token) => {
     return null;
   }
 };
->>>>>>> b6067da5d62bbf93e870208a75fe2c1dd846fc1b
 
 export default api;
