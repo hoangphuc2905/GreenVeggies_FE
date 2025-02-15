@@ -60,7 +60,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-green-50 flex flex-col">
+    <div className="h-screen w-full bg-green-50 flex flex-col">
       {/* //<Headers */}
       <Header />
 
@@ -72,20 +72,20 @@ const Home = () => {
 
         {/* Text Overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <h2 className="text-white text-8xl font-bold shadow-md font-amatic">
+          <h2 className="text-white text-6xl md:text-8xl font-bold  font-amatic">
             100% FRESH & ORGANIC FOODS
           </h2>
-          <h3 className="text-white text-xl font-bold shadow-md mt-4">
+          <h3 className="text-white text-lg md:text-xl font-bold  mt-4">
             CHÚNG TÔI PHÂN PHỐI RAU CỦ VÀ TRÁI CÂY
           </h3>
         </div>
       </div>
 
       {/* Danh mục sản phẩm */}
-      <div className="container mx-auto mt-16">
-        <div className="flex">
+      <div className="container mx-auto mt-5">
+        <div className="flex flex-wrap">
           {/* Danh mục bên trái */}
-          <div className="w-[20%] ">
+          <div className="w-full md:w-1/4 ">
             <Menu />
 
             {/* Sản phẩm bạn có thể thích */}
@@ -93,34 +93,36 @@ const Home = () => {
               <h2 className="text-white text-2xl bg-[#82AE46] rounded-[15px] p-4 text-center mt-6 w-full">
                 Bạn có thể thích
               </h2>
-            </div>
-            <div className="grid grid-cols-1 grid-rows-3 gap-4">
-              {products.map((product, index) => (
-                <div className="flex mt-4" key={index}>
-                  <div className="w-2/4 h-[100px]">
-                    <img
-                      src={
-                        Array.isArray(product.imageUrl)
-                          ? product.imageUrl[0]
-                          : product.imageUrl
-                      }
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
+              <div className="grid grid-cols-1 gap-4">
+                {products.map((product, index) => (
+                  <div className="flex mt-4" key={index}>
+                    <div className="w-1/2 h-[100px]">
+                      <img
+                        src={
+                          Array.isArray(product.imageUrl)
+                            ? product.imageUrl[0]
+                            : product.imageUrl
+                        }
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="w-1/2 pl-4 flex flex-col justify-center">
+                      <p className="text-gray-700 font-bold">{product.name}</p>
+                      <p className="text-gray-700 font-bold">
+                        {product.price}đ
+                      </p>
+                    </div>
                   </div>
-                  <div className="w-3/4 pl-4 flex flex-col justify-center">
-                    <p className="text-gray-700 font-bold">{product.name}</p>
-                    <p className="text-gray-700 font-bold">{product.price}đ</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Phần nội dung bên phải chiếm phần còn lại */}
-          <div className="w-[80%] p-4 ">
+          <div className="w-full md:w-3/4 p-4">
             {/* Hàng trên: 4 cột */}
-            <div className="grid grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center">
                 {/* Lấy hình ảnh */}
                 <div className="container mx-auto relative h-[120px]">
@@ -197,7 +199,7 @@ const Home = () => {
             </div>
 
             {/* Hàng dưới: 3 cột, 2 hàng */}
-            <div className="grid grid-cols-3 grid-rows-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4">
               <div className="text-white rounded-lg shadow-md min-h-[180px] flex items-center justify-center overflow-hidden">
                 <img
                   src={category1Image}
@@ -260,11 +262,11 @@ const Home = () => {
               </h3>
             </div>
 
-            <div className="grid grid-cols-3 grid-rows-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4">
               {products.map((product, index) => (
                 <div
                   key={index}
-                  className="p-4 border rounded-lg shadow-md w-[300px] h-[300px] m-4 relative">
+                  className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative">
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -278,7 +280,7 @@ const Home = () => {
                           : product.imageUrl
                       }
                       alt={product.name}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-over"
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-center">
@@ -299,7 +301,7 @@ const Home = () => {
         <div className="container mx-auto relative z-0">
           {/* {Lấy ảnh}  */}
           <img src={bg3Image} alt="Mô tả hình ảnh" className="w-full h-auto" />
-          <div className="absolute inset-0 grid grid-cols-2 gap-4 z-10">
+          <div className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 gap-4 z-10">
             <div className="p-4 rounded-lg">{/* Nội dung cột 1 */}</div>
             <div className="p-4 rounded-lg">
               <div className="">
