@@ -21,6 +21,7 @@ export const getProducts = async () => {
     return [];
   }
 };
+
 const productAPI = axios.create({
   baseURL: API_PRODUCT_URL,
   headers: {
@@ -60,7 +61,6 @@ export const insertProduct = async (data) => {
   }
 };
 
-// Hàm lấy thông tin người dùng cụ thể
 export const getUserInfo = async (id, token) => {
   try {
     const response = await axios.get(`${API_URL_USER}/user/${id}`, {
