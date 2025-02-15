@@ -42,7 +42,7 @@ const Product = () => {
         <div className="container mx-auto mt-10">
           <div className="flex ">
             {/* Danh mục bên trái */}
-            <div className="w-[20%] mb-10">
+            <div className="w-[30%] mb-10">
               <Menu />
             </div>
             {/* 80% */}
@@ -50,7 +50,7 @@ const Product = () => {
               {products.map((product, index) => (
                 <div
                   key={index}
-                  className="p-4 border rounded-lg shadow-md w-[300px] h-[300px] ml-4 relative">
+                  className="p-4 border rounded-lg shadow-md ml-4 relative">
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%

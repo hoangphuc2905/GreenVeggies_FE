@@ -1,93 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { FcCurrencyExchange, FcContacts, FcBullish, FcSynchronize, FcExport } from "react-icons/fc";
+import { IoLocation } from "react-icons/io5";
+import { useDispatch } from "react-redux";
+import { logout } from "../../../redux/authSlice";
 
-function ProfileForm() {
-    const [profile, setProfile] = useState({
-        name: 'Nguyễn Minh Thuận',
-        phone: '0977041860',
-        email: 'nguyenminhthuan250718@gamil.com',
-        dob: '2003-09-09',
-        address: 'Long An'
+const Profile = () => {
+    const location = useLocation();
+    const [activeMenu, setActiveMenu] = useState(() => {
+        return location.pathname.split('/').pop() || 'payment';
     });
+    const dispatch = useDispatch();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setProfile((prevProfile) => ({
-            ...prevProfile,
-            [name]: value
-        }));
+    const handleMenuClick = (menu) => {
+        setActiveMenu(menu);
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log(profile);
+    const handleLogout = () => {
+        if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+            dispatch(logout());
+        }
+        else {
+            return false;
+        }
     };
 
     return (
-        <div className="bg-white shadow-lg rounded-lg p-6 w-96 max-w-md">
-            <div className="text-center mb-6">
-                <img src="https://via.placeholder.com/150" alt="Avatar" className="w-24 h-24 rounded-full object-cover mx-auto" />
-                <button className="bg-green-500 text-white px-4 py-2 rounded mt-4 hover:bg-green-600">
-                    Chọn ảnh
-                </button>
-                <p className="text-sm text-gray-600 mt-2">Dung lượng file tối đa 1 MB Định dạng .JPEG .PNG</p>
+        <div className="flex">
+            {/* Sidebar */}
+            <div className="w-1/4 bg-gray-800 text-white p-4">
+                <ul className="space-y-4">
+                    <li className={`cursor-pointer ${activeMenu === "payment" ? "text-green-500" : ""}`} onClick={() => handleMenuClick("payment")}>
+                        <Link to="payment" className="flex items-center space-x-2">
+                            <FcCurrencyExchange className="text-xl" />
+                            <span>Thanh toán</span>
+                        </Link>
+                    </li>
+                    <li className={`cursor-pointer ${activeMenu === "account-info" ? "text-green-500" : ""}`} onClick={() => handleMenuClick("account-info")}>
+                        <Link to="account-info" className="flex items-center space-x-2">
+                            <FcContacts className="text-xl" />
+                            <span>Thông tin cá nhân</span>
+                        </Link>
+                    </li>
+                    <li className={`cursor-pointer ${activeMenu === "ticket-history" ? "text-green-500" : ""}`} onClick={() => handleMenuClick("ticket-history")}>
+                        <Link to="ticket-history" className="flex items-center space-x-2">
+                            <FcBullish className="text-xl" />
+                            <span>Lịch sử mua vé</span>
+                        </Link>
+                    </li>
+                    <li className={`cursor-pointer ${activeMenu === "address" ? "text-green-500" : ""}`} onClick={() => handleMenuClick("address")}>
+                        <Link to="address" className="flex items-center space-x-2">
+                            <IoLocation className="text-xl" />
+                            <span>Địa chỉ của bạn</span>
+                        </Link>
+                    </li>
+                    <li className={`cursor-pointer ${activeMenu === "reset-password" ? "text-green-500" : ""}`} onClick={() => handleMenuClick("reset-password")}>
+                        <Link to="reset-password" className="flex items-center space-x-2">
+                            <FcSynchronize className="text-xl" />
+                            <span>Đặt lại mật khẩu</span>
+                        </Link>
+                    </li>
+                    <li onClick={handleLogout} className="cursor-pointer mt-4 flex items-center space-x-2">
+                        <FcExport className="text-xl" />
+                        <span>Đăng xuất</span>
+                    </li>
+                </ul>
             </div>
-            <form onSubmit={handleSubmit}>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Họ và tên:</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={profile.name}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Số điện thoại:</label>
-                    <input
-                        type="text"
-                        name="phone"
-                        value={profile.phone}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Email:</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={profile.email}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Ngày sinh:</label>
-                    <input
-                        type="date"
-                        name="dob"
-                        value={profile.dob}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">Địa chỉ:</label>
-                    <input
-                        type="text"
-                        name="address"
-                        value={profile.address}
-                        onChange={handleChange}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                </div>
-                <button type="submit" className="w-full bg-green-500 text-white py-2 rounded mt-4 hover:bg-green-600 focus:outline-none">
-                    Cập nhật thông tin
-                </button>
-            </form>
+
+            {/* Content Area */}
+            <div className="w-3/4 p-6">
+                <Outlet />
+            </div>
         </div>
     );
-}
+};
 
-export default ProfileForm;
+export default Profile;

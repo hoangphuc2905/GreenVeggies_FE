@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
 
 const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
@@ -6,6 +6,7 @@ const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(""); // Để lưu thông báo lỗi từ API
     const [success, setSuccess] = useState(""); // Để lưu thông báo thành công
+    const inputRefs = useRef([]);
 
     const handleOtpChange = (e, index) => {
         const value = e.target.value;
@@ -13,6 +14,20 @@ const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
+
+        // Tự động chuyển focus sang ô tiếp theo khi có giá trị
+        if (value && index < otp.length - 1) {
+            inputRefs.current[index + 1].focus();
+        }
+    };
+
+    const handleKeyDown = (e, index) => {
+        // Khi nhấn phím Backspace, chuyển focus sang ô trước
+        if (e.key === "Backspace" && otp[index] === "") {
+            if (index > 0) {
+                inputRefs.current[index - 1].focus();
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -104,9 +119,11 @@ const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
                         {otp.map((digit, index) => (
                             <input
                                 key={index}
+                                ref={(el) => (inputRefs.current[index] = el)}
                                 type="text"
                                 value={digit}
                                 onChange={(e) => handleOtpChange(e, index)}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
                                 className="w-12 h-12 text-center border-2 border-gray-300 rounded-lg"
                                 maxLength="1"
                                 required

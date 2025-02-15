@@ -11,45 +11,49 @@ const Menu = () => {
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Rau Xanh
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2 " /> Rau
+          Xanh
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Củ Quả
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2 " /> Củ
+          Quả
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Nấm
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Nấm
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Rau Gia Vị
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Rau
+          Gia Vị
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Sản Phẩm
-          Đặc Biệt
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Sản
+          Phẩm Đặc Biệt
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Rau Đặc
-          Sản
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Rau
+          Đặc Sản
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Trái Cây
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Trái
+          Cây
         </h3>
       </div>
       <div className="p-4 border rounded-lg shadow-md">
         <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l " /> Các Sản
-          Phẩm Liên Quan
+          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Các
+          Sản Phẩm Liên Quan
         </h3>
       </div>
     </div>
