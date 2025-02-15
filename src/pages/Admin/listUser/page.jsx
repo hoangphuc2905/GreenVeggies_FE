@@ -131,7 +131,7 @@ const ListUser = () => {
             title: <HomeOutlined />,
           },
           {
-            href: "/default-page",
+            href: "/admin/default-page",
             title: (
               <>
                 <UserOutlined />
@@ -210,7 +210,7 @@ const ListUser = () => {
               align="center"
             />
             <Column
-              title="Hình minh họa"
+              title="Hình đại diện"
               dataIndex="avatar"
               key="avatar"
               align="center"

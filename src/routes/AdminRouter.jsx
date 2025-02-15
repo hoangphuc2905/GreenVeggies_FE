@@ -6,6 +6,7 @@ import AdminMenu from "../pages/Admin/layout/menu";
 import Products from "../pages/Admin/product/page";
 import Detail from "../pages/Admin/product/detail";
 import ListUser from "../pages/Admin/listUser/page";
+import InsertForm from "../pages/Admin/product/insert";
 
 const AdminRouter = () => {
   const {
@@ -13,16 +14,18 @@ const AdminRouter = () => {
   } = theme.useToken();
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout className="h-full" style={{ minHeight: "100vh" }}>
       <AdminHeader />
       <Layout style={{ marginTop: "64px" }}>
         <AdminMenu colorBgContainer={colorBgContainer} />
-        <Layout style={{ marginLeft: "200px", padding: "24px" }}>
+        <Layout  className="h-full ml-[200px] p-6">
           <Routes>
             <Route path="/" element={<DefaultPage />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<Detail />} />
             <Route path="/user-list" element={<ListUser />} />
+            <Route path="/add-product" element={<InsertForm />} />
+
             {/* Điều hướng nếu admin vào đường dẫn không hợp lệ
             <Route path="*" element={<Navigate to="/admin" />} /> */}
           </Routes>
