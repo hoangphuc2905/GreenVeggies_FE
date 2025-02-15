@@ -1,20 +1,35 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Layout, Spin, Breadcrumb, Button, Menu, ConfigProvider } from "antd";
 import {
   HomeOutlined,
   PlusCircleFilled,
   ShopOutlined,
 } from "@ant-design/icons";
-import DetailProfile from "./detailProfile";
 import { motion } from "framer-motion"; // Import Framer Motion
+import { getProductDetail } from "../../../api/api";
+import Description from "./description";
+import Rating from "./rating";
 
 const Detail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState("Detail");
+  const [isFixed, setIsFixed] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setIsFixed(true);
+      } else {
+        setIsFixed(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const items = [
     { label: "Thông tin chi tiết", key: "Detail" },
@@ -24,10 +39,8 @@ const Detail = () => {
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8002/api/products/${id}`
-        );
-        setProduct(response.data);
+        const response = await getProductDetail(id);
+        setProduct(response);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       } finally {
@@ -46,7 +59,7 @@ const Detail = () => {
         items={[
           { href: "", title: <HomeOutlined /> },
           {
-            href: "/products",
+            href: "/admin/products",
             title: (
               <>
                 <ShopOutlined />
@@ -54,7 +67,7 @@ const Detail = () => {
               </>
             ),
           },
-          { href: "/products", title: "Danh sách sản phẩm" },
+          { href: "/admin/products", title: "Danh sách sản phẩm" },
           { title: product?.name },
         ]}
         className="py-5"
@@ -82,30 +95,30 @@ const Detail = () => {
             Chỉnh sửa
           </Button>
         </div>
-
-        <ConfigProvider
-          theme={{
-            components: {
-              Menu: {
-                itemHoverColor: "#141515",
-                itemSelectedColor: "#FF5722",
-                itemHoverBg: "#388E3C",
-                itemSelectedBg: "#1B5E20",
-                horizontalItemSelectedColor: "#27A743",
+        <div className="mt-7">
+          <ConfigProvider
+            theme={{
+              components: {
+                Menu: {
+                  itemHoverColor: "#141515",
+                  itemSelectedColor: "#FF5722",
+                  itemHoverBg: "#388E3C",
+                  itemSelectedBg: "#1B5E20",
+                  horizontalItemSelectedColor: "#27A743",
+                  colorText: "#7A8699",
+                },
               },
-            },
-          }}
-        >
-          <Menu
-            mode="horizontal"
-            items={items}
-            selectedKeys={[selectedKey]}
-            onClick={(e) => setSelectedKey(e.key)}
-            style={{ borderRadius: "8px" }}
-          />
-        </ConfigProvider>
-
-        {/* Hiển thị nội dung với animation */}
+            }}
+          >
+            <Menu
+              mode="horizontal"
+              items={items}
+              selectedKeys={[selectedKey]}
+              onClick={(e) => setSelectedKey(e.key)}
+              style={{ borderRadius: "8px" }}
+            />
+          </ConfigProvider>
+        </div>
       </div>
       <motion.div
         key={selectedKey} // Giúp animation chạy lại khi đổi tab
@@ -115,8 +128,8 @@ const Detail = () => {
         transition={{ duration: 0.5, ease: "easeOut" }} // Tốc độ animation
         className="mt-6"
       >
-        {selectedKey === "Detail" && <DetailProfile product={product} />}
-        {selectedKey === "Rate" && <p>Phản hồi của khách hàng...</p>}
+        {selectedKey === "Detail" && <Description product={product} />}
+        {selectedKey === "Rate" && <Rating />}
       </motion.div>
     </Layout>
   );

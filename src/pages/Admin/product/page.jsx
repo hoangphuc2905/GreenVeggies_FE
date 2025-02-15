@@ -11,7 +11,6 @@ import {
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import {
   DeleteFilled,
   EditFilled,
@@ -21,13 +20,14 @@ import {
 } from "@ant-design/icons";
 import userRender from "../userRender/userRender";
 import { useNavigate } from "react-router-dom";
+import { getListProducts } from "../../../api/api";
 
 const { Search } = Input;
 
 const fetchProducts = async (key) => {
   try {
-    const response = await axios.get(`http://localhost:8002/api/${key}`);
-    return response.data;
+    const response = await getListProducts(key);
+    return response;
   } catch (error) {
     console.error(error);
     return [];
@@ -81,7 +81,7 @@ const Products = () => {
 
   const handlerClickProduct = (product) => {
     setSelectedProduct(product);
-    navigate(`/products/${product._id}`);
+    navigate(`/admin/products/${product._id}`);
     console.log(product);
   };
 
@@ -128,8 +128,9 @@ const Products = () => {
             />
             <Button
               type="primary"
-              className="bg-blue-500 text-white font-bold"
-              icon={<PlusCircleOutlined />}>
+              className="bg-[#EAF3FE] text-[#689CF8] font-medium"
+              icon={<PlusCircleOutlined />}
+            >
               Thêm sản phẩm
             </Button>
           </Flex>
@@ -141,7 +142,8 @@ const Products = () => {
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             onRow={(record) => ({
               onClick: () => handlerClickProduct(record),
-            })}>
+            })}
+          >
             <Column
               title="#"
               key="index"
