@@ -1,5 +1,4 @@
 import {
-  Breadcrumb,
   Button,
   Flex,
   Form,
@@ -11,8 +10,9 @@ import {
   Row,
   Col,
   message,
+  ConfigProvider,
 } from "antd";
-import { HomeOutlined, PlusOutlined, ShopOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../api/api";
@@ -102,24 +102,8 @@ const InsertForm = () => {
   }, []);
 
   return (
-    <Layout className="-mt-9 h-fit">
-      <Breadcrumb
-        items={[
-          { href: "", title: <HomeOutlined /> },
-          {
-            href: "/admin/products",
-            title: (
-              <>
-                <ShopOutlined />
-                <span>Sản phẩm</span>
-              </>
-            ),
-          },
-          { title: "Thêm sản phẩm" },
-        ]}
-        className="py-5"
-      />
-      <div className="w-full bg-white p-4 rounded-md">
+    <Layout className="h-fit">
+      <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-lg">
         <Flex gap="middle" vertical>
           <Form
             size="middle"
@@ -133,16 +117,44 @@ const InsertForm = () => {
             initialValues={{ status: "available", quantity: 0 }}
           >
             <Flex className="mb-[10vh]" justify="space-between" align="center">
-              <div className="text-2xl text-[#82AE46] font-bold mt-3">
+              <div className="text-2xl text-[#82AE46] font-bold">
                 Thêm thông tin sản phẩm mới
               </div>
-              <Button
-                className="w-[20vh] bg-[#82AE46] text-white"
-                type="primary"
-                htmlType="submit"
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Button: {
+                      defaultBg: "#82AE46",
+                      defaultColor: "#ffffff",
+                      defaultBorderColor: "#82AE46",
+
+                      defaultHoverBg: "#6D9539",
+                      defaultHoverColor: "#ffffff",
+                      defaultHoverBorderColor: "#6D9539",
+                      defaultActiveBg: "#5A7E30",
+                      defaultActiveColor: "#ffffff",
+                      defaultActiveBorderColor: "#5A7E30",
+                      contentFontSize: "17px",
+                    },
+                  },
+                }}
               >
-                Lưu
-              </Button>
+                <div className="flex justify-center gap-5">
+                  <Button
+                    type="default"
+                    htmlType="submit"
+                    className="h-12 w-44 px-10 font-medium"
+                  >
+                    Lưu
+                  </Button>
+                  <Button
+                    type="default"
+                    className="h-12 w-44 px-10 font-medium"
+                  >
+                    Nhập Excel
+                  </Button>
+                </div>
+              </ConfigProvider>
             </Flex>
             <Row gutter={24}>
               <Col span={12}>
@@ -236,12 +248,16 @@ const InsertForm = () => {
                   </Select>
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">
-                  <Select defaultValue="available" className="w-full">
+                  <Select
+                    disabled={true}
+                    defaultValue="available"
+                    className="w-full"
+                  >
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Option key={option.value} value={option.value}>
                         <div className="flex items-center gap-2 font-bold">
                           <div
-                            className={`${option.dot} w-4 h-4 rounded-full relative`}
+                            className={`${option.dot} w-4 h-4 ml-1 blur-[2px] rounded-full relative`}
                           />
                           <span className={option.color}>{option.label}</span>
                         </div>

@@ -3,6 +3,8 @@ import {
   ShoppingOutlined,
   UserOutlined,
   UserAddOutlined,
+  ProductOutlined,
+  AppstoreAddOutlined,
 } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
@@ -34,11 +36,13 @@ const AdminSidebar = ({ colorBgContainer }) => {
         {
           key: "/admin/products",
           label: "Danh sách",
+          icon: <ProductOutlined />,
           onClick: () => navigate("/admin/products"),
         },
         {
           key: "/admin/add-product",
           label: "Thêm sản phẩm",
+          icon: <AppstoreAddOutlined />,
           onClick: () => navigate("/admin/add-product"),
         },
       ],
@@ -63,9 +67,14 @@ const AdminSidebar = ({ colorBgContainer }) => {
     },
   ];
 
-  const activeParentKey = menuItems.find((item) =>
-    item.children?.some((child) => child.key === location.pathname)
+  let activeParentKey = menuItems.find((item) =>
+    item.children?.some((child) => location.pathname === child.key)
   )?.key;
+
+  // Đảm bảo mục "Sản phẩm / Danh sách" luôn mở nếu đường dẫn bắt đầu bằng `/admin/products/`
+  if (location.pathname.startsWith("/admin/products/")) {
+    activeParentKey = "/admin/products";
+  }
 
   return (
     <Sider
@@ -92,7 +101,7 @@ const AdminSidebar = ({ colorBgContainer }) => {
         <Menu
           className="admin-menu h-screen"
           mode="inline"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[location.pathname.startsWith("/admin/products/") ? "/admin/products" : location.pathname]}
           defaultOpenKeys={activeParentKey ? [activeParentKey] : []}
           items={menuItems}
           onClick={({ key }) => {

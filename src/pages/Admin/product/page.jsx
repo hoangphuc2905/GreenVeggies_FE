@@ -1,22 +1,10 @@
-import {
-  Breadcrumb,
-  Button,
-  Flex,
-  Input,
-  Layout,
-  Table,
-  Tag,
-  Space,
-  Select,
-} from "antd";
+import { Button, Flex, Input, Layout, Table, Tag, Space, Select } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
 import {
   DeleteFilled,
   EditFilled,
-  HomeOutlined,
   PlusCircleOutlined,
-  ShopOutlined,
 } from "@ant-design/icons";
 import userRender from "../userRender/userRender";
 import { useNavigate } from "react-router-dom";
@@ -41,73 +29,43 @@ const Products = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Mapping trạng thái thành text dễ hiểu
   const statusMapping = {
     available: { text: "Còn hàng", color: "green" },
     unavailable: { text: "Ngừng bán", color: "red" },
     out_of_stock: { text: "Hết hàng", color: "orange" },
   };
 
-  const options = [
-    {
-      value: "Tất cả",
-    },
-    {
-      value: "Admin",
-    },
-    {
-      value: "User",
-    },
-  ];
+  const options = [{ value: "Tất cả" }, { value: "Admin" }, { value: "User" }];
 
   useEffect(() => {
     const fetchUsers = async () => {
       const data = await fetchProducts("products");
       setProducts(data);
     };
-
     fetchUsers();
   }, []);
 
   const onSearch = (value) => {
     setSearchQuery(value);
-    const filteredProducts = products.filter((product) =>
-      product.name.toLowerCase().includes(value.toLowerCase())
-    );
-    setProducts(filteredProducts);
   };
+
+  const onSelectChange = (value) => {
+    setSelectedOptions(value);
+  };
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const navigate = useNavigate();
 
   const handlerClickProduct = (product) => {
     setSelectedProduct(product);
     navigate(`/admin/products/${product._id}`);
-    console.log(product);
   };
 
   return (
-    <Layout className="-mt-9 h-fit">
-      <Breadcrumb
-        items={[
-          {
-            href: "",
-            title: <HomeOutlined />,
-          },
-          {
-            href: "/admin/products",
-            title: (
-              <>
-                <ShopOutlined />
-                <span>Quản lý sản phẩm</span>
-              </>
-            ),
-          },
-          {
-            title: "Danh sách sản phẩm",
-          },
-        ]}
-        className="py-5"
-      />
+    <Layout className="h-fit">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
         <Flex gap="middle" vertical>
           <div className="text-2xl text-[#82AE46] font-bold mt-3">
@@ -120,10 +78,13 @@ const Products = () => {
               value={selectedOptions}
               className="w-72"
               options={options}
+              onChange={onSelectChange}
             />
             <Search
               placeholder="Tìm kiếm sản phẩm"
               onSearch={onSearch}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-2/3"
             />
             <Button
@@ -136,7 +97,7 @@ const Products = () => {
           </Flex>
           <Table
             size="large"
-            dataSource={products}
+            dataSource={filteredProducts}
             rowKey="productID"
             pagination={{ pageSize: 5 }}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
@@ -238,10 +199,11 @@ const Products = () => {
               dataIndex="status"
               key="status"
               align="center"
-              render={(status) => {
-                const statusInfo = statusMapping[status];
-                return <Tag color={statusInfo?.color}>{statusInfo?.text}</Tag>;
-              }}
+              render={(status) => (
+                <Tag color={statusMapping[status]?.color}>
+                  {statusMapping[status]?.text}
+                </Tag>
+              )}
             />
             <Column
               title="Tác vụ"

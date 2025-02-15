@@ -123,28 +123,7 @@ const ListUser = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <Layout className="-mt-9 overflow-hidden">
-      <Breadcrumb
-        items={[
-          {
-            href: "",
-            title: <HomeOutlined />,
-          },
-          {
-            href: "/admin/default-page",
-            title: (
-              <>
-                <UserOutlined />
-                <span>Quản lý user</span>
-              </>
-            ),
-          },
-          {
-            title: "Danh sách user",
-          },
-        ]}
-        className="py-5"
-      />
+    <Layout className="overflow-hidden">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
         <Flex gap="middle" vertical>
           <Flex gap="middle">
