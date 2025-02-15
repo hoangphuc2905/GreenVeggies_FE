@@ -7,54 +7,65 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import { ConfigProvider, Layout, Menu } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 
 const { Sider } = Layout;
 
 const AdminSidebar = ({ colorBgContainer }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     {
-      key: "dashboard",
+      key: "/admin/dashboard",
       icon: <BarChartOutlined />,
       label: "Bảng thống kê",
       children: [
-        { key: "dashboard-revenue", label: "Thống kê doanh thu" },
-        { key: "dashboard-orders", label: "Thống kê đơn hàng" },
+        { key: "/admin/dashboard-revenue", label: "Thống kê doanh thu" },
+        { key: "/admin/dashboard-orders", label: "Thống kê đơn hàng" },
       ],
     },
     {
-      key: "products",
+      key: "/admin/products",
       icon: <ShoppingOutlined />,
       label: "Sản phẩm",
       children: [
         {
-          key: "product-list",
+          key: "/admin/products",
           label: "Danh sách",
           onClick: () => navigate("/admin/products"),
         },
-        { key: "add-product", label: "Thêm sản phẩm",
-          onClick: () => navigate("/admin/add-product")
-         },
+        {
+          key: "/admin/add-product",
+          label: "Thêm sản phẩm",
+          onClick: () => navigate("/admin/add-product"),
+        },
       ],
     },
     {
-      key: "user-management",
+      key: "/admin/user-management",
       icon: <UserOutlined />,
       label: "Quản lý User",
       children: [
         {
-          key: "user-list",
+          key: "/admin/user-list",
           label: "Danh sách User",
           onClick: () => navigate("/admin/user-list"),
           icon: <FontAwesomeIcon icon={faClipboardList} />,
         },
-        { key: "add-user", label: "Tạo User mới", icon: <UserAddOutlined /> },
+        {
+          key: "/admin/add-user",
+          label: "Tạo User mới",
+          icon: <UserAddOutlined />,
+        },
       ],
     },
   ];
+
+  const activeParentKey = menuItems.find((item) =>
+    item.children?.some((child) => child.key === location.pathname)
+  )?.key;
 
   return (
     <Sider
@@ -66,14 +77,14 @@ const AdminSidebar = ({ colorBgContainer }) => {
         theme={{
           components: {
             Menu: {
-              colorText: "#808080", // Màu chữ mặc định
-              colorTextHover: "#82AE47", // Màu chữ khi hover
-              itemSelectedBg: "#CFE0B9", // Màu nền khi mục menu được chọn
-              colorBgContainer: "#ffffff", // Màu nền tổng thể của menu
-              borderRadius: 8, // Bo tròn góc menu
-              itemSelectedColor: "#82AE47", // Màu chữ khi mục menu được chọn
-              subMenuItemSelectedColor: "#82AE47", // Màu chữ khi mục menu được chọn (menu ngang)
-              itemActiveBg: "#CFE0B9", // Màu nền khi hover
+              colorText: "#808080",
+              colorTextHover: "#82AE47",
+              itemSelectedBg: "#CFE0B9",
+              colorBgContainer: "#ffffff",
+              borderRadius: 8,
+              itemSelectedColor: "#82AE47",
+              subMenuItemSelectedColor: "#82AE47",
+              itemActiveBg: "#CFE0B9",
             },
           },
         }}
@@ -81,7 +92,8 @@ const AdminSidebar = ({ colorBgContainer }) => {
         <Menu
           className="admin-menu h-screen"
           mode="inline"
-          defaultOpenKeys={["default-page"]}
+          selectedKeys={[location.pathname]}
+          defaultOpenKeys={activeParentKey ? [activeParentKey] : []}
           items={menuItems}
           onClick={({ key }) => {
             const selectedItem = menuItems.find(
