@@ -1,11 +1,15 @@
 import { useState, useRef } from "react";
-import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
+import { ArrowLeft } from "lucide-react";
 
 const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const inputRefs = useRef([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(""); // Để lưu thông báo lỗi từ API
+    const [success, setSuccess] = useState(""); // Để lưu thông báo thành công
 
-    console.log('Email gui OTP:', emailqmk); // Kiểm tra email
+
+
 
     const handleOtpChange = (e, index) => {
         const value = e.target.value;
@@ -31,6 +35,9 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError(""); // Reset lỗi khi gửi lại
+        setSuccess(""); // Reset thành công khi gửi lại
 
         // Kết hợp các ký tự OTP thành một chuỗi
         const otpValue = otp.join("");
@@ -54,6 +61,8 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
             );
 
             const data = await response.json();
+            console.log('Email:', emailqmk);
+            console.log('OTP:', otpValue);
 
             if (response.ok) {
                 alert("OTP đã được xác nhận!");
@@ -65,11 +74,12 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
         } catch (error) {
             alert("Lỗi kết nối, vui lòng thử lại.");
         }
+
+
     };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-
             {/* Nút quay lại ở góc trên bên trái */}
             <button
                 onClick={goBack}
@@ -98,7 +108,10 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
                 <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
                 <h3 className="text-xl font-bold mb-4 text-black text-center">Nhập mã OTP QMK</h3>
                 <p className="text-center text-gray-500 mb-3">Nhập mã OTP đã gửi đến email của bạn</p>
-                <p className="text-center text-gray-500 mb-3">Email: <span className="font-semibold">{emailqmk}</span></p> {/* Hiển thị email */}
+                <p className="text-center text-gray-500 mb-3">
+                    Email: {emailqmk ? emailqmk : "Không có email được truyền"}
+                </p>
+
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="flex justify-center space-x-2">

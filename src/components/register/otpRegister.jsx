@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
 
-const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
+const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(""); // Để lưu thông báo lỗi từ API
@@ -66,7 +66,7 @@ const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
                 setSuccess("OTP đã được xác nhận thành công!");
                 // Chuyển sang form đăng ký sau khi xác nhận OTP thành công
                 setTimeout(() => {
-                    closeOtpForm();
+                    closeOtpFormdk();
                     openSignupForm();
                 }, 2000);
             } else {
@@ -91,7 +91,7 @@ const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
 
             {/* Nút đóng ở góc trên bên phải */}
             <button
-                onClick={closeOtpForm}
+                onClick={closeOtpFormdk}
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
             >
                 &times;
@@ -109,7 +109,7 @@ const OtpFormdk = ({ goBack, closeOtpForm, openSignupForm, email }) => {
                 <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
                 <h3 className="text-xl font-bold mb-4 text-black text-center">Nhập mã OTP</h3>
                 <p className="text-center text-gray-500 mb-3">Nhập mã OTP đã gửi đến email của bạn</p>
-                <p className="text-center text-gray-500 mb-3">Email: {email}</p> {/* Hiển thị email */}
+                <p className="text-center text-gray-500 mb-3">Email: {email}</p>
 
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
                 {success && <div className="text-green-500 text-center mb-3">{success}</div>}
