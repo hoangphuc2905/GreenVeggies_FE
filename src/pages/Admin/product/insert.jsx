@@ -191,15 +191,36 @@ const InsertForm = () => {
                   name="imageUrl"
                 >
                   <Upload
-                    action="/api/upload" // 🔄 Cập nhật URL đúng
+                    action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
                     listType="picture-card"
-                    accept=".png,.jpg,.jpeg"
+                    accept="image/*"
+                    data={() => ({ upload_preset: "ml_default" })}
                     beforeUpload={(file) => {
                       const isImage = file.type.startsWith("image/");
                       if (!isImage) {
                         message.error("Chỉ được tải lên file hình ảnh!");
+                        return false;
                       }
-                      return isImage;
+                      return true;
+                    }}
+                    onChange={(info) => {
+                      if (info.file.status === "done") {
+                        const imageUrl = info.file.response?.secure_url;
+                        if (imageUrl) {
+                          message.success(
+                            `Tải lên thành công: ${info.file.name}`
+                          );
+                          console.log("Cloudinary URL:", imageUrl);
+                        } else {
+                          message.error(
+                            "Không tìm thấy URL ảnh trong phản hồi"
+                          );
+                          console.log("Response lỗi:", info.file.response);
+                        }
+                      } else if (info.file.status === "error") {
+                        message.error(`Tải lên thất bại: ${info.file.name}`);
+                        console.error("Lỗi upload:", info.file.response);
+                      }
                     }}
                   >
                     <button
