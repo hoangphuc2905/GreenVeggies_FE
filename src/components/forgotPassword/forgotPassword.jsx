@@ -11,7 +11,6 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
         setError(""); // Reset error
 
         try {
-            // Gọi API gửi OTP
             const response = await fetch(`http://localhost:8009/api/auth/forgot-password?email=${emailqmk}`, {
                 method: 'POST',
                 headers: {
@@ -22,9 +21,10 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
             const data = await response.json();
 
             if (response.ok) {
-                alert(data.message);
+                // alert(data.message);
+
                 closeForgotPasswordForm(); // Đóng form quên mật khẩu
-                openOtpFormqmk(emailqmk); // Mở form OTP
+                openOtpFormqmk(emailqmk); // Truyền email vào form OTP
             } else {
                 setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
@@ -37,7 +37,6 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-            {/* Nút đóng */}
             <button
                 onClick={closeForgotPasswordForm}
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
@@ -65,7 +64,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input
                         type="email"
-                        name="email"
+                        name="emailqmk"
                         value={emailqmk}
                         onChange={(e) => setEmailqmk(e.target.value)}
                         placeholder="Email"
@@ -84,7 +83,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                     <div className="text-center text-sm text-gray-500 mt-2">
                         <button
                             type="button"
-                            onClick={openLoginForm} // Mở lại trang login khi nhấn vào
+                            onClick={openLoginForm}
                             className="text-green-500 hover:underline"
                         >
                             Back to login
