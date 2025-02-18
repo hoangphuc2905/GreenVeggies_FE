@@ -11,6 +11,7 @@ import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import { ConfigProvider, Layout, Menu } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
+import logo from "../../../assets/Green.png";
 
 const { Sider } = Layout;
 
@@ -71,16 +72,21 @@ const AdminSidebar = ({ colorBgContainer }) => {
     item.children?.some((child) => location.pathname === child.key)
   )?.key;
 
-  // Đảm bảo mục "Sản phẩm / Danh sách" luôn mở nếu đường dẫn bắt đầu bằng `/admin/products/`
   if (location.pathname.startsWith("/admin/products/")) {
     activeParentKey = "/admin/products";
   }
 
   return (
     <Sider
-      className="fixed max-h-screen h-fit z-50"
+      className="fixed max-h-screen h-fit z-50 pt-[2vh]"
       style={{ background: colorBgContainer }}
     >
+      <div className="flex items-center py-2">
+        <img src={logo} alt="logo" className="h-10 mx-4" />
+        <span className="text-lg font-bold text-[#82AE46]">
+          GreenVeggies
+        </span>{" "}
+      </div>
       <div className="text-[#7A8699] size-5 font-thin mx-6 my-5">Menu</div>
       <ConfigProvider
         theme={{
@@ -101,7 +107,11 @@ const AdminSidebar = ({ colorBgContainer }) => {
         <Menu
           className="admin-menu h-screen"
           mode="inline"
-          selectedKeys={[location.pathname.startsWith("/admin/products/") ? "/admin/products" : location.pathname]}
+          selectedKeys={[
+            location.pathname.startsWith("/admin/products/")
+              ? "/admin/products"
+              : location.pathname,
+          ]}
           defaultOpenKeys={activeParentKey ? [activeParentKey] : []}
           items={menuItems}
           onClick={({ key }) => {

@@ -15,13 +15,21 @@ const AdminRouter = () => {
   } = theme.useToken();
 
   return (
-    <Layout className="h-full" style={{ minHeight: "100vh" }}>
-      <AdminHeader style={{ position: "fixed", top: 0, width: "100%", zIndex: 1000 }} />
-      <Layout style={{ marginTop: "25px", position: "relative" }}>
-        <Layout className="h-full" style={{ display: "flex"}}>
-          <AdminSidebar style={{ position: "fixed", left: 0, top: "104px", height: "calc(100vh - 104px)", zIndex: 900, width: "200px" }} colorBgContainer={colorBgContainer} />
-          <Layout className="h-full mt-[1%]" style={{ flex: 1, padding: "16px", marginLeft: "200px" }}>
-            <BreadcrumbNav style={{ position: "relative", marginBottom: "16px", padding: "8px 16px", background: colorBgContainer }} />
+    <Layout className="h-full min-h-screen">
+      <AdminHeader className="fixed top-0"/>
+      <AdminSidebar
+        className="fixed left-0 top-16 h-full z-[900] w-48"
+        colorBgContainer={colorBgContainer}
+      />
+      <Layout className="mt-6 relative">
+        <Layout className="h-full flex">
+          <Layout className="h-full mt-[4vh] flex-1 p-4 ml-52 mr-[3vh]">
+            <BreadcrumbNav
+              className="fixed top-16 w-full"
+              style={{
+                background: colorBgContainer,
+              }}
+            />
             <Routes>
               <Route path="/" element={<DefaultPage />} />
               <Route path="/products" element={<Products />} />

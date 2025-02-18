@@ -64,6 +64,10 @@ const Products = () => {
     navigate(`/admin/products/${product._id}`);
   };
 
+
+  const handlerClickAddProduct = () => {
+    navigate(`/admin/add-product`);
+  }
   return (
     <Layout className="h-fit">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
@@ -91,6 +95,7 @@ const Products = () => {
               type="primary"
               className="bg-[#EAF3FE] text-[#689CF8] font-medium"
               icon={<PlusCircleOutlined />}
+              onClick={handlerClickAddProduct}
             >
               Thêm sản phẩm
             </Button>
