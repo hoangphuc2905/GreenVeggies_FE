@@ -1,19 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 
-const SignupForm = ({ switchToLogin }) => {
+const SignupForm = ({ switchToLogin, email }) => {
     const [formData, setFormData] = useState({
-        email: "",
+        email: email || "", // Gán giá trị email từ props
         username: "",
         phone: "",
         dateOfBirth: "",
         password: "",
         image: null,
         address: "",
+        role: "user", 
     });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    // Cập nhật email khi nhận được từ props
+    useEffect(() => {
+        if (email) {
+            setFormData((prevFormData) => ({ ...prevFormData, email }));
+        }
+    }, [email]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,15 +51,15 @@ const SignupForm = ({ switchToLogin }) => {
             phone: formData.phone,
             dateOfBirth: formData.dateOfBirth,
             password: formData.password,
-            address: formData.address, // Chỉ gửi khi có giá trị
-            avatar: formData.image ? formData.image.name : null, // Gửi tên ảnh nếu có
+            address: formData.address,
+            avatar: formData.image ? formData.image.name : null,
         };
 
         try {
             const response = await fetch("http://localhost:8009/api/auth/register", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json", // Đảm bảo gửi dữ liệu ở dạng JSON
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify(requestBody),
             });
@@ -61,7 +70,7 @@ const SignupForm = ({ switchToLogin }) => {
             if (response.ok) {
                 setSuccess("Đăng ký thành công!");
                 setTimeout(() => {
-                    switchToLogin(); // Chuyển sang LoginForm khi đăng ký thành công
+                    switchToLogin();
                 }, 2000);
             } else {
                 setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
@@ -103,10 +112,9 @@ const SignupForm = ({ switchToLogin }) => {
                         type="email"
                         name="email"
                         value={formData.email}
-                        onChange={handleChange}
-                        placeholder="Email"
                         className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
                         required
+                        readOnly // Không cho chỉnh sửa email
                     />
                     <input
                         type="text"
