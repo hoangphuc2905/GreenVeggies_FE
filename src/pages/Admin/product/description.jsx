@@ -1,7 +1,7 @@
-import { Card, Col, Row, Tag } from "antd";
+import { Card, Col, Row, Table, Tag } from "antd";
 import PropTypes from "prop-types";
 
-const DetailProfile = ({ product }) => {
+const Description = ({ product }) => {
   if (!product) return <p>Không có dữ liệu sản phẩm.</p>;
 
   // Mapping trạng thái thành text dễ hiểu
@@ -19,8 +19,45 @@ const DetailProfile = ({ product }) => {
     return result;
   };
 
+  const dataSource = [
+    { key: "1", label: "Giá nhập", value: `${product.import} VND / KG` },
+    {
+      key: "2",
+      label: "Danh mục",
+      value: product.category?.name || "Không có danh mục",
+    },
+    {
+      key: "3",
+      label: "Mô tả",
+      value: (
+        <div>
+          <p>
+            <strong>Nguồn gốc:</strong>{" "}
+            {product.origin || "Không có thông tin nguồn gốc"}.
+          </p>
+          <p className="mt-2 font-medium">Đặc điểm sản phẩm:</p>
+          <p>{product.description || "Không có mô tả"}</p>
+        </div>
+      ),
+    },
+  ];
+
+  const columns = [
+    {
+      title: "",
+      dataIndex: "label",
+      key: "label",
+      width: 200,
+      className: "font-medium text-[#808080]",
+    },
+    {
+      title: "",
+      dataIndex: "value",
+      key: "value",
+    },
+  ];
   return (
-    <div className="mt-8">
+    <div className="mt-8 z-0 h-full">
       <div>
         <Row
           gutter={[16, 16]}
@@ -30,14 +67,14 @@ const DetailProfile = ({ product }) => {
         >
           {/* Đánh giá */}
           <Col span={4}>
-            <Card title="Đánh giá" bordered={false}>
+            <Card title="Đánh giá">
               {product.quantity ? `${product.quantity} ⭐` : "Chưa có đánh giá"}
             </Card>
           </Col>
 
           {/* Giá bán */}
           <Col span={4}>
-            <Card title="Giá bán" bordered={false}>
+            <Card title="Giá bán">
               {product.price
                 ? `${product.price.toLocaleString()} VND`
                 : "Chưa cập nhật"}
@@ -46,14 +83,14 @@ const DetailProfile = ({ product }) => {
 
           {/* Tồn kho (Số lượng nhập - Đã bán) */}
           <Col span={4}>
-            <Card title="Tồn kho" bordered={false}>
+            <Card title="Tồn kho">
               {stockQuantity()} {product.unit}
             </Card>
           </Col>
 
           {/* Trạng thái */}
           <Col span={4}>
-            <Card title="Trạng thái" bordered={false}>
+            <Card title="Trạng thái">
               <Tag color={statusMapping[product.status]?.color}>
                 {statusMapping[product.status]?.text || "Không xác định"}
               </Tag>
@@ -62,27 +99,35 @@ const DetailProfile = ({ product }) => {
 
           {/* Số lượng nhập */}
           <Col span={4}>
-            <Card title="Số lượng nhập" bordered={false}>
+            <Card title="Số lượng nhập">
               {product.import} {product.unit}
             </Card>
           </Col>
 
           {/* Đã bán */}
           <Col span={4}>
-            <Card title="Đã bán" bordered={false}>
+            <Card title="Đã bán">
               {product.sold} {product.unit}
             </Card>
           </Col>
         </Row>
       </div>
-      <div>
-        
+      <div className="mt-8 h-full max-h-screen bg-white p-4 rounded-md shadow-xl">
+        <div className="text-lg font-semibold mb-4 pb-2 ml-3">
+          Thông tin cơ bản
+        </div>
+        <Table
+          dataSource={dataSource}
+          columns={columns}
+          pagination={false}
+          showHeader={false}
+        />
       </div>
     </div>
   );
 };
 
-DetailProfile.propTypes = {
+Description.propTypes = {
   product: PropTypes.shape({
     price: PropTypes.number,
     quantity: PropTypes.number,
@@ -91,7 +136,12 @@ DetailProfile.propTypes = {
     unit: PropTypes.string,
     status: PropTypes.string,
     review: PropTypes.number,
+    category: PropTypes.shape({
+      name: PropTypes.string,
+    }),
+    description: PropTypes.string,
+    origin: PropTypes.string,
   }),
 };
 
-export default DetailProfile;
+export default Description;
