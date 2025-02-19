@@ -35,7 +35,6 @@ const Header = () => {
 
   const [emailqmk, setEmailqmk] = useState("");
 
-
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
   const closeOtpFormqmk = () => setShowOtpFormqmk(false);
@@ -74,7 +73,6 @@ const Header = () => {
     setShowRegisterForm(false);
     setShowOtpFormdk(true);
   };
-
 
   // Hàm xử lý đăng nhập thành công
   const handleLoginSuccess = async (userData) => {
@@ -116,9 +114,7 @@ const Header = () => {
     setEmailqmk(emailqmk);
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
-  }
-
-
+  };
 
   return (
     <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
@@ -227,8 +223,8 @@ const Header = () => {
         showRegisterForm ||
         showResetPasswordForm ||
         showSignupForm) && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
-        )}
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
+      )}
 
       {/* Modal Register Form */}
       {showRegisterForm && (
