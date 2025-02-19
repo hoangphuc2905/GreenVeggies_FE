@@ -15,8 +15,8 @@ import ResetPasswordForm from "../../../components/forgotPassword/resetPassword"
 import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
-
 import SignupForm from "../../../components/register/registerForm";
+
 
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
 
@@ -34,7 +34,7 @@ const Header = () => {
   const [user, setUser] = useState(null); // Thêm trạng thái để lưu thông tin người dùng
 
   const [emailqmk, setEmailqmk] = useState("");
-
+  const [otpqmk, setOtpqmk] = useState("");
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
@@ -51,9 +51,11 @@ const Header = () => {
   };
 
   // Mở ResetPassword form khi nhấn "Continue" trong OTP form
-  const openResetPasswordForm = () => {
+  const openResetPasswordForm = (emailqmk, otpqmk) => {
     setShowOtpFormqmk(false); // Đóng form OTP
     setShowResetPasswordForm(true); // Mở form Reset Password
+    setEmailqmk(emailqmk); // Truyền email vào form Reset Password
+    setOtpqmk(otpqmk); // Truyền OTP vào form Reset Password
   };
 
   // Mở Signup form khi nhấn "Continue" trong OTP form 2
@@ -74,7 +76,6 @@ const Header = () => {
     setShowRegisterForm(false);
     setShowOtpFormdk(true);
   };
-
 
   // Hàm xử lý đăng nhập thành công
   const handleLoginSuccess = async (userData) => {
@@ -117,8 +118,6 @@ const Header = () => {
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
   }
-
-
 
   return (
     <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
@@ -269,6 +268,8 @@ const Header = () => {
               setShowResetPasswordForm(false);
               setShowOtpFormqmk(true); // Quay lại OtpFormqmk
             }}
+            emailqmk={emailqmk} // Truyền email vào ResetPasswordForm
+            otpqmk={otpqmk} // Truyền OTP vào ResetPasswordForm
           />
         </div>
       )}
@@ -277,14 +278,14 @@ const Header = () => {
       {showOtpFormqmk && (
         <div className="fixed inset-0 z-20 flex justify-center items-center">
           <OtpFormqmk
-            closeOtpFormqmk={closeOtpFormqmk}
+            closeOtpForm={closeOtpFormqmk}
+
             openResetPasswordForm={openResetPasswordForm} // Gọi hàm này khi nhấn Continue
             goBack={() => {
               setShowOtpFormqmk(false);
               setShowForgotPasswordForm(true); // Quay lại ForgotPasswordForm
             }}
-            emailqmk={emailqmk}
-          // Truyền email vào OtpForm
+            emailqmk={emailqmk} // Truyền email vào OtpForm
 
           />
         </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
 
+
 const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);

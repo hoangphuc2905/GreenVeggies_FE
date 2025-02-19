@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
@@ -19,6 +20,17 @@ export const getProducts = async () => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách sản phẩm:", error);
     return [];
+  }
+};
+
+// Hàm lấy thông tin sản phẩm cụ thể theo id
+export const getProductById = async (id) => {
+  try {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin sản phẩm:", error);
+    return null;
   }
 };
 
@@ -59,6 +71,7 @@ export const getProductDetail = async (id) => {
 export const getUserInfo = async (id) => {
   try {
     const response = await userAPI.get(`user/${id}`);
+
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
@@ -67,6 +80,7 @@ export const getUserInfo = async (id) => {
 };
 
 export const insertProduct = async (data) => {
+
   try {
     const formattedData = {
       name: decodeURIComponent(data.name),
