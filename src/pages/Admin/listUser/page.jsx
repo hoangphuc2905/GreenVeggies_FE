@@ -17,9 +17,7 @@ import userRender from "../userRender/userRender";
 import {
   DeleteFilled,
   EditFilled,
-  HomeOutlined,
   PlusCircleOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import UserDetailModal from "./profileDetail";
 

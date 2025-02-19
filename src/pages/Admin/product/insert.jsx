@@ -16,6 +16,10 @@ import { PlusOutlined } from "@ant-design/icons";
 
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../api/api";
+import { Buffer } from "buffer";
+import { Navigate } from "react-router-dom";
+
+const convertToUtf8 = (text) => Buffer.from(text, "latin1").toString("utf-8");
 
 const { TextArea } = Input;
 
@@ -68,14 +72,16 @@ const handlerInsertProduct = async (values) => {
     const response = await insertProduct(formData);
 
     if (response) {
-      console.log("Thêm sản phẩm thành công", response);
+      message.success("Thêm sản phẩm thành công! 🎉");
+      setTimeout(() => {
+        Navigate("/admin/products"); // Chuyển hướng sau khi hiển thị thông báo
+      }, 1000);
     } else {
-      console.error("Thêm sản phẩm thất bại", formData);
-      console.error("Lỗi khi thêm sản phẩm:", response);
-      console.error("Hình ảnh:", values.imageUrl);
+      message.error("Thêm sản phẩm thất bại. Vui lòng thử lại! ❌");
     }
   } catch (error) {
     console.error("Lỗi khi thêm sản phẩm:", error);
+    message.error("Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
   }
 };
 
