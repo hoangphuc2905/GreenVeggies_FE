@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProducts } from "../../api/api";
-import { Link } from "react-router-dom";
+
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
 const countdownDate = new Date("2025-04-13T00:00:00").getTime();
