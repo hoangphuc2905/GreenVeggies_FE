@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
-import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
+import { ArrowLeft } from "lucide-react";
 
 const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const inputRefs = useRef([]);
-
-    console.log('Email gui OTP:', emailqmk); // Kiểm tra email
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(""); // Để lưu thông báo lỗi từ API
+    const [success, setSuccess] = useState(""); // Để lưu thông báo thành công
 
     const handleOtpChange = (e, index) => {
         const value = e.target.value;
@@ -31,6 +32,9 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
+        setError(""); // Reset lỗi khi gửi lại
+        setSuccess(""); // Reset thành công khi gửi lại
 
         // Kết hợp các ký tự OTP thành một chuỗi
         const otpValue = otp.join("");
@@ -38,13 +42,14 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
         // Kiểm tra OTP đầy đủ chưa
         if (otpValue.length !== 6) {
             alert("Vui lòng nhập đầy đủ mã OTP.");
+            setLoading(false);
             return;
         }
 
         // Gửi yêu cầu xác thực OTP đến API
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/verify-otp?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
+                `http://localhost:8009/api/auth/verify-otp-reset?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
                 {
                     method: "POST",
                     headers: {
@@ -54,22 +59,25 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
             );
 
             const data = await response.json();
+            console.log('Email:', emailqmk);
+            console.log('OTP:', otpValue);
 
             if (response.ok) {
                 alert("OTP đã được xác nhận!");
                 closeOtpForm(); // Đóng form OTP
-                openResetPasswordForm(); // Mở form Reset Password
+                openResetPasswordForm(emailqmk, otpValue); // Mở form Reset Password và truyền email cùng OTP
             } else {
                 alert(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
         } catch (error) {
-            alert("Lỗi kết nối, vui lòng thử lại.");
+            console.error("Lỗi kết nối:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-
             {/* Nút quay lại ở góc trên bên trái */}
             <button
                 onClick={goBack}
@@ -98,7 +106,11 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
                 <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
                 <h3 className="text-xl font-bold mb-4 text-black text-center">Nhập mã OTP QMK</h3>
                 <p className="text-center text-gray-500 mb-3">Nhập mã OTP đã gửi đến email của bạn</p>
-                <p className="text-center text-gray-500 mb-3">Email: <span className="font-semibold">{emailqmk}</span></p> {/* Hiển thị email */}
+                <p className="text-center text-gray-500 mb-3">
+                    Email: {emailqmk ? emailqmk : "Không có email được truyền"}
+                </p>
+
+                {error && <div className="text-red-500 text-center mb-3">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="flex justify-center space-x-2">
@@ -119,9 +131,10 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
 
                     <button
                         type="submit"
-                        className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                        className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={loading}
                     >
-                        Continue
+                        {loading ? "Đang xác thực..." : "Continue"}
                     </button>
                 </form>
             </div>

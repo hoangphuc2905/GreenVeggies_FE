@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
+import { ArrowLeft } from "lucide-react";
 
-const ResetPasswordForm = ({ goBack, closeResetPasswordForm, email }) => {
+const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
     const [newPassword, setNewPassword] = useState(""); // Mật khẩu mới
     const [confirmPassword, setConfirmPassword] = useState(""); // Xác nhận mật khẩu
     const [loading, setLoading] = useState(false); // Trạng thái tải
@@ -11,35 +11,42 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, email }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(""); // Reset lỗi khi gửi lại
-        setSuccess(""); // Reset thành công khi gửi lại
+        setError("");
+        setSuccess("");
 
-        // Kiểm tra nếu mật khẩu và xác nhận mật khẩu trùng nhau
         if (newPassword !== confirmPassword) {
             setError("Mật khẩu và xác nhận mật khẩu không khớp!");
             setLoading(false);
             return;
         }
 
-        // Gửi yêu cầu cập nhật mật khẩu đến API
+        const otpStored = localStorage.getItem("verifiedOtp");
+        const emailStored = localStorage.getItem("verifiedEmail");
+
+        // Kiểm tra lại OTP và email
+        if (!otpStored || !emailStored) {
+            setError("Thông tin OTP hoặc email không hợp lệ.");
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/update-password?email=${encodeURIComponent(email)}&newPassword=${encodeURIComponent(newPassword)}`,
+                `http://localhost:8009/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json", // Gửi yêu cầu dưới dạng JSON
+                        "Content-Type": "application/json",
                     },
                 }
             );
 
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (response.ok) {
                 setSuccess("Mật khẩu đã được thay đổi thành công!");
                 setTimeout(() => {
-                    closeResetPasswordForm(); // Đóng form sau khi thành công
+                    closeResetPasswordForm();
                 }, 2000);
             } else {
                 setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
@@ -51,17 +58,16 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, email }) => {
         }
     };
 
+
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-            {/* Nút quay lại ở góc trên bên trái */}
             <button
-                onClick={goBack}  // Quay lại form OTP hoặc form trước đó
+                onClick={goBack}
                 className="absolute top-2 left-2 flex items-center text-gray-500 hover:text-gray-700 transition"
             >
                 <ArrowLeft size={24} />
             </button>
 
-            {/* Nút đóng ở góc trên bên phải */}
             <button
                 onClick={closeResetPasswordForm}
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
@@ -81,6 +87,7 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, email }) => {
                 <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
                 <h3 className="text-xl font-bold mb-4 text-black text-center">Đặt lại mật khẩu</h3>
                 <p className="text-center text-gray-500 mb-3">Nhập mật khẩu mới cho tài khoản</p>
+                <p className="text-center text-gray-500 mb-3">Email: {emailqmk || "Không có email được truyền"}</p>
 
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
                 {success && <div className="text-green-500 text-center mb-3">{success}</div>}
@@ -110,7 +117,7 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, email }) => {
                         className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
                         disabled={loading}
                     >
-                        {loading ? "Đang thay đổi..." : "Continue"}
+                        {loading ? "Đang thay đổi..." : "Tiếp tục"}
                     </button>
                 </form>
             </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
 
-const RegisterForm = ({ goBack, closeRegisterForm, openOtpForm }) => {
+const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk    }) => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -36,7 +36,7 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpForm }) => {
                 // Mở form OTP
                 alert("Mã xác thực đã được gửi đến email của bạn!");
                 closeRegisterForm(); // Đóng form đăng ký
-                openOtpForm(email); // Mở form OTP và truyền email
+                openOtpFormdk(email); // Mở form OTP và truyền email
             } else {
                 setError(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
             }

@@ -1,6 +1,11 @@
 import { useState } from "react";
 
-const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister }) => {
+const LoginForm = ({
+    closeLoginForm,
+    openForgotPasswordForm,
+    switchToRegister,
+    onLoginSuccess, // Thêm hàm onLoginSuccess vào props
+}) => {
     const [formData, setFormData] = useState({
         username: "",
         password: "",
@@ -20,21 +25,28 @@ const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister })
 
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/login?email=${encodeURIComponent(formData.username)}&password=${encodeURIComponent(formData.password)}`,
+                `http://localhost:8009/api/auth/login?email=${encodeURIComponent(
+                    formData.username
+                )}&password=${encodeURIComponent(formData.password)}`,
                 {
                     method: "POST",
                     headers: {
-                        "accept": "*/*",
+                        accept: "*/*",
                     },
                 }
             );
 
             const data = await response.json();
 
+            console.log("user data", data);
+
             if (response.ok) {
                 // Set user role based on API response
                 const role = data.user.role; // 'admin' or 'guest' (user)
                 setUserRole(role);
+
+                // Gọi hàm onLoginSuccess với dữ liệu người dùng
+                onLoginSuccess(data);
 
                 // Display login success message
                 alert("Đăng nhập thành công!");
@@ -53,8 +65,7 @@ const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister })
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
             <button
                 onClick={closeLoginForm}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
-            >
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
                 &times;
             </button>
 
@@ -67,8 +78,12 @@ const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister })
             </div>
 
             <div className="w-full md:w-1/2 p-6">
-                <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
-                <h3 className="text-xl font-bold mb-4 text-black text-center">Welcome Back</h3>
+                <h2 className="text-xl font-bold text-green-700 text-center">
+                    GREENVEGGIES
+                </h2>
+                <h3 className="text-xl font-bold mb-4 text-black text-center">
+                    Welcome Back
+                </h3>
 
                 {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
@@ -96,8 +111,7 @@ const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister })
                         <button
                             type="button"
                             onClick={openForgotPasswordForm}
-                            className="hover:underline"
-                        >
+                            className="hover:underline">
                             Forgot password?
                         </button>
                     </div>
@@ -105,8 +119,7 @@ const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister })
                     <button
                         type="submit"
                         className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
-                        disabled={loading}
-                    >
+                        disabled={loading}>
                         {loading ? "Đang đăng nhập..." : "Login"}
                     </button>
 
@@ -115,8 +128,7 @@ const LoginForm = ({ closeLoginForm, openForgotPasswordForm, switchToRegister })
                         <button
                             type="button"
                             onClick={switchToRegister}
-                            className="text-green-500 hover:underline"
-                        >
+                            className="text-green-500 hover:underline">
                             Sign up
                         </button>
                     </div>
