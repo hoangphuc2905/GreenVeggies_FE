@@ -24,15 +24,18 @@ const LoginForm = ({
         setError("");
 
         try {
+            // Gửi email và password trong body, thay vì gửi dưới dạng query string
             const response = await fetch(
-                `http://localhost:8009/api/auth/login?email=${encodeURIComponent(
-                    formData.username
-                )}&password=${encodeURIComponent(formData.password)}`,
+                `http://localhost:8009/api/auth/login`,
                 {
                     method: "POST",
                     headers: {
-                        accept: "*/*",
+                        "Content-Type": "application/json", // Đảm bảo gửi body dưới dạng JSON
                     },
+                    body: JSON.stringify({
+                        email: formData.username, // email từ form
+                        password: formData.password, // password từ form
+                    }),
                 }
             );
 

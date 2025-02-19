@@ -226,8 +226,8 @@ const Header = () => {
         showRegisterForm ||
         showResetPasswordForm ||
         showSignupForm) && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
-      )}
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
+        )}
 
       {/* Modal Register Form */}
       {showRegisterForm && (
