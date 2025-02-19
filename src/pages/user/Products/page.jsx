@@ -52,7 +52,7 @@ const Product = () => {
         <div className="container mx-auto mt-10">
           <div className="flex ">
             {/* Danh mục bên trái */}
-            <div className="w-[25%] mb-10">
+            <div className="w-[40%] mb-10">
               <Menu />
               {/* Bộ lọc giá */}
               <div className="p-4 border rounded-lg shadow-md mt-6 bg-white">
@@ -88,7 +88,7 @@ const Product = () => {
                   Bạn có thể thích
                 </h2>
                 <div className="grid grid-cols-1 gap-4">
-                  {products.map((product, index) => (
+                  {products.slice(0, 4).map((product, index) => (
                     <div
                       key={index}
                       className="flex mt-4 cursor-pointer"
@@ -118,9 +118,9 @@ const Product = () => {
               </div>
             </div>
             {/* 80% */}
-            <div className="grid grid-cols-4 grid-rows-4 gap-4">
+            <div className="grid grid-cols-4 grid-rows-6 gap-4 ">
               {products.map((product, index) => (
-                <Link to={`/product/${product._id}`} key={index}>
+                <Link className="" to={`/product/${product._id}`} key={index}>
                   <div className="p-4 border rounded-lg shadow-md ml-4 relative">
                     {product.discount && (
                       <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
