@@ -17,7 +17,7 @@ import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
 
-import SignupForm from "../../../components/register/registerForm";
+
 
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
 
@@ -227,8 +227,8 @@ const Header = () => {
         showRegisterForm ||
         showResetPasswordForm ||
         showSignupForm) && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
-      )}
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
+        )}
 
       {/* Modal Register Form */}
       {showRegisterForm && (
