@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Layout, theme } from "antd";
+import { App, Layout, theme } from "antd";
 import AdminHeader from "../pages/Admin/layout/header";
 import DefaultPage from "../pages/Admin/defaultPage/defaultPage";
 import AdminSidebar from "../pages/Admin/layout/menu";
@@ -15,32 +15,34 @@ const AdminRouter = () => {
   } = theme.useToken();
 
   return (
-    <Layout className="h-full min-h-screen">
-      <AdminHeader className="fixed top-0"/>
-      <AdminSidebar
-        className="fixed left-0 top-16 h-full z-[900] w-48"
-        colorBgContainer={colorBgContainer}
-      />
-      <Layout className="mt-6 relative">
-        <Layout className="h-full flex">
-          <Layout className="h-full mt-[4vh] flex-1 p-4 ml-52 mr-[3vh]">
-            <BreadcrumbNav
-              className="fixed top-16 w-full"
-              style={{
-                background: colorBgContainer,
-              }}
-            />
-            <Routes>
-              <Route path="/" element={<DefaultPage />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:id" element={<Detail />} />
-              <Route path="/user-list" element={<ListUser />} />
-              <Route path="/add-product" element={<InsertForm />} />
-            </Routes>
+    <App>
+      <Layout className="h-full min-h-screen m-0">
+        <AdminHeader className="fixed top-0" />
+        <AdminSidebar
+          className="fixed left-0 top-16 h-full z-[900] w-48"
+          colorBgContainer={colorBgContainer}
+        />
+        <Layout className="mt-6 relative">
+          <Layout className="h-full flex">
+            <Layout className="h-full mt-[4vh] flex-1 p-4 ml-52 mr-[3vh]">
+              <BreadcrumbNav
+                className="fixed top-16 w-full"
+                style={{
+                  background: colorBgContainer,
+                }}
+              />
+              <Routes>
+                <Route path="/" element={<DefaultPage />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:id" element={<Detail />} />
+                <Route path="/user-list" element={<ListUser />} />
+                <Route path="/add-product" element={<InsertForm />} />
+              </Routes>
+            </Layout>
           </Layout>
         </Layout>
       </Layout>
-    </Layout>
+    </App>
   );
 };
 
