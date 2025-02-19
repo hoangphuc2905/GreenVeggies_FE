@@ -8,9 +8,6 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
     const [error, setError] = useState(""); // Để lưu thông báo lỗi từ API
     const [success, setSuccess] = useState(""); // Để lưu thông báo thành công
 
-
-
-
     const handleOtpChange = (e, index) => {
         const value = e.target.value;
         if (/[^0-9]/.test(value)) return; // Chỉ cho phép nhập số
@@ -45,13 +42,14 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
         // Kiểm tra OTP đầy đủ chưa
         if (otpValue.length !== 6) {
             alert("Vui lòng nhập đầy đủ mã OTP.");
+            setLoading(false);
             return;
         }
 
         // Gửi yêu cầu xác thực OTP đến API
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/verify-otp?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
+                `http://localhost:8009/api/auth/verify-otp-reset?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
                 {
                     method: "POST",
                     headers: {
@@ -67,15 +65,15 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
             if (response.ok) {
                 alert("OTP đã được xác nhận!");
                 closeOtpForm(); // Đóng form OTP
-                openResetPasswordForm(); // Mở form Reset Password
+                openResetPasswordForm(emailqmk, otpValue); // Mở form Reset Password và truyền email cùng OTP
             } else {
                 alert(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
         } catch (error) {
-            alert("Lỗi kết nối, vui lòng thử lại.");
+            console.error("Lỗi kết nối:", error);
+        } finally {
+            setLoading(false);
         }
-
-
     };
 
     return (
@@ -112,6 +110,7 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
                     Email: {emailqmk ? emailqmk : "Không có email được truyền"}
                 </p>
 
+                {error && <div className="text-red-500 text-center mb-3">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="flex justify-center space-x-2">
@@ -132,9 +131,10 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
 
                     <button
                         type="submit"
-                        className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
+                        className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={loading}
                     >
-                        Continue
+                        {loading ? "Đang xác thực..." : "Continue"}
                     </button>
                 </form>
             </div>
