@@ -5,20 +5,30 @@ import Header from "../layouts/header";
 import Footer from "../layouts/footer";
 import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/bg_1.png";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 const Product = () => {
   const [products, setProducts] = useState([]);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch data from API
+    // Fetch dữ liệu từ API
     axios
       .get("http://localhost:8008/api/products")
       .then((response) => {
         setProducts(response.data);
       })
       .catch((error) => {
-        console.error("There was an error fetching the data!", error);
+        console.error("Lỗi khi lấy dữ liệu!", error);
       });
   }, []);
+
+  const handleProductClick = (id) => {
+    navigate(`/product/${id}`);
+  };
   return (
     <div className="min-h-screen bg-green-50 flex flex-col">
       {/* //<Headers */}
@@ -42,41 +52,105 @@ const Product = () => {
         <div className="container mx-auto mt-10">
           <div className="flex ">
             {/* Danh mục bên trái */}
-            <div className="w-[30%] mb-10">
+            <div className="w-[25%] mb-10">
               <Menu />
+              {/* Bộ lọc giá */}
+              <div className="p-4 border rounded-lg shadow-md mt-6 bg-white">
+                <h3 className="text-xl font-bold mb-3 text-center">
+                  Lọc theo giá
+                </h3>
+                <div className="flex flex-col space-y-4">
+                  <input
+                    type="number"
+                    placeholder="Giá tối thiểu"
+                    className="border px-3 py-2 rounded w-full"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Giá tối đa"
+                    className="border px-3 py-2 rounded w-full"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                  />
+                  <input
+                    type="submit"
+                    value="Tìm kiếm"
+                    className="border px-3 py-2 rounded w-full bg-[#82AE46] text-white font-bold cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Sản phẩm bạn có thể thích */}
+              <div>
+                <h2 className="text-white text-2xl bg-[#82AE46] rounded-[15px] p-4 text-center mt-6 w-full">
+                  Bạn có thể thích
+                </h2>
+                <div className="grid grid-cols-1 gap-4">
+                  {products.map((product, index) => (
+                    <div
+                      key={index}
+                      className="flex mt-4 cursor-pointer"
+                      onClick={() => handleProductClick(product._id)}>
+                      <div className="w-1/2 h-[100px]">
+                        <img
+                          src={
+                            Array.isArray(product.imageUrl)
+                              ? product.imageUrl[0]
+                              : product.imageUrl
+                          }
+                          alt={product.name}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="w-1/2 pl-4 flex flex-col justify-center">
+                        <p className="text-gray-700 font-bold">
+                          {product.name}
+                        </p>
+                        <p className="text-gray-700 font-bold">
+                          {product.price}đ
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             {/* 80% */}
-            <div className="grid grid-cols-4 grid-rows-3 gap-4">
+            <div className="grid grid-cols-4 grid-rows-4 gap-4">
               {products.map((product, index) => (
-                <div
-                  key={index}
-                  className="p-4 border rounded-lg shadow-md ml-4 relative">
-                  {product.discount && (
-                    <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
-                      {product.discount}%
+                <Link to={`/product/${product._id}`} key={index}>
+                  <div className="p-4 border rounded-lg shadow-md ml-4 relative">
+                    {product.discount && (
+                      <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
+                        {product.discount}%
+                      </div>
+                    )}
+                    <div className="container mx-auto relative h-[200px]">
+                      <img
+                        src={
+                          Array.isArray(product.imageUrl)
+                            ? product.imageUrl[0]
+                            : product.imageUrl
+                        }
+                        alt={product.name}
+                        className="w-full h-full object-contain"
+                      />
                     </div>
-                  )}
-                  <div className="container mx-auto relative h-[200px]">
-                    <img
-                      src={
-                        Array.isArray(product.imageUrl)
-                          ? product.imageUrl[0]
-                          : product.imageUrl
-                      }
-                      alt={product.name}
-                      className="w-full h-full object-contain"
-                    />
+                    <p className="text-gray-700 font-bold text-center">
+                      {product.name}
+                    </p>
+                    <p className="text-gray-700 text-center">
+                      {product.oldPrice && (
+                        <span className="line-through">
+                          {product.oldPrice}đ
+                        </span>
+                      )}{" "}
+                      <span className="text-gray-700">{product.price}đ</span>
+                    </p>
                   </div>
-                  <p className="text-gray-700 font-bold text-center">
-                    {product.name}
-                  </p>
-                  <p className="text-gray-700 text-center">
-                    {product.oldPrice && (
-                      <span className="line-through">{product.oldPrice}đ</span>
-                    )}{" "}
-                    <span className="text-gray-700">{product.price}đ</span>
-                  </p>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

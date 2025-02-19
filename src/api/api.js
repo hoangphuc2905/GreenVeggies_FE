@@ -20,6 +20,17 @@ export const getProducts = async () => {
   }
 };
 
+// Hàm lấy thông tin sản phẩm cụ thể theo id
+export const getProductById = async (id) => {
+  try {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin sản phẩm:", error);
+    return null;
+  }
+};
+
 // Hàm lấy thông tin người dùng cụ thể
 export const getUserInfo = async (id, token) => {
   try {

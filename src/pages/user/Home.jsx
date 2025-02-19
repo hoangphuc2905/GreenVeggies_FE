@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getProducts } from "../../api/api";
-
+import { Link } from "react-router-dom";
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
 const countdownDate = new Date("2025-04-13T00:00:00").getTime();
@@ -20,7 +20,7 @@ import personImage from "../../../src/assets/person_1.png";
 import Header from "./layouts/header";
 import Footer from "./layouts/footer";
 import Menu from "./layouts/Menu";
-
+import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
 
 const reviews = [
@@ -49,6 +49,7 @@ const reviews = [
 
 const Home = () => {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -58,6 +59,9 @@ const Home = () => {
 
     fetchProducts();
   }, []);
+  const handleProductClick = (id) => {
+    navigate(`/product/${id}`);
+  };
 
   return (
     <div className="h-screen w-full bg-green-50 flex flex-col">
@@ -95,7 +99,10 @@ const Home = () => {
               </h2>
               <div className="grid grid-cols-1 gap-4">
                 {products.map((product, index) => (
-                  <div className="flex mt-4" key={index}>
+                  <div
+                    key={index}
+                    className="flex mt-4 cursor-pointer"
+                    onClick={() => handleProductClick(product._id)}>
                     <div className="w-1/2 h-[100px]">
                       <img
                         src={
@@ -104,7 +111,7 @@ const Home = () => {
                             : product.imageUrl
                         }
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                       />
                     </div>
                     <div className="w-1/2 pl-4 flex flex-col justify-center">
@@ -266,7 +273,8 @@ const Home = () => {
               {products.map((product, index) => (
                 <div
                   key={index}
-                  className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative">
+                  className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer"
+                  onClick={() => handleProductClick(product._id)}>
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -280,7 +288,7 @@ const Home = () => {
                           : product.imageUrl
                       }
                       alt={product.name}
-                      className="w-full h-full object-over"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   <p className="text-gray-700 font-bold text-center">
