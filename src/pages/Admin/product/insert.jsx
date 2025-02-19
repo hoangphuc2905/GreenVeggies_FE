@@ -9,13 +9,14 @@ import {
   Upload,
   Row,
   Col,
-  message,
   ConfigProvider,
+  App,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../api/api";
+import { useNavigate } from "react-router-dom";
 
 const { TextArea } = Input;
 
@@ -46,38 +47,6 @@ const validateMessages = {
   required: "${label} không được để trống!",
   types: { number: "${label} phải là số hợp lệ!" },
 };
-const handlerInsertProduct = async (values) => {
-  try {
-    const imageUrls =
-      values.imageUrl?.map((file) => file.url || file.response?.url) || [];
-
-    const formData = {
-      name: values.name,
-      description: values.description,
-      price: values.price,
-      sold: 0,
-      quantity: values.import,
-      import: values.import,
-      category: values.category,
-      origin: values.origin,
-      imageUrl: imageUrls,
-      unit: values.unit,
-      status: values.status,
-    };
-
-    const response = await insertProduct(formData);
-
-    if (response) {
-      console.log("Thêm sản phẩm thành công", response);
-    } else {
-      console.error("Thêm sản phẩm thất bại", formData);
-      console.error("Lỗi khi thêm sản phẩm:", response);
-      console.error("Hình ảnh:", values.imageUrl);
-    }
-  } catch (error) {
-    console.error("Lỗi khi thêm sản phẩm:", error);
-  }
-};
 
 const fetchCategories = async (key) => {
   try {
@@ -90,8 +59,9 @@ const fetchCategories = async (key) => {
 };
 
 const InsertForm = () => {
+  const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchCategory = async () => {
       const response = await fetchCategories("categories");
@@ -100,6 +70,41 @@ const InsertForm = () => {
     };
     fetchCategory();
   }, []);
+
+  const handlerInsertProduct = async (values) => {
+    try {
+      const imageUrls =
+        values.imageUrl?.map((file) => file.url || file.response?.url) || [];
+
+      const formData = {
+        name: values.name,
+        description: values.description,
+        price: values.price,
+        sold: 0,
+        quantity: values.import,
+        import: values.import,
+        category: values.category,
+        origin: values.origin,
+        imageUrl: imageUrls,
+        unit: values.unit,
+        status: values.status,
+      };
+
+      const response = await insertProduct(formData);
+
+      if (response) {
+        message.success("Thêm sản phẩm thành công! 🎉");
+        setTimeout(() => {
+          navigate("/admin/products"); // Chuyển hướng sau khi hiển thị thông báo
+        }, 1000);
+      } else {
+        message.error("Thêm sản phẩm thất bại. Vui lòng thử lại! ❌");
+      }
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm:", error);
+      message.error("Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
+    }
+  };
 
   return (
     <Layout className="h-fit">

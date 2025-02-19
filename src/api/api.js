@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const API_URL_USER = import.meta.env.VITE_API_URL_USER;
+
+const API_URL_USER = import.meta.env.VITE_API_USER_URL;
+
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 
 const api = axios.create({
@@ -39,6 +41,13 @@ const productAPI = axios.create({
   },
 });
 
+const userAPI = axios.create({
+  baseURL: API_URL_USER,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 export const getListProducts = async (key) => {
   try {
     const response = await productAPI.get(`/${key}`);
@@ -59,30 +68,42 @@ export const getProductDetail = async (id) => {
   }
 };
 
-export const insertProduct = async (data) => {
+export const getUserInfo = async (id) => {
   try {
-    const response = await productAPI.post("/products", data, {
+    const response = await userAPI.get(`user/${id}`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin người dùng:", error);
+    return null;
+  }
+};
+
+export const insertProduct = async (data) => {
+
+  try {
+    const formattedData = {
+      name: decodeURIComponent(data.name),
+      description: decodeURIComponent(data.description),
+      origin: decodeURIComponent(data.origin),
+      imageUrl: data.imageUrl, // Không cần decode URL ảnh
+      price: data.price,
+      sold: 0,
+      quantity: data.import,
+      import: data.import,
+      category: data.category,
+      unit: data.unit,
+      status: data.status,
+    };
+
+    console.log("data", data);
+
+    const response = await productAPI.post("/products", formattedData, {
       headers: { "Content-Type": "application/json" },
     });
     return response.data;
   } catch (error) {
     console.error("Lỗi khi thêm sản phẩm:", error);
-    return null;
-  }
-};
-
-// Hàm lấy thông tin người dùng cụ thể
-export const getUserInfo = async (id, token) => {
-  try {
-    const response = await axios.get(`${API_URL_USER}/user/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    console.log("Thông tin người dùng:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin người dùng:", error);
     return null;
   }
 };

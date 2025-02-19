@@ -1,9 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Layout, Spin, Button, Menu, ConfigProvider } from "antd";
-import {
-  PlusCircleFilled,
-} from "@ant-design/icons";
+import { PlusCircleFilled } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
 import { getProductDetail } from "../../../api/api";
 import Description from "./description";
@@ -53,7 +51,6 @@ const Detail = () => {
 
   return (
     <Layout className="h-fit">
-     
       <div className="w-full bg-white p-4 rounded-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -63,7 +60,10 @@ const Detail = () => {
               className="w-20 h-20 object-cover mt-4 rounded-full"
             />
             <div>
-              <div className="text-[20px] font-medium product_name"> {product?.name}</div>
+              <div className="text-[20px] font-medium product_name">
+                {" "}
+                {product?.name}
+              </div>
               <div className="text-[15px] font-normal text-[#808080]">
                 Mã sản phẩm: {product?.productID}
               </div>
@@ -111,7 +111,7 @@ const Detail = () => {
         className="mt-6"
       >
         {selectedKey === "Detail" && <Description product={product} />}
-        {selectedKey === "Rate" && <Rating />}
+        {selectedKey === "Rate" && <Rating product={product} />}
       </motion.div>
     </Layout>
   );
