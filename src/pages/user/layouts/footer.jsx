@@ -35,7 +35,7 @@ const footer = () => {
               placeholder="Nhập địa chỉ email của bạn"
               className="p-2 border rounded-l-lg flex-grow"
             />
-            <button className="p-2 bg-[#82AE46] text-white rounded-r-lg">
+            <button className="p-2 bg-[#82AE46] text-white rounded-r-lg hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200">
               Đăng ký
             </button>
           </div>
