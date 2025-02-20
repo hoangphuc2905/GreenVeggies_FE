@@ -1,10 +1,9 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
-
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
-
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
+const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -48,6 +47,13 @@ const userAPI = axios.create({
   },
 });
 
+const reviewAPI = axios.create({
+  baseURL: API_REVIEW_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 export const getListProducts = async (key) => {
   try {
     const response = await productAPI.get(`/${key}`);
@@ -81,7 +87,6 @@ export const getProductDetail = async (id) => {
 export const getUserInfo = async (id) => {
   try {
     const response = await userAPI.get(`user/${id}`);
-
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
@@ -90,7 +95,6 @@ export const getUserInfo = async (id) => {
 };
 
 export const insertProduct = async (data) => {
-
   try {
     const formattedData = {
       name: decodeURIComponent(data.name),
@@ -118,6 +122,18 @@ export const insertProduct = async (data) => {
   }
 };
 
+// Hàm lấy tất cả đánh giá
+export const getAllReviews = async () => {
+  try {
+    const response = await reviewAPI.get("/reviews");
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách đánh giá:", error);
+    return [];
+  }
+};
+
+
 export const insertCategory = async (data) => {
   try {
     const response = await api.post("/categories", data);
@@ -129,3 +145,4 @@ export const insertCategory = async (data) => {
 }
 
 export default api;
+

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getProducts } from "../../api/api";
+import { getProducts, getAllReviews } from "../../api/api";
 
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
@@ -16,40 +16,18 @@ import category2Image from "../../../src/assets/category-2.png";
 import category3Image from "../../../src/assets/category-3.png";
 import category4Image from "../../../src/assets/category-4.png";
 import bg3Image from "../../../src/assets/bg_3_1.png";
-import personImage from "../../../src/assets/person_1.png";
+
 import Header from "./layouts/header";
 import Footer from "./layouts/footer";
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
 
-const reviews = [
-  {
-    name: "Nguyễn Minh Thuận",
-    role: "UI Designer",
-    review:
-      "Rau củ ở đây luôn tươi ngon, sạch sẽ và giao hàng rất nhanh! Gia đình tôi rất yên tâm khi sử dụng.",
-    image: personImage,
-  },
-  {
-    name: "Phạm Đăng Khôi",
-    role: "Web Developer",
-    review:
-      "Sản phẩm chất lượng, rau giòn ngọt, trái cây tươi mọng. Mua nhiều lần rồi mà lần nào cũng hài lòng!",
-    image: personImage,
-  },
-  {
-    name: "Huỳnh Hoàng Phúc",
-    role: "System Analyst",
-    review:
-      "Dịch vụ tuyệt vời, rau củ đúng chuẩn organic, ăn rất an toàn. Chắc chắn sẽ tiếp tục ủng hộ!",
-    image: personImage,
-  },
-];
-
 const Home = () => {
   const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const navigate = useNavigate();
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -57,11 +35,34 @@ const Home = () => {
       setProducts(data);
     };
 
+    const fetchReviews = async () => {
+      const data = await getAllReviews();
+      setReviews(data);
+    };
+    const fetchRelatedProducts = async () => {
+      try {
+        const productsData = await getProducts();
+        setRelatedProducts(productsData);
+      } catch (error) {
+        console.error("Failed to fetch related products:", error);
+      }
+    };
+
     fetchProducts();
+    fetchReviews();
+    fetchRelatedProducts();
   }, []);
+
   const handleProductClick = (id) => {
     navigate(`/product/${id}`);
   };
+
+  const getRandomProducts = (products, count) => {
+    const shuffled = products.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
+  const randomProducts = getRandomProducts(products, 6);
 
   return (
     <div className="h-screen w-full bg-green-50 flex flex-col">
@@ -98,12 +99,12 @@ const Home = () => {
                 Bạn có thể thích
               </h2>
               <div className="grid grid-cols-1 gap-4">
-                {products.map((product, index) => (
+                {relatedProducts.slice(0, 5).map((product, index) => (
                   <div
                     key={index}
                     className="flex mt-4 cursor-pointer"
                     onClick={() => handleProductClick(product._id)}>
-                    <div className="w-1/2 h-[100px]">
+                    <div className="w-1/2 h-[100px] hover:shadow-xl hover:scale-110">
                       <img
                         src={
                           Array.isArray(product.imageUrl)
@@ -111,7 +112,7 @@ const Home = () => {
                             : product.imageUrl
                         }
                         alt={product.name}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-1/2 pl-4 flex flex-col justify-center">
@@ -270,10 +271,10 @@ const Home = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4">
-              {products.map((product, index) => (
+              {randomProducts.map((product, index) => (
                 <div
                   key={index}
-                  className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer"
+                  className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
                   onClick={() => handleProductClick(product._id)}>
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
@@ -390,14 +391,14 @@ const Home = () => {
               <div key={index} className="p-4 text-center">
                 <div className="mx-auto relative h-[200px] w-[200px]">
                   <img
-                    src={review.image}
+                    src={review.imageUrl}
                     alt={`Ảnh của ${review.name}`}
                     className="w-full h-full object-contain rounded-full"
                   />
                 </div>
-                <p className="mt-4">{review.review}</p>
-                <h3 className="text-xl font-semibold mt-4">{review.name}</h3>
-                <p className="text-sm">{review.role}</p>
+                <p className="mt-4">{review.userID.username}</p>
+                <h3 className="text-xl font-semibold mt-4">{review.comment}</h3>
+                <p className="text-sm">{review.rating}</p>
               </div>
             ))}
           </Carousel>
