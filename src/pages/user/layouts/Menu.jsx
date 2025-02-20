@@ -1,5 +1,17 @@
- import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Link } from "react-router-dom";
+
+const categories = [
+  { name: "Rau Xanh", path: "/category/rau-xanh" },
+  { name: "Củ Quả", path: "/category/cu-qua" },
+  { name: "Nấm", path: "/category/nam" },
+  { name: "Rau Gia Vị", path: "/category/rau-gia-vi" },
+  { name: "Sản Phẩm Đặc Biệt", path: "/category/dac-biet" },
+  { name: "Rau Đặc Sản", path: "/category/rau-dac-san" },
+  { name: "Trái Cây", path: "/category/trai-cay" },
+  { name: "Các Sản Phẩm Liên Quan", path: "/category/lien-quan" },
+];
 
 const Menu = () => {
   return (
@@ -9,53 +21,16 @@ const Menu = () => {
           Danh mục sản phẩm
         </h2>
       </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2 " /> Rau
-          Xanh
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2 " /> Củ
-          Quả
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Nấm
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Rau
-          Gia Vị
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Sản
-          Phẩm Đặc Biệt
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Rau
-          Đặc Sản
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Trái
-          Cây
-        </h3>
-      </div>
-      <div className="p-4 border rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold">
-          <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" /> Các
-          Sản Phẩm Liên Quan
-        </h3>
-      </div>
+      {categories.map((category, index) => (
+        <Link key={index} to={category.path}>
+          <div className="p-4 border rounded-lg shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
+            <h3 className="text-xl font-semibold">
+              <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" />{" "}
+              {category.name}
+            </h3>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 };

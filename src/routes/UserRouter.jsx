@@ -2,8 +2,9 @@ import { Routes, Route } from "react-router-dom";
 import Home from "../pages/user/Home";
 import Product from "../pages/user/Products/page";
 import Detail from "../pages/user/Products/detail";
+import Wishlist from "../pages/user/Wishlist/cart";
 import Profile from "../pages/user/Profile/page";
-import Wishlist from "../pages/user/Wishlist/wishList";
+
 import { useState } from "react";
 
 const UserRouter = () => {

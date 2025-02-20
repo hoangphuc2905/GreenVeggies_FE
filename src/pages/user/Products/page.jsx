@@ -16,6 +16,7 @@ const Product = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(24); // Số lượng sản phẩm trên mỗi trang
   const navigate = useNavigate();
+
   const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     // Fetch dữ liệu từ API
