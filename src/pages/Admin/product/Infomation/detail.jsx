@@ -1,9 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Layout, Spin, Button, Menu, ConfigProvider, Image } from "antd";
 import { PlusCircleFilled } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
-import { getProductDetail } from "../../../api/api";
+import { getProductDetail } from "../../../../api/api";
 import Description from "./description";
 import Rating from "./rating";
 
@@ -26,6 +26,11 @@ const Detail = () => {
     };
     fetchProductDetail();
   }, [id]);
+  const navigate = useNavigate();
+
+  const handlerClickUpdate = (product) => {
+    navigate(`/admin/products/update-product/${product._id}`, { state: { product } });
+  };
 
   if (loading)
     return <Spin size="large" className="flex justify-center mt-10" />;
@@ -74,6 +79,7 @@ const Detail = () => {
             type="primary"
             className="bg-[#EAF3FE] text-[#689CF8] font-medium"
             icon={<PlusCircleFilled />}
+            onClick={() => handlerClickUpdate(product)}
           >
             Chỉnh sửa
           </Button>

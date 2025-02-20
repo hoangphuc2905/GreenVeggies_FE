@@ -1,8 +1,16 @@
-import { Avatar, Button, Card, ConfigProvider, Empty, Rate, Typography } from "antd";
+import {
+  Avatar,
+  Button,
+  Card,
+  ConfigProvider,
+  Empty,
+  Rate,
+  Typography,
+} from "antd";
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { getUserInfo } from "../../../api/api";
-import EmptyRating from "../emptyData/emptyRating";
+import { getUserInfo } from "../../../../api/api";
+import EmptyRating from "../../emptyData/emptyRating";
 const { Meta } = Card;
 
 const Rating = ({ product }) => {

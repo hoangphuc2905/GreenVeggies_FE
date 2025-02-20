@@ -27,6 +27,14 @@ const breadcrumbItems = {
     },
     { href: "/admin/add-product", title: "Thêm sản phẩm" },
   ],
+  "/admin/user-list": [
+    { href: "/admin/user-management", title: "Quản lý User" },
+    { href: "/admin/user-list", title: "Danh sách User" },
+  ],
+  "/admin/add-user": [
+    { href: "/admin/user-management", title: "Quản lý User" },
+    { href: "/admin/add-user", title: "Tạo User mới" },
+  ],
 };
 
 const BreadcrumbNav = () => {
