@@ -11,7 +11,6 @@ import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import { ConfigProvider, Layout, Menu } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
-import logo from "../../../assets/Green.png";
 
 const { Sider } = Layout;
 
@@ -78,15 +77,10 @@ const AdminSidebar = ({ colorBgContainer }) => {
 
   return (
     <Sider
-      className="fixed max-h-screen h-fit z-50 pt-[2vh]"
+      className="fixed max-h-screen h-fit z-50 pt-[2vh] mt-[3vh]"
       style={{ background: colorBgContainer }}
+      width={250}
     >
-      <div className="flex items-center py-2">
-        <img src={logo} alt="logo" className="h-10 mx-4" />
-        <span className="text-lg font-bold text-[#82AE46]">
-          GreenVeggies
-        </span>{" "}
-      </div>
       <div className="text-[#7A8699] size-5 font-thin mx-6 my-5">Menu</div>
       <ConfigProvider
         theme={{

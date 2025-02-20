@@ -1,14 +1,18 @@
 import { Avatar, Badge } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faBell } from "@fortawesome/free-solid-svg-icons";
+import logo from "../../../assets/Green.png";
 
 const AdminHeader = () => {
   return (
-    <div
-      className="flex justify-between items-center h-[8vh] px-11 bg-[#82AE46] fixed z-[1000] ml-[200px]"
-      style={{ width: "calc(100% - 200px)" }}
-    >
+    <div className="flex justify-between items-center h-[8vh] px-11 bg-[#82AE46] fixed z-[1000] w-screen shadow-md">
       <div className="flex w-full justify-between">
+        <div className="flex items-center py-2">
+          <img src={logo} alt="logo" className="h-10 mx-4" />
+          <span className="text-lg font-bold text-[#ffffff]">
+            GreenVeggies
+          </span>{" "}
+        </div>
         <div>
           <div className="text-[#ffffff] font-bold text-xl">
             Chào mừng quay trở lại, Admin

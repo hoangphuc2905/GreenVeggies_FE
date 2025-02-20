@@ -7,11 +7,14 @@ import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/bg_1.png";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { Pagination } from "antd";
 
 const Product = () => {
   const [products, setProducts] = useState([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(24); // Số lượng sản phẩm trên mỗi trang
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,12 +32,24 @@ const Product = () => {
   const handleProductClick = (id) => {
     navigate(`/product/${id}`);
   };
+
+  // Tính toán sản phẩm hiển thị dựa trên trang hiện tại
+  const indexOfLastProduct = currentPage * pageSize;
+  const indexOfFirstProduct = indexOfLastProduct - pageSize;
+  const currentProducts = products.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-green-50 flex flex-col">
-      {/* //<Headers */}
+      {/* Header */}
       <Header />
       {/* Content */}
-
       <div className="container mx-auto">
         {/* Lấy hình ảnh */}
         <div className="container mx-auto relative">
@@ -52,10 +67,10 @@ const Product = () => {
         <div className="container mx-auto mt-10">
           <div className="flex ">
             {/* Danh mục bên trái */}
-            <div className="w-[40%] mb-10">
+            <div className="w-[500px] mb-10">
               <Menu />
               {/* Bộ lọc giá */}
-              <div className="p-4 border rounded-lg shadow-md mt-6 bg-white">
+              <div className="p-4 border rounded-lg shadow-md mt-6 ">
                 <h3 className="text-xl font-bold mb-3 text-center">
                   Lọc theo giá
                 </h3>
@@ -87,13 +102,13 @@ const Product = () => {
                 <h2 className="text-white text-2xl bg-[#82AE46] rounded-[15px] p-4 text-center mt-6 w-full">
                   Bạn có thể thích
                 </h2>
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-4 overflow-y-auto">
                   {products.slice(0, 4).map((product, index) => (
                     <div
                       key={index}
                       className="flex mt-4 cursor-pointer"
                       onClick={() => handleProductClick(product._id)}>
-                      <div className="w-1/2 h-[100px]">
+                      <div className="w-1/2 h-[100px] hover:shadow-xl hover:scale-110">
                         <img
                           src={
                             Array.isArray(product.imageUrl)
@@ -101,7 +116,7 @@ const Product = () => {
                               : product.imageUrl
                           }
                           alt={product.name}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="w-1/2 pl-4 flex flex-col justify-center">
@@ -118,40 +133,52 @@ const Product = () => {
               </div>
             </div>
             {/* 80% */}
-            <div className="grid grid-cols-4 grid-rows-6 gap-4 ">
-              {products.map((product, index) => (
-                <Link className="" to={`/product/${product._id}`} key={index}>
-                  <div className="p-4 border rounded-lg shadow-md ml-4 relative">
-                    {product.discount && (
-                      <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
-                        {product.discount}%
+            <div className="flex flex-col w-full">
+              <div className="grid grid-cols-4 grid-rows-6 gap-4">
+                {currentProducts.map((product, index) => (
+                  <Link className="" to={`/product/${product._id}`} key={index}>
+                    <div
+                      id={`product-${index}`}
+                      className="p-4 border rounded-lg shadow-md ml-4 relative hover:shadow-xl hover:scale-105">
+                      {product.discount && (
+                        <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
+                          {product.discount}%
+                        </div>
+                      )}
+                      <div className="container mx-auto relative h-[150px] ">
+                        <img
+                          src={
+                            Array.isArray(product.imageUrl)
+                              ? product.imageUrl[0]
+                              : product.imageUrl
+                          }
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                    )}
-                    <div className="container mx-auto relative h-[200px]">
-                      <img
-                        src={
-                          Array.isArray(product.imageUrl)
-                            ? product.imageUrl[0]
-                            : product.imageUrl
-                        }
-                        alt={product.name}
-                        className="w-full h-full object-contain"
-                      />
+                      <p className="text-gray-700 font-bold text-center">
+                        {product.name}
+                      </p>
+                      <p className="text-gray-700 text-center">
+                        {product.oldPrice && (
+                          <span className="line-through">
+                            {product.oldPrice}đ
+                          </span>
+                        )}{" "}
+                        <span className="text-gray-700">{product.price}đ</span>
+                      </p>
                     </div>
-                    <p className="text-gray-700 font-bold text-center">
-                      {product.name}
-                    </p>
-                    <p className="text-gray-700 text-center">
-                      {product.oldPrice && (
-                        <span className="line-through">
-                          {product.oldPrice}đ
-                        </span>
-                      )}{" "}
-                      <span className="text-gray-700">{product.price}đ</span>
-                    </p>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
+              <div className="w-full flex justify-center mt-6 text-[#82AE46]">
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={products.length}
+                  onChange={handlePageChange}
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -20,9 +20,8 @@ import SignupForm from "../../../components/register/registerForm";
 import { SettingOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
 
-
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
-
+// import { User } from "lucide-react";
 
 
 const Header = () => {
@@ -121,6 +120,7 @@ const Header = () => {
     setEmailqmk(emailqmk);
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
+
   }
   const items = [
     {
@@ -150,7 +150,6 @@ const Header = () => {
       icon: <LogoutOutlined />,
     },
   ];
-
 
   return (
     <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
@@ -184,6 +183,7 @@ const Header = () => {
                   </Space>
                 </a>
               </Dropdown>
+
             </div>
           ) : (
             <button
@@ -203,30 +203,33 @@ const Header = () => {
 
             <nav>
               <ul className="flex">
-                <li className="mx-4 py-2 text-sm mt-1">
-                  <Link to="/" className="font-bold " onClick={scrollToTop}>
+                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+                  <Link
+                    to="/"
+                    className="font-bold hover:shadow-xl "
+                    onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1">
+                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <Link
                     to="/product"
-                    className="font-bold"
+                    className="font-bold "
                     onClick={scrollToTop}>
                     CỬA HÀNG
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1">
+                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1">
+                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <Link to="/posts" className="font-bold" onClick={scrollToTop}>
                     BÀI VIẾT
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1">
+                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <Link
                     to="/contact"
                     className="font-bold"
@@ -234,8 +237,11 @@ const Header = () => {
                     LIÊN HỆ
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1">
-                  <Link to="/cart" className="font-bold" onClick={scrollToTop}>
+                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+                  <Link
+                    to="/wishlist"
+                    className="font-bold"
+                    onClick={scrollToTop}>
                     <Space size="middle">
                       <Badge count={0} showZero>
                         <FontAwesomeIcon
@@ -246,7 +252,7 @@ const Header = () => {
                     </Space>
                   </Link>
                 </li>
-                <li className="mx-4 relative">
+                <li className="mx-4 relative hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <input
                     type="text"
                     placeholder="Tìm kiếm"
@@ -271,8 +277,8 @@ const Header = () => {
         showRegisterForm ||
         showResetPasswordForm ||
         showSignupForm) && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
-        )}
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-10"></div>
+      )}
 
       {/* Modal Register Form */}
       {showRegisterForm && (
@@ -324,14 +330,12 @@ const Header = () => {
         <div className="fixed inset-0 z-20 flex justify-center items-center">
           <OtpFormqmk
             closeOtpForm={closeOtpFormqmk}
-
             openResetPasswordForm={openResetPasswordForm} // Gọi hàm này khi nhấn Continue
             goBack={() => {
               setShowOtpFormqmk(false);
               setShowForgotPasswordForm(true); // Quay lại ForgotPasswordForm
             }}
             emailqmk={emailqmk} // Truyền email vào OtpForm
-
           />
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Layout, Spin, Button, Menu, ConfigProvider } from "antd";
+import { Layout, Spin, Button, Menu, ConfigProvider, Image } from "antd";
 import { PlusCircleFilled } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
 import { getProductDetail } from "../../../api/api";
@@ -12,25 +12,6 @@ const Detail = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState("Detail");
-  const [isFixed, setIsFixed] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        setIsFixed(true);
-      } else {
-        setIsFixed(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const items = [
-    { label: "Thông tin chi tiết", key: "Detail" },
-    { label: "Phản hồi của khách hàng", key: "Rate" },
-  ];
 
   useEffect(() => {
     const fetchProductDetail = async () => {
@@ -54,14 +35,34 @@ const Detail = () => {
       <div className="w-full bg-white p-4 rounded-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img
-              src={product?.imageUrl}
-              alt={product?.name}
-              className="w-20 h-20 object-cover mt-4 rounded-full"
-            />
+            <Image.PreviewGroup
+              items={
+                Array.isArray(product?.imageUrl) && product.imageUrl.length > 0
+                  ? product.imageUrl
+                  : [product?.imageUrl]
+              }
+            >
+              <Image
+                width={65}
+                height={65}
+                src={
+                  Array.isArray(product?.imageUrl) &&
+                  product.imageUrl.length > 0
+                    ? product.imageUrl[0]
+                    : product?.imageUrl
+                }
+                alt={product?.name || "Product Image"}
+                style={{
+                  borderRadius: "50%",
+                  width: "65px",
+                  height: "65px",
+                  objectFit: "cover",
+                }}
+              />
+            </Image.PreviewGroup>
+
             <div>
               <div className="text-[20px] font-medium product_name">
-                {" "}
                 {product?.name}
               </div>
               <div className="text-[15px] font-normal text-[#808080]">
@@ -94,7 +95,10 @@ const Detail = () => {
           >
             <Menu
               mode="horizontal"
-              items={items}
+              items={[
+                { label: "Thông tin chi tiết", key: "Detail" },
+                { label: "Phản hồi của khách hàng", key: "Rate" },
+              ]}
               selectedKeys={[selectedKey]}
               onClick={(e) => setSelectedKey(e.key)}
               style={{ borderRadius: "8px" }}
@@ -103,11 +107,11 @@ const Detail = () => {
         </div>
       </div>
       <motion.div
-        key={selectedKey} // Giúp animation chạy lại khi đổi tab
-        initial={{ y: "-100%", opacity: 0 }} // Bắt đầu từ ngoài trái màn hình
-        animate={{ y: 0, opacity: 1 }} // Trượt vào
-        exit={{ x: "100%", opacity: 0 }} // Khi biến mất trượt sang phải
-        transition={{ duration: 0.5, ease: "easeOut" }} // Tốc độ animation
+        key={selectedKey}
+        initial={{ y: "-100%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
         className="mt-6"
       >
         {selectedKey === "Detail" && <Description product={product} />}
