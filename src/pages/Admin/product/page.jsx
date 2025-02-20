@@ -1,4 +1,14 @@
-import { Button, Flex, Input, Layout, Table, Tag, Space, Select } from "antd";
+import {
+  Button,
+  Flex,
+  Input,
+  Layout,
+  Table,
+  Tag,
+  Space,
+  Select,
+  Image,
+} from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
 import {
@@ -28,6 +38,7 @@ const Products = () => {
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   const statusMapping = {
     available: { text: "Còn hàng", color: "green" },
@@ -35,22 +46,38 @@ const Products = () => {
     out_of_stock: { text: "Hết hàng", color: "orange" },
   };
 
-  const options = [{ value: "Tất cả" }, { value: "Admin" }, { value: "User" }];
-
   useEffect(() => {
     const fetchUsers = async () => {
       const data = await fetchProducts("products");
       setProducts(data);
     };
+    const fetchCategories = async () => {
+      const data = await fetchProducts("categories");
+      const formattedCategories = data.map((category) => ({
+        value: category._id, // Hoặc category.id tùy vào dữ liệu
+        label: category.name,
+      }));
+      setCategories([
+        { value: "Tất cả", label: "Tất cả" },
+        ...formattedCategories,
+      ]);
+    };
+
+    fetchCategories();
     fetchUsers();
   }, []);
+  const handlerFilter = (value) => {
+    if (selectedOptions.includes("Tất cả") && value.length > 1) {
+      setSelectedOptions(value.filter((v) => v !== "Tất cả"));
+    } else if (value.includes("Tất cả")) {
+      setSelectedOptions(["Tất cả"]);
+    } else {
+      setSelectedOptions(value);
+    }
+  };
 
   const onSearch = (value) => {
     setSearchQuery(value);
-  };
-
-  const onSelectChange = (value) => {
-    setSelectedOptions(value);
   };
 
   const filteredProducts = products.filter((product) =>
@@ -64,13 +91,12 @@ const Products = () => {
     navigate(`/admin/products/${product._id}`);
   };
 
-
   const handlerClickAddProduct = () => {
     navigate(`/admin/add-product`);
-  }
+  };
   return (
     <Layout className="h-fit">
-      <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
+      <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
         <Flex gap="middle" vertical>
           <div className="text-2xl text-[#82AE46] font-bold mt-3">
             Danh sách sản phẩm
@@ -81,9 +107,10 @@ const Products = () => {
               tagRender={userRender}
               value={selectedOptions}
               className="w-72"
-              options={options}
-              onChange={onSelectChange}
+              options={categories}
+              onChange={handlerFilter}
             />
+
             <Search
               placeholder="Tìm kiếm sản phẩm"
               onSearch={onSearch}
@@ -140,10 +167,13 @@ const Products = () => {
                 return (
                   <div className="flex justify-center items-center">
                     {firstImage ? (
-                      <img
+                      <Image
+                        width={65}
+                        height={65} 
                         src={firstImage}
                         alt="product"
-                        className="rounded-full w-11 h-11 object-cover"
+                        className="object-cover"
+                        style={{ borderRadius: "50%" }}
                       />
                     ) : (
                       <span>Không có ảnh</span>

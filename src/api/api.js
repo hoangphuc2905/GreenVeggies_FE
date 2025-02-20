@@ -64,6 +64,16 @@ export const getListProducts = async (key) => {
   }
 };
 
+export const getListUsers = async (key) => {
+  try {
+    const response = await userAPI.get(`/${key}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách người dùng:", error);
+    return [];
+  }
+}
+
 export const getProductDetail = async (id) => {
   try {
     const response = await productAPI.get(`products/${id}`);
@@ -123,4 +133,16 @@ export const getAllReviews = async () => {
   }
 };
 
+
+export const insertCategory = async (data) => {
+  try {
+    const response = await api.post("/categories", data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi thêm danh mục:", error);
+    return null;
+  }
+}
+
 export default api;
+

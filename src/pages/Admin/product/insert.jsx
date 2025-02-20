@@ -17,6 +17,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../api/api";
 import { useNavigate } from "react-router-dom";
+import FormInsertCategory from "../category/insert";
 
 const { TextArea } = Input;
 
@@ -48,31 +49,41 @@ const validateMessages = {
   types: { number: "${label} phải là số hợp lệ!" },
 };
 
-const fetchCategories = async (key) => {
-  try {
-    const response = await getListProducts(key);
-    return response;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
-
 const InsertForm = () => {
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openInsertCategory = () => {
+    console.log("Open modal");
+    setIsModalOpen(true);
+  };
+
   const navigate = useNavigate();
-  useEffect(() => {
-    const fetchCategory = async () => {
-      const response = await fetchCategories("categories");
+  // Hàm fetch danh mục
+  const fetchCategories = async () => {
+    try {
+      const response = await getListProducts("categories");
       setCategories(response);
-      console.log("Categories", response);
-    };
-    fetchCategory();
+      console.log("Categories updated:", response);
+    } catch (error) {
+      console.error("Lỗi lấy danh mục:", error);
+      message.error("Lỗi tải danh mục!");
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
   }, []);
+  const handleCategoryAdded = async () => {
+    await fetchCategories();
+  };
 
   const handlerInsertProduct = async (values) => {
     try {
+      setLoading(true); // Bật loading
+
       const imageUrls =
         values.imageUrl?.map((file) => file.url || file.response?.url) || [];
 
@@ -95,7 +106,7 @@ const InsertForm = () => {
       if (response) {
         message.success("Thêm sản phẩm thành công! 🎉");
         setTimeout(() => {
-          navigate("/admin/products"); // Chuyển hướng sau khi hiển thị thông báo
+          navigate("/admin/products");
         }, 1000);
       } else {
         message.error("Thêm sản phẩm thất bại. Vui lòng thử lại! ❌");
@@ -103,12 +114,14 @@ const InsertForm = () => {
     } catch (error) {
       console.error("Lỗi khi thêm sản phẩm:", error);
       message.error("Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
+    } finally {
+      setLoading(false); // Tắt loading
     }
   };
 
   return (
     <Layout className="h-fit">
-      <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-lg">
+      <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
         <Flex gap="middle" vertical>
           <Form
             size="middle"
@@ -149,9 +162,11 @@ const InsertForm = () => {
                     type="default"
                     htmlType="submit"
                     className="h-12 w-44 px-10 font-medium"
+                    loading={loading} // Khi loading = true, nút sẽ xoay
                   >
-                    Lưu
+                    {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
+
                   <Button
                     type="default"
                     className="h-12 w-44 px-10 font-medium"
@@ -171,14 +186,24 @@ const InsertForm = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item label="Loại danh mục" name="category">
-                  <Select>
-                    {categories.map((cat) => (
-                      <Select.Option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Select className="flex-1">
+                      {categories.map((cat) => (
+                        <Select.Option key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                    <button
+                      onClick={openInsertCategory}
+                      type="button"
+                      className="text-[#82AE46] bg-none  w-12 h-12 flex items-center justify-center  hover:text-[#34C759]"
+                    >
+                      <PlusOutlined className="text-4xl font-extrabold" />
+                    </button>
+                  </div>
                 </Form.Item>
+
                 <Form.Item
                   label="Nguồn gốc"
                   name="origin"
@@ -206,7 +231,36 @@ const InsertForm = () => {
                         message.error("Chỉ được tải lên file hình ảnh!");
                         return false;
                       }
-                      return true;
+
+                      return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.src = URL.createObjectURL(file);
+                        img.onload = () => {
+                          const canvas = document.createElement("canvas");
+                          const ctx = canvas.getContext("2d");
+
+                          // Resize ảnh về 768x768
+                          canvas.width = 768;
+                          canvas.height = 768;
+                          ctx.drawImage(img, 0, 0, 768, 768);
+
+                          canvas.toBlob((blob) => {
+                            if (blob) {
+                              const resizedFile = new File([blob], file.name, {
+                                type: file.type,
+                              });
+                              resolve(resizedFile); // Trả về file đã resize
+                            } else {
+                              message.error("Lỗi khi resize ảnh!");
+                              reject(false);
+                            }
+                          }, file.type);
+                        };
+                        img.onerror = () => {
+                          message.error("Không thể đọc file ảnh!");
+                          reject(false);
+                        };
+                      });
                     }}
                     onChange={(info) => {
                       if (info.file.status === "done") {
@@ -294,6 +348,13 @@ const InsertForm = () => {
               </Col>
             </Row>
           </Form>
+
+          {/* Modal thêm danh mục */}
+          <FormInsertCategory
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onCategoryAdded={handleCategoryAdded}
+          />
         </Flex>
       </div>
     </Layout>

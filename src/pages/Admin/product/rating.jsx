@@ -1,12 +1,12 @@
-import { Avatar, Card, ConfigProvider, Rate } from "antd";
+import { Avatar, Button, Card, ConfigProvider, Empty, Rate, Typography } from "antd";
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { getUserInfo } from "../../../api/api";
-
+import EmptyRating from "../emptyData/emptyRating";
 const { Meta } = Card;
 
 const Rating = ({ product }) => {
-  const [userData, setUserData] = useState({}); 
+  const [userData, setUserData] = useState({});
 
   useEffect(() => {
     const fetchUserNames = async () => {
@@ -48,9 +48,10 @@ const Rating = ({ product }) => {
     <ConfigProvider>
       <div>
         <div className="px-2 text-[#808080]">Phản hồi của khách hàng</div>
-        <div className="grid grid-cols-2 gap-6 py-4 px-5">
-          {product?.reviews && product.reviews.length > 0 ? (
-            product.reviews.map((review) => (
+
+        {product?.reviews && product.reviews.length > 0 ? (
+          <div className="grid grid-cols-2 gap-6 py-4 px-5">
+            {product.reviews.map((review) => (
               <Card
                 key={review._id}
                 className="shadow-md transition-transform duration-300 hover:scale-105"
@@ -86,11 +87,11 @@ const Rating = ({ product }) => {
                   }
                 />
               </Card>
-            ))
-          ) : (
-            <p className="text-center text-gray-500">Chưa có phản hồi nào.</p>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyRating></EmptyRating>
+        )}
       </div>
     </ConfigProvider>
   );

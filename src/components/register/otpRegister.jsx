@@ -33,8 +33,8 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(""); // Reset lỗi khi gửi lại
-        setSuccess(""); // Reset thành công khi gửi lại
+        setError("");
+        setSuccess("");
 
         // Kết hợp các ký tự OTP thành một chuỗi
         const otpValue = otp.join("");
@@ -53,21 +53,20 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json", // Thêm header Content-Type
+                        "Content-Type": "application/json",
                     },
                 }
             );
 
             const data = await response.json();
             console.log('Email:', email);
-            console.log('OTP:', otpValue);  // Kiểm tra giá trị OTP
+            console.log('OTP:', otpValue);
 
             if (response.ok) {
                 setSuccess("OTP đã được xác nhận thành công!");
-                // Chuyển sang form đăng ký sau khi xác nhận OTP thành công
                 setTimeout(() => {
                     closeOtpFormdk();
-                    openSignupForm();
+                    openSignupForm(email); // Truyền email sang SignupForm
                 }, 2000);
             } else {
                 setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
@@ -78,6 +77,7 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">

@@ -314,7 +314,8 @@ const Header = () => {
       {showSignupForm && (
         <div className="fixed inset-0 z-20 flex justify-center items-center">
           <SignupForm
-            switchToLogin={openLoginForm} // Chuyển sang LoginForm khi đăng ký thành công
+            switchToLogin={openLoginForm}
+            email={email}// Chuyển sang LoginForm khi đăng ký thành công
           />
         </div>
       )}

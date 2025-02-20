@@ -69,6 +69,7 @@ const Description = ({ product }) => {
           <Col span={4}>
             {product && product.reviews.length > 0 ? (
               <Card
+              className="text-[#808080] shadow-md"
                 title={
                   <span className="font-semibold">
                     Đánh giá:{" "}
@@ -91,13 +92,13 @@ const Description = ({ product }) => {
                 />
               </Card>
             ) : (
-              <Card className="text-[#808080]" title="Đánh giá">Chưa có đánh giá</Card>
+              <Card className="text-[#808080] shadow-md" title="Đánh giá">Chưa có đánh giá</Card>
             )}
           </Col>
 
           {/* Giá bán */}
           <Col span={4}>
-            <Card className="text-[#808080]" title="Giá bán">
+            <Card className="text-[#808080] shadow-md" title="Giá bán">
               {product.price
                 ? `${product.price.toLocaleString()} VND`
                 : "Chưa cập nhật"}
@@ -106,14 +107,14 @@ const Description = ({ product }) => {
 
           {/* Tồn kho (Số lượng nhập - Đã bán) */}
           <Col span={4}>
-            <Card className="text-[#808080]" title="Tồn kho">
+            <Card className="text-[#808080] shadow-md" title="Tồn kho">
               {stockQuantity()} {product.unit}
             </Card>
           </Col>
 
           {/* Trạng thái */}
           <Col span={4}>
-            <Card className="text-[#808080]" title="Trạng thái">
+            <Card className="text-[#808080] shadow-md" title="Trạng thái">
               <Tag color={statusMapping[product.status]?.color}>
                 {statusMapping[product.status]?.text || "Không xác định"}
               </Tag>
@@ -122,14 +123,14 @@ const Description = ({ product }) => {
 
           {/* Số lượng nhập */}
           <Col span={4}>
-            <Card className="text-[#808080]" title="Số lượng nhập">
+            <Card className="text-[#808080] shadow-md" title="Số lượng nhập">
               {product.import} {product.unit}
             </Card>
           </Col>
 
           {/* Đã bán */}
           <Col span={4}>
-            <Card className="text-[#808080]" title="Đã bán">
+            <Card className="text-[#808080] shadow-md" title="Đã bán">
               {product.sold} {product.unit}
             </Card>
           </Col>
@@ -164,7 +165,7 @@ Description.propTypes = {
     }),
     description: PropTypes.string,
     origin: PropTypes.string,
-    imageUrl: PropTypes.string,
+    imageUrl: PropTypes.array,
     reviews: PropTypes.array,
   }),
 };
