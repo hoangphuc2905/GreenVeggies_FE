@@ -7,12 +7,12 @@ const AdminHeader = () => {
   return (
     <div className="flex justify-between items-center h-[8vh] px-11 bg-[#82AE46] fixed z-[1000] w-screen shadow-md">
       <div className="flex w-full justify-between">
-        <div className="flex items-center py-2">
+        <a href="/" className="flex items-center py-2">
           <img src={logo} alt="logo" className="h-10 mx-4" />
           <span className="text-lg font-bold text-[#ffffff]">
             GreenVeggies
           </span>{" "}
-        </div>
+        </a>
         <div>
           <div className="text-[#ffffff] font-bold text-xl">
             Chào mừng quay trở lại, Admin

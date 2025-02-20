@@ -72,7 +72,7 @@ export const getListUsers = async (key) => {
     console.error("Lỗi khi lấy danh sách người dùng:", error);
     return [];
   }
-}
+};
 
 export const getProductDetail = async (id) => {
   try {
@@ -122,6 +122,36 @@ export const insertProduct = async (data) => {
   }
 };
 
+export const updateProduct = async (id, data) => {
+  try {
+    if (data.productID) {
+      throw new Error("Không thể chỉnh sửa mã sản phẩm!");
+    }
+
+    const formattedData = {
+      name: decodeURIComponent(data.name),
+      description: decodeURIComponent(data.description),
+      origin: decodeURIComponent(data.origin),
+      imageUrl: data.imageUrl,
+      price: data.price,
+      sold: 0,
+      quantity: data.import,
+      import: data.import,
+      category: data.category,
+      unit: data.unit,
+      status: data.status,
+    };
+
+    const response = await productAPI.put(`/products/${id}`, formattedData, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật sản phẩm:", error);
+    return null;
+  }
+};
+
 // Hàm lấy tất cả đánh giá
 export const getAllReviews = async () => {
   try {
@@ -133,7 +163,6 @@ export const getAllReviews = async () => {
   }
 };
 
-
 export const insertCategory = async (data) => {
   try {
     const response = await api.post("/categories", data);
@@ -142,7 +171,6 @@ export const insertCategory = async (data) => {
     console.error("Lỗi khi thêm danh mục:", error);
     return null;
   }
-}
+};
 
 export default api;
-

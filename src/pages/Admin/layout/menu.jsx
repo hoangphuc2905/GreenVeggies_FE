@@ -45,6 +45,7 @@ const AdminSidebar = ({ colorBgContainer }) => {
           icon: <AppstoreAddOutlined />,
           onClick: () => navigate("/admin/add-product"),
         },
+        
       ],
     },
     {

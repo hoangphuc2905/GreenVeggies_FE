@@ -15,9 +15,9 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 
 import { useEffect, useState } from "react";
-import { getListProducts, insertProduct } from "../../../api/api";
+import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
-import FormInsertCategory from "../category/insert";
+import FormInsertCategory from "../../category/insert";
 
 const { TextArea } = Input;
 
@@ -162,7 +162,7 @@ const InsertForm = () => {
                     type="default"
                     htmlType="submit"
                     className="h-12 w-44 px-10 font-medium"
-                    loading={loading} // Khi loading = true, nút sẽ xoay
+                    loading={loading}
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
@@ -238,8 +238,6 @@ const InsertForm = () => {
                         img.onload = () => {
                           const canvas = document.createElement("canvas");
                           const ctx = canvas.getContext("2d");
-
-                          // Resize ảnh về 768x768
                           canvas.width = 768;
                           canvas.height = 768;
                           ctx.drawImage(img, 0, 0, 768, 768);
@@ -249,7 +247,7 @@ const InsertForm = () => {
                               const resizedFile = new File([blob], file.name, {
                                 type: file.type,
                               });
-                              resolve(resizedFile); // Trả về file đã resize
+                              resolve(resizedFile);
                             } else {
                               message.error("Lỗi khi resize ảnh!");
                               reject(false);
@@ -296,17 +294,33 @@ const InsertForm = () => {
                 <Form.Item
                   label="Giá nhập"
                   name="price"
-                  rules={[{ required: true, type: "number" }]}
+                  rules={[
+                    {
+                      required: true,
+                      type: "number",
+                      min: 0,
+                      message: "Giá nhập không hợp lệ!",
+                    },
+                  ]}
                 >
                   <InputNumber className="w-full" />
                 </Form.Item>
-                <Form.Item label="Số lượng nhập" name="import">
-                  <InputNumber className="w-full" />
-                </Form.Item>
+
                 <Form.Item
-                  label="Tồn kho"
-                  rules={[{ required: true, type: "number" }]}
+                  label="Số lượng nhập"
+                  name="import"
+                  rules={[
+                    {
+                      required: true,
+                      type: "number",
+                      min: 0,
+                      message: "Tồn kho không hợp lệ!",
+                    },
+                  ]}
                 >
+                  <InputNumber className="w-full" />
+                </Form.Item>
+                <Form.Item label="Tồn kho">
                   <InputNumber
                     className="w-full"
                     value={0}

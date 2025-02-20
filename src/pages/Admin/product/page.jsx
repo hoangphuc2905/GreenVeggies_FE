@@ -110,7 +110,6 @@ const Products = () => {
               options={categories}
               onChange={handlerFilter}
             />
-
             <Search
               placeholder="Tìm kiếm sản phẩm"
               onSearch={onSearch}
@@ -169,7 +168,7 @@ const Products = () => {
                     {firstImage ? (
                       <Image
                         width={65}
-                        height={65} 
+                        height={65}
                         src={firstImage}
                         alt="product"
                         className="object-cover"
