@@ -2,7 +2,6 @@ import { Button, Flex, Input, Layout, Select, Space, Table, Tag } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
 import DefaultAVT from "../../../assets/default.png";
-import axios from "axios";
 import userRender from "../userRender/userRender";
 import {
   DeleteFilled,
@@ -10,13 +9,14 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import UserDetailModal from "./profileDetail";
+import { getListUsers } from "../../../api/api";
 
 const { Search } = Input;
 
 const getUsers = async (key) => {
   try {
-    const response = await axios.get(`http://localhost:8001/api/${key}`);
-    return response.data;
+    const response = await getListUsers(key);
+    return response;
   } catch (error) {
     console.error(error);
     return [];
@@ -64,14 +64,13 @@ const ListUser = () => {
   ];
 
   const handlerFilter = (value) => {
-    if (value.includes("Admin") || value.includes("User")) {
-      value = value.filter((item) => item !== "Tất cả");
+    if (selectedOptions.includes("Tất cả") && value.length > 1) {
+      setSelectedOptions(value.filter((v) => v !== "Tất cả"));
+    } else if (value.includes("Tất cả")) {
+      setSelectedOptions(["Tất cả"]);
+    } else {
+      setSelectedOptions(value);
     }
-    if (value.length === 0 || value.includes("Tất cả")) {
-      value = ["Tất cả"];
-    }
-
-    setSelectedOptions(value);
     applyFilters(value, searchQuery); // Áp dụng lọc dựa trên vai trò và tìm kiếm
   };
 
@@ -154,7 +153,7 @@ const ListUser = () => {
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
           <Table
-            size="middle"
+            size="large"
             dataSource={users}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             rowKey="_id"
