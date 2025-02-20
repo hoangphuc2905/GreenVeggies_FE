@@ -4,10 +4,11 @@ import AdminHeader from "../pages/Admin/layout/header";
 import DefaultPage from "../pages/Admin/defaultPage/defaultPage";
 import AdminSidebar from "../pages/Admin/layout/menu";
 import Products from "../pages/Admin/product/page";
-import Detail from "../pages/Admin/product/detail";
+import Detail from "../pages/Admin/product/Infomation/detail";
 import ListUser from "../pages/Admin/listUser/page";
-import InsertForm from "../pages/Admin/product/insert";
 import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
+import InsertProduct from "../pages/Admin/product/InsertAndUpdate/insert";
+import UpdateForm from "../pages/Admin/product/InsertAndUpdate/update";
 
 const AdminRouter = () => {
   const {
@@ -37,7 +38,8 @@ const AdminRouter = () => {
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<Detail />} />
                 <Route path="/user-list" element={<ListUser />} />
-                <Route path="/add-product" element={<InsertForm />} />
+                <Route path="/add-product" element={<InsertProduct />} />
+                <Route path="/products/update-product/:id" element={<UpdateForm />} />
               </Routes>
             </Layout>
           </Layout>

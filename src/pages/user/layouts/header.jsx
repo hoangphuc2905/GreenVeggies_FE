@@ -17,8 +17,12 @@ import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
 
+import { SettingOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Dropdown } from 'antd';
+
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
 // import { User } from "lucide-react";
+
 
 const Header = () => {
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -116,7 +120,36 @@ const Header = () => {
     setEmailqmk(emailqmk);
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
-  };
+
+  }
+  const items = [
+    {
+      key: '1',
+      label: 'Chào! Ngày mới vui vẻ',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: '2',
+      label: (
+        <Link to="/profile">
+          Thông tin cá nhân
+        </Link>
+      ),
+      icon: <UserOutlined />
+    },
+    {
+      key: '3',
+      label: 'Đổi mật khẩu',
+      icon: <SettingOutlined />,
+    },
+    {
+      key: '4',
+      label: 'Đăng xuất',
+      icon: <LogoutOutlined />,
+    },
+  ];
 
   const location = useLocation();
   const isHomeActive = location.pathname === "/";
@@ -144,7 +177,19 @@ const Header = () => {
           {user ? (
             <div className="text-white text-l font-bold">
               Xin chào, {user.username}
-              <FontAwesomeIcon icon={faUser} className="text-white text-l " />
+              <Dropdown
+                menu={{
+                  items,
+                }}
+              >
+                <a onClick={(e) => e.preventDefault()}>
+                  <Space>
+
+                    <FontAwesomeIcon icon={faUser} className="text-white text-l " />
+                  </Space>
+                </a>
+              </Dropdown>
+
             </div>
           ) : (
             <button

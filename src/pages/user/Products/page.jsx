@@ -108,7 +108,8 @@ const Product = () => {
                     <div
                       key={index}
                       className="flex mt-4 cursor-pointer"
-                      onClick={() => handleProductClick(product._id)}>
+                      onClick={() => handleProductClick(product._id)}
+                    >
                       <div className="w-1/2 h-[100px] hover:shadow-xl hover:scale-110">
                         <img
                           src={
@@ -140,7 +141,8 @@ const Product = () => {
                   <Link className="" to={`/product/${product._id}`} key={index}>
                     <div
                       id={`product-${index}`}
-                      className="p-4 border rounded-lg shadow-md ml-4 relative hover:shadow-xl hover:scale-105">
+                      className="p-4 border rounded-lg shadow-md ml-4 relative hover:shadow-xl hover:scale-105"
+                    >
                       {product.discount && (
                         <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                           {product.discount}%

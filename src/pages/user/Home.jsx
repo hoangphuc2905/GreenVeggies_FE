@@ -103,7 +103,8 @@ const Home = () => {
                   <div
                     key={index}
                     className="flex mt-4 cursor-pointer"
-                    onClick={() => handleProductClick(product._id)}>
+                    onClick={() => handleProductClick(product._id)}
+                  >
                     <div className="w-1/2 h-[100px] hover:shadow-xl hover:scale-110">
                       <img
                         src={
@@ -275,7 +276,8 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product._id)}>
+                  onClick={() => handleProductClick(product._id)}
+                >
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
