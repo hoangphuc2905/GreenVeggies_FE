@@ -17,10 +17,11 @@ const Product = () => {
   const [pageSize] = useState(24); // Số lượng sản phẩm trên mỗi trang
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL;
   useEffect(() => {
     // Fetch dữ liệu từ API
     axios
-      .get("http://localhost:8008/api/products")
+      .get(`${API_URL}/products`)
       .then((response) => {
         setProducts(response.data);
       })

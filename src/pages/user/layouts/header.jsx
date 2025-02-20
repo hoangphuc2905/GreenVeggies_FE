@@ -6,7 +6,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Badge, Space } from "antd";
 import { useState, useEffect } from "react";
 import RegisterForm from "../../../components/register/register";
@@ -118,9 +118,15 @@ const Header = () => {
     setShowOtpFormqmk(true);
   };
 
+  const location = useLocation();
+  const isHomeActive = location.pathname === "/";
+  const isProductActive = location.pathname.startsWith("/product");
+  const isNewsActive = location.pathname.startsWith("/news");
+  const isCartActive = location.pathname.startsWith("/wishlist");
+
   return (
-    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
-      <div className="container mx-auto flex w-full justify-between items-center">
+    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-2 fixed top-0 z-50">
+      <div className="container mx-auto flex w-full justify-between items-center ">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
           <div className="text-white text-l font-bold ml-2">
@@ -158,23 +164,38 @@ const Header = () => {
 
             <nav>
               <ul className="flex">
-                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
-                  <Link
-                    to="/"
-                    className="font-bold hover:shadow-xl "
-                    onClick={scrollToTop}>
+                {/* Trang chủ */}
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                    isHomeActive
+                      ? "text-[#82AE46] underline font-bold"
+                      : "hover:text-[#82AE46] hover:underline active:scale-95"
+                  }`}>
+                  <Link to="/" className="font-bold" onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+
+                {/* Cửa hàng */}
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                    isProductActive
+                      ? "text-[#82AE46] underline font-bold"
+                      : "hover:text-[#82AE46] hover:underline active:scale-95"
+                  }`}>
                   <Link
                     to="/product"
-                    className="font-bold "
+                    className="font-bold"
                     onClick={scrollToTop}>
                     CỬA HÀNG
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                    isNewsActive
+                      ? "text-[#82AE46] underline font-bold"
+                      : "hover:text-[#82AE46] hover:underline active:scale-95"
+                  }`}>
                   <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
@@ -192,7 +213,12 @@ const Header = () => {
                     LIÊN HỆ
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                    isCartActive
+                      ? "text-[#82AE46] underline font-bold"
+                      : "hover:text-[#82AE46] hover:underline active:scale-95"
+                  }`}>
                   <Link
                     to="/wishlist"
                     className="font-bold"
@@ -201,12 +227,15 @@ const Header = () => {
                       <Badge count={0} showZero>
                         <FontAwesomeIcon
                           icon={faCartShopping}
-                          className="text-xl"
+                          className={`text-xl ${
+                            isCartActive ? "text-[#82AE46]" : ""
+                          }`} 
                         />
                       </Badge>
                     </Space>
                   </Link>
                 </li>
+
                 <li className="mx-4 relative hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <input
                     type="text"
@@ -315,7 +344,7 @@ const Header = () => {
         <div className="fixed inset-0 z-20 flex justify-center items-center">
           <SignupForm
             switchToLogin={openLoginForm}
-            email={email}// Chuyển sang LoginForm khi đăng ký thành công
+            email={email} // Chuyển sang LoginForm khi đăng ký thành công
           />
         </div>
       )}

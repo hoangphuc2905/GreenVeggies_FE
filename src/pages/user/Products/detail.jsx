@@ -3,12 +3,13 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import Header from "../layouts/header";
 import Footer from "../layouts/footer";
-import { getProductById, getProducts } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm
+import { getProductById, getProducts, getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm và người dùng
 import { Breadcrumb, Divider, InputNumber, Rate } from "antd";
 
 const Detail = ({ wishlist, setWishlist }) => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [userData, setUserData] = useState({});
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -46,6 +47,42 @@ const Detail = ({ wishlist, setWishlist }) => {
     fetchProduct();
     fetchRelatedProducts();
   }, [id]);
+
+  useEffect(() => {
+    const fetchUserNames = async () => {
+      if (!product?.reviews) return;
+
+      const uniqueUserIDs = [...new Set(product.reviews.map((r) => r.userID))];
+
+      uniqueUserIDs.forEach(async (userID) => {
+        if (!userID) {
+          console.error("Lỗi: userID bị null hoặc undefined");
+          return;
+        }
+
+        if (!userData[userID]) {
+          try {
+            console.log("Fetching user for ID:", userID);
+            const response = await getUserInfo(userID);
+            console.log("User info:", response);
+
+            setUserData((prev) => ({
+              ...prev,
+              [userID]: response?.username || "Người dùng ẩn danh",
+            }));
+          } catch (error) {
+            console.error(`Lỗi khi lấy thông tin user ${userID}:`, error);
+            setUserData((prev) => ({
+              ...prev,
+              [userID]: "Người dùng ẩn danh",
+            }));
+          }
+        }
+      });
+    };
+
+    fetchUserNames();
+  }, [product?.reviews]);
 
   const handleProductClick = (id) => {
     navigate(`/product/${id}`);
@@ -101,6 +138,13 @@ const Detail = ({ wishlist, setWishlist }) => {
   if (!product) {
     return <div>Loading...</div>;
   }
+
+  // Tính toán điểm trung bình của các đánh giá
+  const averageRating =
+    product.reviews.length > 0
+      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+        product.reviews.length
+      : 0;
 
   return (
     <div className="min-h-screen bg-green-50 flex flex-col">
@@ -195,7 +239,7 @@ const Detail = ({ wishlist, setWishlist }) => {
             <div className="p-4 w-[416px] h-[416px] overflow-auto ">
               <h1 className="text-3xl font-bold mt-4">{product.name}</h1>
               <div className="mt-4 flex items-center">
-                <Rate allowHalf defaultValue={2.5} />
+                <Rate allowHalf defaultValue={averageRating} />
                 <span className="ml-2">
                   ({product.reviews.length} đánh giá)
                 </span>
@@ -370,6 +414,10 @@ const Detail = ({ wishlist, setWishlist }) => {
             <h2 className="text-2xl font-bold">Đánh giá sản phẩm</h2>
             {product.reviews.map((review, index) => (
               <div key={index} className="mt-2">
+                <p>
+                  <b>{userData[review.userID]}</b> -{" "}
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </p>
                 <Rate disabled defaultValue={review.rating} />
                 <p>{review.comment}</p>
                 <Divider />

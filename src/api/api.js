@@ -32,6 +32,22 @@ export const getProductById = async (id) => {
     return null;
   }
 };
+const api_user = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+// Hàm lấy thông tin sản phẩm cụ thể theo id
+export const getUserById = async (id) => {
+  try {
+    const response = await api_user.get(`/users/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin người dùng:", error);
+    return null;
+  }
+};
 
 const productAPI = axios.create({
   baseURL: API_PRODUCT_URL,
@@ -72,7 +88,7 @@ export const getListUsers = async (key) => {
     console.error("Lỗi khi lấy danh sách người dùng:", error);
     return [];
   }
-}
+};
 
 export const getProductDetail = async (id) => {
   try {
@@ -133,7 +149,6 @@ export const getAllReviews = async () => {
   }
 };
 
-
 export const insertCategory = async (data) => {
   try {
     const response = await api.post("/categories", data);
@@ -142,7 +157,6 @@ export const insertCategory = async (data) => {
     console.error("Lỗi khi thêm danh mục:", error);
     return null;
   }
-}
+};
 
 export default api;
-
