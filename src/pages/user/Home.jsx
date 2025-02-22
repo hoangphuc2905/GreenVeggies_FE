@@ -65,7 +65,7 @@ const Home = () => {
   const randomProducts = getRandomProducts(products, 6);
 
   return (
-    <div className="h-screen w-full bg-green-50 flex flex-col">
+    <div className="h-screen w-full bg-white flex flex-col">
       {/* //<Headers */}
       <Header />
 
