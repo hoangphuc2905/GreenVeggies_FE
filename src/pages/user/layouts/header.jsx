@@ -17,12 +17,15 @@ import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
 
-import { SettingOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
-import { Dropdown } from 'antd';
+import {
+  SettingOutlined,
+  UserOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
+import { Dropdown } from "antd";
 
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
 // import { User } from "lucide-react";
-
 
 const Header = () => {
   const [showLoginForm, setShowLoginForm] = useState(false);
@@ -120,33 +123,28 @@ const Header = () => {
     setEmailqmk(emailqmk);
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
-
-  }
+  };
   const items = [
     {
-      key: '1',
-      label: 'Chào! Ngày mới vui vẻ',
+      key: "1",
+      label: "Chào! Ngày mới vui vẻ",
     },
     {
-      type: 'divider',
+      type: "divider",
     },
     {
-      key: '2',
-      label: (
-        <Link to="/profile">
-          Thông tin cá nhân
-        </Link>
-      ),
-      icon: <UserOutlined />
+      key: "2",
+      label: <Link to="/profile">Thông tin cá nhân</Link>,
+      icon: <UserOutlined />,
     },
     {
-      key: '3',
-      label: 'Đổi mật khẩu',
+      key: "3",
+      label: "Đổi mật khẩu",
       icon: <SettingOutlined />,
     },
     {
-      key: '4',
-      label: 'Đăng xuất',
+      key: "4",
+      label: "Đăng xuất",
       icon: <LogoutOutlined />,
     },
   ];
@@ -158,7 +156,7 @@ const Header = () => {
   const isCartActive = location.pathname.startsWith("/wishlist");
 
   return (
-    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-2 fixed top-0 z-50">
+    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
       <div className="container mx-auto flex w-full justify-between items-center ">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
@@ -184,17 +182,19 @@ const Header = () => {
               >
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
-
-                    <FontAwesomeIcon icon={faUser} className="text-white text-l " />
+                    <FontAwesomeIcon
+                      icon={faUser}
+                      className="text-white text-l "
+                    />
                   </Space>
                 </a>
               </Dropdown>
-
             </div>
           ) : (
             <button
               className="text-white text-l font-bold bg-[#82AE46] px-4 py-2 rounded"
-              onClick={() => setShowLoginForm(true)}>
+              onClick={() => setShowLoginForm(true)}
+            >
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>
@@ -215,7 +215,8 @@ const Header = () => {
                     isHomeActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link to="/" className="font-bold" onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
@@ -227,11 +228,13 @@ const Header = () => {
                     isProductActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to="/product"
                     className="font-bold"
-                    onClick={scrollToTop}>
+                    onClick={scrollToTop}
+                  >
                     CỬA HÀNG
                   </Link>
                 </li>
@@ -240,7 +243,8 @@ const Header = () => {
                     isNewsActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
@@ -254,7 +258,8 @@ const Header = () => {
                   <Link
                     to="/contact"
                     className="font-bold"
-                    onClick={scrollToTop}>
+                    onClick={scrollToTop}
+                  >
                     LIÊN HỆ
                   </Link>
                 </li>
@@ -263,18 +268,20 @@ const Header = () => {
                     isCartActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to="/wishlist"
                     className="font-bold"
-                    onClick={scrollToTop}>
+                    onClick={scrollToTop}
+                  >
                     <Space size="middle">
                       <Badge count={0} showZero>
                         <FontAwesomeIcon
                           icon={faCartShopping}
                           className={`text-xl ${
                             isCartActive ? "text-[#82AE46]" : ""
-                          }`} 
+                          }`}
                         />
                       </Badge>
                     </Space>
