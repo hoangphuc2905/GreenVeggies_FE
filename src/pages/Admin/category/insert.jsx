@@ -128,7 +128,7 @@ import {
         theme={{
           components: {
             Modal: {
-              contentBg: "#E2F8C5",
+              // contentBg: "#E2F8C5",
             },
             Button: {
               defaultHoverBg: "bg-opacity",
@@ -140,10 +140,10 @@ import {
       >
         <Modal
           title={
-            <div className="bg-[#E2F8C5] flex items-center justify-center gap-4">
+            <div className=" flex items-center justify-center gap-4">
               <img src={logo} className="w-14 h-14" alt="Logo" />
               <div className="py-3 font-bold text-xl text-[#82AE46]">
-                Thêm mới danh mục
+                THÊM MỚI DANH MỤC
               </div>
             </div>
           }
@@ -214,7 +214,7 @@ import {
                     htmlType="button"
                     onClick={handleCancel}
                     icon={<ArrowLeftOutlined />}
-                    className="w-full bg-[#FF3D00] hover:bg-red-600 text-white"
+                    className="w-full bg-[#FF3D00] hover:bg-red-600 text-white py-6 text-base"
                   >
                     Hủy bỏ
                   </Button>
@@ -225,7 +225,7 @@ import {
                     type="default"
                     htmlType="submit"
                     icon={<SaveFilled />}
-                    className="w-full bg-[#82AE46] hover:bg-green-600 text-white"
+                    className="w-full bg-[#82AE46] hover:bg-green-600 text-white py-6 text-base"
                   >
                     Thêm mới
                   </Button>
@@ -236,7 +236,7 @@ import {
                     htmlType="button"
                     onClick={handleRefresh}
                     icon={<ReloadOutlined />}
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-base"
                   >
                     Làm mới
                   </Button>
