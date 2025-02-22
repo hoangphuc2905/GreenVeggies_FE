@@ -156,7 +156,7 @@ const Header = () => {
   const isCartActive = location.pathname.startsWith("/wishlist");
 
   return (
-    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-4 fixed top-0 z-50">
+    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-2 fixed top-0 z-50">
       <div className="container mx-auto flex w-full justify-between items-center ">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
@@ -201,7 +201,7 @@ const Header = () => {
           )}
         </div>
 
-        <div className="fixed top-[50px] bg-white w-screen left-0 shadow-md z-10">
+        <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10">
           <div className="container flex justify-between items-center center mx-auto">
             <h1 className="text-[#82AE46] text-3xl py-2 font-bold">
               GreenVeggies
