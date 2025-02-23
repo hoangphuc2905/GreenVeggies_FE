@@ -15,7 +15,7 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { getListProducts, insertProduct } from "../../../../api/api";
+import { getListProducts, updateProduct } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/insert";
 
@@ -49,6 +49,8 @@ const validateMessages = {
   types: { number: "${label} phải là số hợp lệ!" },
 };
 
+// Hàm fetch danh mục
+
 const UpdateForm = () => {
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
@@ -60,49 +62,62 @@ const UpdateForm = () => {
   const location = useLocation();
   const product = location.state?.product; // Lấy product từ location.state
 
+  const fetchCategories = async () => {
+    try {
+      const response = await getListProducts("categories");
+      setCategories(response);
+    } catch (error) {
+      message.error("Lỗi tải danh mục!");
+    }
+  };
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await getListProducts("categories");
-        setCategories(response);
-      } catch (error) {
-        message.error("Lỗi tải danh mục!");
-      }
-    };
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    console.log(product);
-    if (product) {
-      form.setFieldsValue({
-        name: product.name,
-        category: product.category,
-        origin: product.origin,
-        description: product.description,
-        price: product.price,
-        import: product.import,
-        unit: product.unit,
-        status: product.status,
-        imageUrl: product.imageUrl
-          ? product.imageUrl.map((url, index) => ({
-              uid: index,
-              name: `image-${index}`,
-              url,
-              status: "done",
-            }))
-          : [],
-      });
-    }
-  }, [product, form]);
+  const handleCategoryAdded = async () => {
+    await fetchCategories();
+  };
 
-  const handlerInsertProduct = async (values) => {
+  const openInsertCategory = () => {
+    console.log("Open modal");
+    setIsModalOpen(true);
+  };
+  useEffect(() => {
+    if (product) {
+      if (categories.length > 0) {
+        const selectedCategory = categories.find(
+          (cat) => cat._id === product.category?._id
+        );
+        form.setFieldsValue({
+          name: product.name || "",
+          category: selectedCategory?._id || null,
+          origin: product.origin || "",
+          description: product.description || "",
+          price: product.price || 0,
+          import: product.import || 0,
+          unit: product.unit || "piece",
+          status: product.status || "available",
+          imageUrl: product.imageUrl
+            ? product.imageUrl.map((url, index) => ({
+                uid: index,
+                name: `image-${index}`,
+                url,
+                status: "done",
+              }))
+            : [],
+        });
+      }
+    }
+  }, [product, categories]); // Chạy lại khi product hoặc categories thay đổi
+
+  const handlerUpdateProduct = async (values) => {
     try {
       setLoading(true);
       const imageUrls =
         values.imageUrl?.map((file) => file.url || file.response?.url) || [];
       const formData = { ...values, sold: 0, imageUrl: imageUrls };
-      const response = await insertProduct(formData);
+      const response = await updateProduct(product._id, formData);
       if (response) {
         message.success("Cập nhật sản phẩm thành công!");
         setTimeout(() => navigate("/admin/products"), 1000);
@@ -117,34 +132,56 @@ const UpdateForm = () => {
   };
 
   return (
-    <Layout>
+    <Layout className="h-fit">
       <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
         <Flex gap="middle" vertical>
           <Form
             form={form}
             size="middle"
-            layout="horizontal"
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 16 }}
             labelAlign="left"
-            onFinish={handlerInsertProduct}
+            layout="horizontal"
+            style={{ maxWidth: "100%" }}
+            onFinish={handlerUpdateProduct}
             validateMessages={validateMessages}
             initialValues={{ status: "available", quantity: 0 }}
           >
-            <Flex justify="space-between" align="center">
+            <Flex className="mb-[10vh]" justify="space-between" align="center">
               <div className="text-2xl text-[#82AE46] font-bold">
-                Cập nhật sản phẩm
+                Chỉnh sửa thông tin sản phẩm
               </div>
-              <Button
-                type="default"
-                htmlType="submit"
-                className="h-12 w-44 px-10 font-medium"
-                loading={loading}
-              >
-                {loading ? "Đang lưu..." : "Lưu"}
-              </Button>
-            </Flex>
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Button: {
+                      defaultBg: "#82AE46",
+                      defaultColor: "#ffffff",
+                      defaultBorderColor: "#82AE46",
 
+                      defaultHoverBg: "#6D9539",
+                      defaultHoverColor: "#ffffff",
+                      defaultHoverBorderColor: "#6D9539",
+                      defaultActiveBg: "#5A7E30",
+                      defaultActiveColor: "#ffffff",
+                      defaultActiveBorderColor: "#5A7E30",
+                      contentFontSize: "17px",
+                    },
+                  },
+                }}
+              >
+                <div className="flex justify-center gap-5">
+                  <Button
+                    type="default"
+                    htmlType="submit"
+                    className="h-12 w-44 px-10 font-medium"
+                    loading={loading}
+                  >
+                    {loading ? "Đang lưu..." : "Lưu"}
+                  </Button>
+                </div>
+              </ConfigProvider>
+            </Flex>
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
@@ -155,14 +192,30 @@ const UpdateForm = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item label="Loại danh mục" name="category">
-                  <Select>
-                    {categories.map((cat) => (
-                      <Select.Option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      defaultValue={product.category?._id}
+                      placeholder="Chọn danh mục"
+                      onChange={(value) =>
+                        console.log("Selected category ID:", value)
+                      }
+                    >
+                      {categories.map((cat) => (
+                        <Select.Option key={cat._id} value={cat._id}>
+                          {cat.name}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                    <button
+                      onClick={openInsertCategory}
+                      type="button"
+                      className="text-[#82AE46] bg-none  w-12 h-12 flex items-center justify-center  hover:text-[#34C759]"
+                    >
+                      <PlusOutlined className="text-4xl font-extrabold" />
+                    </button>
+                  </div>
                 </Form.Item>
+
                 <Form.Item
                   label="Nguồn gốc"
                   name="origin"
@@ -171,31 +224,142 @@ const UpdateForm = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">
-                  <TextArea rows={4} />
+                  <TextArea rows={8} />
+                </Form.Item>
+                <Form.Item
+                  label="Hình minh họa"
+                  valuePropName="fileList"
+                  getValueFromEvent={normFile}
+                  name="imageUrl"
+                >
+                  <Upload
+                    action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
+                    listType="picture-card"
+                    accept="image/*"
+                    data={() => ({ upload_preset: "ml_default" })}
+                    beforeUpload={(file) => {
+                      const isImage = file.type.startsWith("image/");
+                      if (!isImage) {
+                        message.error("Chỉ được tải lên file hình ảnh!");
+                        return false;
+                      }
+
+                      return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.src = URL.createObjectURL(file);
+                        img.onload = () => {
+                          const canvas = document.createElement("canvas");
+                          const ctx = canvas.getContext("2d");
+                          canvas.width = 768;
+                          canvas.height = 768;
+                          ctx.drawImage(img, 0, 0, 768, 768);
+
+                          canvas.toBlob((blob) => {
+                            if (blob) {
+                              const resizedFile = new File([blob], file.name, {
+                                type: file.type,
+                              });
+                              resolve(resizedFile);
+                            } else {
+                              message.error("Lỗi khi resize ảnh!");
+                              reject(false);
+                            }
+                          }, file.type);
+                        };
+                        img.onerror = () => {
+                          message.error("Không thể đọc file ảnh!");
+                          reject(false);
+                        };
+                      });
+                    }}
+                    onChange={(info) => {
+                      if (info.file.status === "done") {
+                        const imageUrl = info.file.response?.secure_url;
+                        if (imageUrl) {
+                          message.success(
+                            `Tải lên thành công: ${info.file.name}`
+                          );
+                          console.log("Cloudinary URL:", imageUrl);
+                        } else {
+                          message.error(
+                            "Không tìm thấy URL ảnh trong phản hồi"
+                          );
+                          console.log("Response lỗi:", info.file.response);
+                        }
+                      } else if (info.file.status === "error") {
+                        message.error(`Tải lên thất bại: ${info.file.name}`);
+                        console.error("Lỗi upload:", info.file.response);
+                      }
+                    }}
+                  >
+                    <button
+                      style={{ border: 0, background: "none" }}
+                      type="button"
+                    >
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </button>
+                  </Upload>
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
                   label="Giá nhập"
                   name="price"
-                  rules={[{ required: true, type: "number", min: 0 }]}
+                  rules={[
+                    {
+                      required: true,
+                      type: "number",
+                      min: 0,
+                      message: "Giá nhập không hợp lệ!",
+                    },
+                  ]}
                 >
                   <InputNumber className="w-full" />
                 </Form.Item>
+
                 <Form.Item
                   label="Số lượng nhập"
                   name="import"
-                  rules={[{ required: true, type: "number", min: 0 }]}
+                  rules={[
+                    {
+                      required: true,
+                      type: "number",
+                      min: 0,
+                      message: "Tồn kho không hợp lệ!",
+                    },
+                  ]}
                 >
                   <InputNumber className="w-full" />
                 </Form.Item>
-                <Form.Item label="Trạng thái" name="status">
+                <Form.Item label="Tồn kho">
+                  <InputNumber
+                    className="w-full"
+                    value={0}
+                    disabled={true}
+                    placeholder="0"
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Đơn vị"
+                  name="unit"
+                  rules={[{ required: true }]}
+                >
                   <Select>
+                    <Select.Option value="piece">Cái</Select.Option>
+                    <Select.Option value="kg">Kg</Select.Option>
+                    <Select.Option value="gram">Gram</Select.Option>
+                    <Select.Option value="liter">Lít</Select.Option>
+                    <Select.Option value="ml">Ml</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item label="Trạng thái" name="status">
+                  <Select className="w-full">
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Option key={option.value} value={option.value}>
                         <div className="flex items-center gap-2 font-bold">
                           <div
-                            className={`${option.dot} w-4 h-4 rounded-full`}
+                            className={`${option.dot} w-4 h-4 ml-1 blur-[2px] rounded-full relative`}
                           />
                           <span className={option.color}>{option.label}</span>
                         </div>
@@ -206,9 +370,12 @@ const UpdateForm = () => {
               </Col>
             </Row>
           </Form>
+
+          {/* Modal thêm danh mục */}
           <FormInsertCategory
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
+            onCategoryAdded={handleCategoryAdded}
           />
         </Flex>
       </div>

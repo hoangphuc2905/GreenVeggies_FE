@@ -8,6 +8,7 @@ import {
   Space,
   Select,
   Image,
+  ConfigProvider,
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
@@ -18,7 +19,8 @@ import {
 } from "@ant-design/icons";
 import userRender from "../userRender/userRender";
 import { useNavigate } from "react-router-dom";
-import { getListProducts } from "../../../api/api";
+import { getListProducts, updateProduct } from "../../../api/api";
+import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
 
 const { Search } = Input;
 
@@ -37,8 +39,9 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const statusMapping = {
     available: { text: "Còn hàng", color: "green" },
@@ -66,6 +69,7 @@ const Products = () => {
     fetchCategories();
     fetchUsers();
   }, []);
+
   const handlerFilter = (value) => {
     if (selectedOptions.includes("Tất cả") && value.length > 1) {
       setSelectedOptions(value.filter((v) => v !== "Tất cả"));
@@ -85,15 +89,46 @@ const Products = () => {
   );
 
   const navigate = useNavigate();
+  const handlerClickUpdate = useHandlerClickUpdate();
 
   const handlerClickProduct = (product) => {
-    setSelectedProduct(product);
     navigate(`/admin/products/${product._id}`);
   };
 
   const handlerClickAddProduct = () => {
     navigate(`/admin/add-product`);
   };
+  const handlerStopSell = async (value) => {
+    try {
+      if (!window.confirm("Bạn có chắc chắn muốn ngừng bán sản phẩm này?"))
+        return;
+
+      const response = await updateProduct(value._id, {
+        status: "unavailable",
+        name: value.name,
+        origin: value.origin,
+        description: value.description,
+      });
+
+      if (response) {
+        const newProducts = products.map((product) =>
+          product._id === value._id
+            ? { ...product, status: "unavailable" }
+            : product
+        );
+        setProducts(newProducts);
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật sản phẩm:", error);
+    }
+  };
+
+  const calculateAverageRating = (reviews) => {
+    if (!reviews || reviews.length === 0) return 0;
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return (totalRating / reviews.length).toFixed(1);
+  };
+
   return (
     <Layout className="h-fit">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
@@ -130,7 +165,14 @@ const Products = () => {
             size="large"
             dataSource={filteredProducts}
             rowKey="productID"
-            pagination={{ pageSize: 5 }}
+            pagination={{
+              pageSize,
+              current: currentPage,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              },
+            }}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             onRow={(record) => ({
               onClick: () => handlerClickProduct(record),
@@ -140,7 +182,9 @@ const Products = () => {
               title="#"
               key="index"
               align="center"
-              render={(_, __, index) => index + 1}
+              render={(_, __, index) =>
+                (currentPage - 1) * pageSize + index + 1
+              }
             />
             <Column
               title="Mã sản phẩm"
@@ -223,10 +267,10 @@ const Products = () => {
             />
             <Column
               title="Đánh giá"
-              dataIndex="review"
-              key="review"
+              dataIndex="reviews"
+              key="reviews"
               align="center"
-              render={(text) => text || "-"}
+              render={(reviews) => <div>{calculateAverageRating(reviews)}</div>}
             />
             <Column
               title="Tình trạng"
@@ -238,23 +282,55 @@ const Products = () => {
                   {statusMapping[status]?.text}
                 </Tag>
               )}
-            />
+            />{" "}
             <Column
               title="Tác vụ"
               key="action"
               align="center"
-              render={() => (
+              render={(text, record) => (
                 <Space size="middle">
-                  <Button
-                    type="primary"
-                    icon={<EditFilled />}
-                    className="bg-green-500 text-white"
-                  />
-                  <Button
-                    type="primary"
-                    icon={<DeleteFilled />}
-                    className="bg-red-500 text-white"
-                  />
+                  <ConfigProvider
+                    theme={{
+                      components: {
+                        Button: {
+                          defaultHoverBg: "bg-opacity",
+                          defaultHoverColor: "white",
+                          defaultHoverBorderColor: "none",
+                        },
+                      },
+                    }}
+                  >
+                    <Button
+                      type="default"
+                      icon={<EditFilled />}
+                      className="bg-[#27A743] text-white mr-[5px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlerClickUpdate(record);
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = "#15803d")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = "#22c55e")
+                      }
+                    />
+                    <Button
+                      type="default"
+                      icon={<DeleteFilled />}
+                      className="bg-red-500 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlerStopSell(record);
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = "#991b1b")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = "#dc2626")
+                      }
+                    />
+                  </ConfigProvider>
                 </Space>
               )}
             />
