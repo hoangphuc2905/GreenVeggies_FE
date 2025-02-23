@@ -145,7 +145,6 @@ const InsertForm = () => {
                       defaultBg: "#82AE46",
                       defaultColor: "#ffffff",
                       defaultBorderColor: "#82AE46",
-
                       defaultHoverBg: "#6D9539",
                       defaultHoverColor: "#ffffff",
                       defaultHoverBorderColor: "#6D9539",

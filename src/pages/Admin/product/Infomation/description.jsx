@@ -4,14 +4,12 @@ import PropTypes from "prop-types";
 const Description = ({ product }) => {
   if (!product) return <p>Không có dữ liệu sản phẩm.</p>;
 
-  // Mapping trạng thái thành text dễ hiểu
   const statusMapping = {
     available: { text: "Còn hàng", color: "green" },
     unavailable: { text: "Ngừng bán", color: "red" },
     out_of_stock: { text: "Hết hàng", color: "orange" },
   };
 
-  // Tính toán tồn kho
 
   const stockQuantity = () => {
     const result = product.import - product.sold;
