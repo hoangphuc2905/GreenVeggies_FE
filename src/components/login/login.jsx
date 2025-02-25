@@ -22,11 +22,11 @@ const LoginForm = ({
     e.preventDefault();
     setLoading(true);
     setError("");
-    const VITE_API_URL_USER = import.meta.env.VITE_API_URL_USER;
+    // const VITE_API_URL_USER = import.meta.env.VITE_API_URL_USER;
 
     try {
       // Gửi email và password trong body, thay vì gửi dưới dạng query string
-      const response = await fetch(VITE_API_URL_USER`/auth/login`, {
+      const response = await fetch(`http://localhost:8009/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json", // Đảm bảo gửi body dưới dạng JSON

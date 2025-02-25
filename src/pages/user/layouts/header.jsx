@@ -5,6 +5,7 @@ import {
   faPhone,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link, useLocation } from "react-router-dom";
 import { Badge, Space } from "antd";
@@ -21,6 +22,7 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import { Dropdown } from "antd";
 
@@ -28,6 +30,8 @@ import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm nà
 // import { User } from "lucide-react";
 
 const Header = () => {
+  const navigate = useNavigate();
+
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
   const [showOtpFormqmk, setShowOtpFormqmk] = useState(false);
@@ -124,6 +128,17 @@ const Header = () => {
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
   };
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+      // Xóa thông tin người dùng và token khỏi localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
+      setUser(null); // Cập nhật trạng thái user về null
+      alert("Bạn đã đăng xuất!");
+      navigate("/"); // Chuyển hướng về trang Home
+    }
+  };
+
   const items = [
     {
       key: "1",
@@ -134,17 +149,26 @@ const Header = () => {
     },
     {
       key: "2",
-      label: <Link to="/profile">Thông tin cá nhân</Link>,
+      label: <Link to="/user/profile">Thông tin cá nhân</Link>,
       icon: <UserOutlined />,
     },
     {
       key: "3",
-      label: "Đổi mật khẩu",
+      label: <Link to="/user/change-password">Cập nhật mật khẩu</Link>,
       icon: <SettingOutlined />,
     },
     {
       key: "4",
-      label: "Đăng xuất",
+      label: <Link to="/user/address">Địa chỉ của bạn</Link>,
+      icon: <GlobalOutlined />,
+    },
+    {
+      key: "5",
+      label: (
+        <div onClick={handleLogout}>
+          Đăng xuất
+        </div>
+      ),
       icon: <LogoutOutlined />,
     },
   ];
