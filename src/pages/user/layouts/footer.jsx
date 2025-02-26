@@ -35,7 +35,9 @@ const footer = () => {
               placeholder="Nhập địa chỉ email của bạn"
               className="p-2 border rounded-l-lg flex-grow"
             />
-            <button className="p-2 bg-[#82AE46] text-white rounded-r-lg hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200">
+            <button
+              className="p-2 bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white rounded-r-lg
+             hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200">
               Đăng ký
             </button>
           </div>
@@ -65,31 +67,43 @@ const footer = () => {
           <div className="p-4  ">
             <h3 className="text-xl font-semibold">Menu</h3>
             <Link
-              to="/product "
-              className="text-gray-700 mt-4 block"
+              to="/product"
+              className="text-gray-700 mt-4 block hover:text-green-600"
               onClick={scrollToTop}>
               Cửa hàng
             </Link>
-            <p className="text-gray-700 mt-4">Về</p>
-            <p className="text-gray-700 mt-4">Bài viết</p>
-            <p className="text-gray-700 mt-4">Liên hệ với chúng tôi</p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">Về</p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">Bài viết</p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">
+              Liên hệ với chúng tôi
+            </p>
           </div>
           <div className="p-4  ">
             <h3 className="text-xl font-semibold">Hỗ trợ</h3>
-            <p className="text-gray-700 mt-4">Thông tin vận chuyển </p>
-            <p className="text-gray-700 mt-4">Trả hàng & Đổi hàng </p>
-            <p className="text-gray-700 mt-4">Điều khoản và điều kiện</p>
-            <p className="text-gray-700 mt-4">Chính sách bảo mật</p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">
+              Thông tin vận chuyển{" "}
+            </p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">
+              Trả hàng & Đổi hàng{" "}
+            </p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">
+              Điều khoản và điều kiện
+            </p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">
+              Chính sách bảo mật
+            </p>
           </div>
           <div className="p-4  ">
-            <p className="text-gray-700 mt-11">Câu hỏi thường gặp</p>
-            <p className="text-gray-700 mt-4">Liên hệ</p>
+            <p className="text-gray-700 mt-11 hover:text-green-600">
+              Câu hỏi thường gặp
+            </p>
+            <p className="text-gray-700 mt-4 hover:text-green-600">Liên hệ</p>
           </div>
           <div className="p-4  ">
             <h3 className="text-xl font-semibold">Bạn có câu hỏi?</h3>
             <p className="text-gray-700 mt-4 flex items-center">
               <FontAwesomeIcon icon={faLocationDot} className=" text-l mr-2" />
-              12, Phạm Văn Bảo, phường 1, quận Gò Vấp, Thành phố Hồ Chí Minh
+              12, Nguyễn Văn Bảo, phường 1, quận Gò Vấp, Thành phố Hồ Chí Minh
             </p>
             <p className="text-gray-700 mt-4 flex items-center">
               <FontAwesomeIcon icon={faPhone} className=" text-l mr-2" /> +84

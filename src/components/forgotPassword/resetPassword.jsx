@@ -2,23 +2,46 @@ import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
 const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
-    const [newPassword, setNewPassword] = useState(""); // Mật khẩu mới
-    const [confirmPassword, setConfirmPassword] = useState(""); // Xác nhận mật khẩu
-    const [loading, setLoading] = useState(false); // Trạng thái tải
-    const [error, setError] = useState(""); // Thông báo lỗi
-    const [success, setSuccess] = useState(""); // Thông báo thành công
+  const [newPassword, setNewPassword] = useState(""); // Mật khẩu mới
+  const [confirmPassword, setConfirmPassword] = useState(""); // Xác nhận mật khẩu
+  const [loading, setLoading] = useState(false); // Trạng thái tải
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [success, setSuccess] = useState(""); // Thông báo thành công
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-        setSuccess("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
-        if (newPassword !== confirmPassword) {
-            setError("Mật khẩu và xác nhận mật khẩu không khớp!");
-            setLoading(false);
-            return;
+    if (newPassword !== confirmPassword) {
+      setError("Mật khẩu và xác nhận mật khẩu không khớp!");
+      setLoading(false);
+      return;
+    }
+
+    const otpStored = localStorage.getItem("verifiedOtp");
+    const emailStored = localStorage.getItem("verifiedEmail");
+
+    // Kiểm tra lại OTP và email
+    if (!otpStored || !emailStored) {
+      setError("Thông tin OTP hoặc email không hợp lệ.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(
+          emailqmk
+        )}&newPassword=${encodeURIComponent(newPassword)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+
 
         const otpStored = localStorage.getItem("verifiedOtp");
         const emailStored = localStorage.getItem("verifiedEmail");
@@ -32,7 +55,7 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
 
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
+                `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
                 {
                     method: "POST",
                     headers: {
