@@ -1,20 +1,28 @@
 import { useEffect, useState } from "react";
 import { Layout, Spin, Button, Menu, ConfigProvider, Image } from "antd";
-import { PlusCircleFilled } from "@ant-design/icons";
+import { PlusCircleFilled, TagOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
 import { getProductDetail } from "../../../../api/api";
 import Description from "./description";
 import Rating from "./rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";
-import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import InsertStockEntry from "../../stockEntry/insert";
 
 const Detail = () => {
-  const { id } = useParams();
+  const location = useLocation();
+  const id = location.state?.productID;
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState("Detail");
+  const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
+
   const handlerClickUpdate = useHandlerClickUpdate();
 
+  const openInsertStockEntry = (product) => {
+    setIsStockEntryOpen(true);
+    setProduct(product);
+  };
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
@@ -28,6 +36,18 @@ const Detail = () => {
     };
     fetchProductDetail();
   }, [id]);
+
+  const reloadProduct = async () => {
+    setLoading(true);
+    try {
+      const response = await getProductDetail(id);
+      setProduct(response);
+    } catch (error) {
+      console.error("Lỗi khi tải lại sản phẩm:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading)
     return <Spin size="large" className="flex justify-center mt-10" />;
@@ -72,14 +92,25 @@ const Detail = () => {
               </div>
             </div>
           </div>
-          <Button
-            type="primary"
-            className="bg-[#EAF3FE] text-[#689CF8] font-medium"
-            icon={<PlusCircleFilled />}
-            onClick={() => handlerClickUpdate(product)}
-          >
-            Chỉnh sửa
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              type="primary"
+              className="bg-[#EAF3FE] text-[#689CF8] font-medium"
+              icon={<PlusCircleFilled />}
+              onClick={() => handlerClickUpdate(product)}
+            >
+              Chỉnh sửa
+            </Button>
+
+            <Button
+              type="primary"
+              className="bg-[#EAF3FE] text-[#689CF8] font-medium"
+              icon={<TagOutlined />}
+              onClick={() => openInsertStockEntry(product)}
+            >
+              Nhập hàng
+            </Button>
+          </div>
         </div>
         <div className="mt-7">
           <ConfigProvider
@@ -120,6 +151,14 @@ const Detail = () => {
         {selectedKey === "Detail" && <Description product={product} />}
         {selectedKey === "Rate" && <Rating product={product} />}
       </motion.div>
+
+      <InsertStockEntry
+        isOpen={isStockEntryOpen}
+        onClose={() => setIsStockEntryOpen(false)}
+        productID={product?.productID}
+        productName={product?.name}
+        onStockUpdated={reloadProduct}
+      ></InsertStockEntry>
     </Layout>
   );
 };

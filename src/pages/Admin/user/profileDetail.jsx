@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Modal, Button } from "antd";
+import { Modal, Button, Image } from "antd";
 import DefaultAVT from "../../../assets/default.png";
 
 const UserDetailModal = ({ isOpen, onClose, user }) => {
@@ -18,7 +18,7 @@ const UserDetailModal = ({ isOpen, onClose, user }) => {
         <div className="flex flex-col items-center gap-4">
           {/* Avatar trên cùng, căn giữa */}
           <div className="w-36 h-36">
-            <img
+            <Image
               src={user.avatar || DefaultAVT}
               alt="Avatar"
               className="w-36 h-36 rounded-full object-cover border-4 border-gray-200 shadow-md"

@@ -5,7 +5,7 @@ import DefaultPage from "../pages/Admin/defaultPage/defaultPage";
 import AdminSidebar from "../pages/Admin/layout/menu";
 import Products from "../pages/Admin/product/page";
 import Detail from "../pages/Admin/product/Infomation/detail";
-import ListUser from "../pages/Admin/listUser/page";
+import ListUser from "../pages/Admin/user/page";
 import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
 import InsertProduct from "../pages/Admin/product/InsertAndUpdate/insert";
 import UpdateForm from "../pages/Admin/product/InsertAndUpdate/update";

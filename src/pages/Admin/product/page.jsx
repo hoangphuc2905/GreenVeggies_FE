@@ -16,11 +16,13 @@ import {
   DeleteFilled,
   EditFilled,
   PlusCircleOutlined,
+  TagFilled,
 } from "@ant-design/icons";
 import userRender from "../userRender/userRender";
 import { useNavigate } from "react-router-dom";
 import { getListProducts, updateProduct } from "../../../api/api";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
+import InsertStockEntry from "../stockEntry/insert";
 
 const { Search } = Input;
 
@@ -42,6 +44,13 @@ const Products = () => {
   const [categories, setCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const openInsertStockEntry = (product) => {
+    setIsStockEntryOpen(true);
+    setSelectedProduct(product);
+  };
 
   const statusMapping = {
     available: { text: "Còn hàng", color: "green" },
@@ -92,7 +101,9 @@ const Products = () => {
   const handlerClickUpdate = useHandlerClickUpdate();
 
   const handlerClickProduct = (product) => {
-    navigate(`/admin/products/${product._id}`);
+    navigate(`/admin/products/${product._id}`, {
+      state: { productID: product.productID },
+    });
   };
 
   const handlerClickAddProduct = () => {
@@ -103,7 +114,7 @@ const Products = () => {
       if (!window.confirm("Bạn có chắc chắn muốn ngừng bán sản phẩm này?"))
         return;
 
-      const response = await updateProduct(value._id, {
+      const response = await updateProduct(value.productID, {
         status: "unavailable",
         name: value.name,
         origin: value.origin,
@@ -112,7 +123,7 @@ const Products = () => {
 
       if (response) {
         const newProducts = products.map((product) =>
-          product._id === value._id
+          product.productID === value.productID
             ? { ...product, status: "unavailable" }
             : product
         );
@@ -128,7 +139,10 @@ const Products = () => {
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     return (totalRating / reviews.length).toFixed(1);
   };
-
+  const reloadProducts = async () => {
+    const data = await fetchProducts("products");
+    setProducts(data);
+  };
   return (
     <Layout className="h-fit">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
@@ -238,7 +252,7 @@ const Products = () => {
               key="price"
               align="center"
               render={(text, record) =>
-                `${text.toLocaleString()} / ${record.unit}`
+                `${(record.price * 1.5).toLocaleString()} / ${record.unit}`
               }
             />
             <Column
@@ -317,6 +331,21 @@ const Products = () => {
                     />
                     <Button
                       type="default"
+                      icon={<TagFilled />}
+                      className="bg-[#138cff] text-white mr-[5px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openInsertStockEntry(record);
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = "#107bff")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = "#138cff")
+                      }
+                    />
+                    <Button
+                      type="default"
                       icon={<DeleteFilled />}
                       className="bg-red-500 text-white"
                       onClick={(e) => {
@@ -335,6 +364,13 @@ const Products = () => {
               )}
             />
           </Table>
+          <InsertStockEntry
+            isOpen={isStockEntryOpen}
+            onClose={() => setIsStockEntryOpen(false)}
+            productID={selectedProduct?.productID}
+            productName={selectedProduct?.name}
+            onStockUpdated={reloadProducts}
+          ></InsertStockEntry>
         </Flex>
       </div>
     </Layout>

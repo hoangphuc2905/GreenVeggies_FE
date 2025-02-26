@@ -18,6 +18,8 @@ import { useEffect, useState } from "react";
 import { getListProducts, updateProduct } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/insert";
+import InsertStockEntry from "../../StockEntry/insert";
+
 
 const { TextArea } = Input;
 
@@ -58,6 +60,7 @@ const UpdateForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
 
   const location = useLocation();
   const product = location.state?.product; // Lấy product từ location.state
@@ -69,6 +72,10 @@ const UpdateForm = () => {
     } catch (error) {
       message.error("Lỗi tải danh mục!");
     }
+  };
+
+  const openInsertStockEntry = () => {
+    setIsStockEntryOpen(true);
   };
 
   useEffect(() => {
@@ -94,8 +101,6 @@ const UpdateForm = () => {
           category: selectedCategory?._id || null,
           origin: product.origin || "",
           description: product.description || "",
-          price: product.price || 0,
-          import: product.import || 0,
           unit: product.unit || "piece",
           status: product.status || "available",
           imageUrl: product.imageUrl
@@ -117,7 +122,7 @@ const UpdateForm = () => {
       const imageUrls =
         values.imageUrl?.map((file) => file.url || file.response?.url) || [];
       const formData = { ...values, sold: 0, imageUrl: imageUrls };
-      const response = await updateProduct(product._id, formData);
+      const response = await updateProduct(product.productID, formData);
       if (response) {
         message.success("Cập nhật sản phẩm thành công!");
         setTimeout(() => navigate("/admin/products"), 1000);
@@ -173,11 +178,26 @@ const UpdateForm = () => {
                 <div className="flex justify-center gap-5">
                   <Button
                     type="default"
+                    className="h-12 w-44 px-10 font-medium"
+                    onClick={() => navigate(-1)}
+                  >
+                    Hủy
+                  </Button>{" "}
+                  <Button
+                    type="default"
                     htmlType="submit"
                     className="h-12 w-44 px-10 font-medium"
                     loading={loading}
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
+                  </Button>
+                  <Button
+                    type="default"
+                    htmlType="button"
+                    className="h-12 w-44 px-10 font-medium"
+                    onClick={openInsertStockEntry}
+                  >
+                    Nhập hàng
                   </Button>
                 </div>
               </ConfigProvider>
@@ -226,6 +246,35 @@ const UpdateForm = () => {
                 <Form.Item label="Mô tả" name="description">
                   <TextArea rows={8} />
                 </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Đơn vị"
+                  name="unit"
+                  rules={[{ required: true }]}
+                >
+                  <Select>
+                    <Select.Option value="piece">Cái</Select.Option>
+                    <Select.Option value="kg">Kg</Select.Option>
+                    <Select.Option value="gram">Gram</Select.Option>
+                    <Select.Option value="liter">Lít</Select.Option>
+                    <Select.Option value="ml">Ml</Select.Option>
+                  </Select>
+                </Form.Item>
+                <Form.Item label="Trạng thái" name="status">
+                  <Select className="w-full">
+                    {STATUS_OPTIONS.map((option) => (
+                      <Select.Option key={option.value} value={option.value}>
+                        <div className="flex items-center gap-2 font-bold">
+                          <div
+                            className={`${option.dot} w-4 h-4 ml-1 blur-[2px] rounded-full relative`}
+                          />
+                          <span className={option.color}>{option.label}</span>
+                        </div>
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
                 <Form.Item
                   label="Hình minh họa"
                   valuePropName="fileList"
@@ -233,6 +282,7 @@ const UpdateForm = () => {
                   name="imageUrl"
                 >
                   <Upload
+                    multiple={true}
                     action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
                     listType="picture-card"
                     accept="image/*"
@@ -302,72 +352,6 @@ const UpdateForm = () => {
                   </Upload>
                 </Form.Item>
               </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Giá nhập"
-                  name="price"
-                  rules={[
-                    {
-                      required: true,
-                      type: "number",
-                      min: 0,
-                      message: "Giá nhập không hợp lệ!",
-                    },
-                  ]}
-                >
-                  <InputNumber className="w-full" />
-                </Form.Item>
-
-                <Form.Item
-                  label="Số lượng nhập"
-                  name="import"
-                  rules={[
-                    {
-                      required: true,
-                      type: "number",
-                      min: 0,
-                      message: "Tồn kho không hợp lệ!",
-                    },
-                  ]}
-                >
-                  <InputNumber className="w-full" />
-                </Form.Item>
-                <Form.Item label="Tồn kho">
-                  <InputNumber
-                    className="w-full"
-                    value={0}
-                    disabled={true}
-                    placeholder="0"
-                  />
-                </Form.Item>
-                <Form.Item
-                  label="Đơn vị"
-                  name="unit"
-                  rules={[{ required: true }]}
-                >
-                  <Select>
-                    <Select.Option value="piece">Cái</Select.Option>
-                    <Select.Option value="kg">Kg</Select.Option>
-                    <Select.Option value="gram">Gram</Select.Option>
-                    <Select.Option value="liter">Lít</Select.Option>
-                    <Select.Option value="ml">Ml</Select.Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Trạng thái" name="status">
-                  <Select className="w-full">
-                    {STATUS_OPTIONS.map((option) => (
-                      <Select.Option key={option.value} value={option.value}>
-                        <div className="flex items-center gap-2 font-bold">
-                          <div
-                            className={`${option.dot} w-4 h-4 ml-1 blur-[2px] rounded-full relative`}
-                          />
-                          <span className={option.color}>{option.label}</span>
-                        </div>
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
             </Row>
           </Form>
 
@@ -377,6 +361,11 @@ const UpdateForm = () => {
             onClose={() => setIsModalOpen(false)}
             onCategoryAdded={handleCategoryAdded}
           />
+
+          <InsertStockEntry
+            isOpen={isStockEntryOpen}
+            onClose={() => setIsStockEntryOpen(false)}
+          ></InsertStockEntry>
         </Flex>
       </div>
     </Layout>
