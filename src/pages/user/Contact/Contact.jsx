@@ -1,5 +1,5 @@
-import Header from "./layouts/header";
-import Footer from "./layouts/footer";
+import Header from "../layouts/header";
+import Footer from "../layouts/footer";
 
 const Lienhe = () => {
   return (
@@ -10,9 +10,9 @@ const Lienhe = () => {
       {/* Hero Section với nền hình ảnh rõ nét */}
       <div className="container mx-auto relative">
         <img
-          src="src/assets/bg_1.png"
+          src="src\assets\thuan10.webp"
           alt="Background"
-          className="w-full h-auto"
+          className="w-full h-[550px]"
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <h1 className="text-white text-8xl font-bold shadow-md font-amatic">
@@ -25,14 +25,14 @@ const Lienhe = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto py-12 px-6">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
+      <div className="container w-full mx-auto py-12">
+        <div className="grid md:grid-cols-2 gap-8 justify-between w-full">
           {/* Thay khung "Gửi tin nhắn" bằng 1 hình ảnh */}
-          <div className="flex justify-center">
+          <div className="flex justify-center ">
             <img
               src="src/assets/thuan2.png"
               alt="Hỗ trợ khách hàng"
-              className="rounded-lg shadow-lg"
+              className="rounded-lg shadow-lg w-full"
             />
           </div>
 
@@ -60,7 +60,7 @@ const Lienhe = () => {
       </div>
 
       {/* Google Maps - Đặt gần footer và mở rộng kích thước */}
-      <div className="container mx-auto px-6 pb-12">
+      <div className="container mx-auto pb-12">
         <div className="w-full h-[450px] rounded-lg shadow-lg overflow-hidden">
           <iframe
             className="w-full h-full"
@@ -73,7 +73,7 @@ const Lienhe = () => {
       </div>
 
       {/* Newsletter Section */}
-      <div className="bg-gray-100 py-8">
+      <div className="container mx-auto px-6 pb-12 bg-gray-100 py-8">
         <div className="container mx-auto text-center">
           <h2 className="text-2xl font-bold mb-2">Đăng ký nhận bản tin</h2>
           <p className="text-gray-600 mb-4">

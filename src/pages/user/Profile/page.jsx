@@ -11,7 +11,7 @@ const ProfilePage = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
       // Xóa thông tin người dùng và token khỏi localStorage
       localStorage.removeItem("token");
-      localStorage.removeItem("userId");
+      localStorage.removeItem("userID");
       setUser(null); // Cập nhật trạng thái user về null
       alert("Bạn đã đăng xuất!");
       navigate("/"); // Chuyển hướng về trang Home

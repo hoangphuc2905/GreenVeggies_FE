@@ -34,7 +34,7 @@ const AddressForm = () => {
   const handleCityChange = async (e) => {
     const selectedCity = e.target.value;
     setAddress((prev) => ({ ...prev, city: selectedCity, district: "", ward: "" }));
-    
+
     if (!selectedCity) {
       setDistricts([]);
       setWards([]);
@@ -76,16 +76,52 @@ const AddressForm = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Submit form và gọi API POST
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Address submitted:", address);
-    setShowForm(false);
+
+    // Kiểm tra dữ liệu trước khi gửi API
+    if (!address.city || !address.district || !address.ward || !address.street) {
+      alert("Vui lòng điền đầy đủ thông tin địa chỉ!");
+      return;
+    }
+
+    try {
+      // Xây dựng URL với query parameters
+      const url = new URL("/api/address", window.location.origin);
+      const params = new URLSearchParams({
+        userID: address.userID,
+        city: address.city,
+        district: address.district,
+        ward: address.ward,
+        street: address.street,
+        isDefault: address.isDefault,
+      });
+
+      // Thêm query parameters vào URL
+      url.search = params.toString();
+
+      // Gửi yêu cầu POST với các tham số query
+      const response = await axios.post(url);
+
+      if (response.status === 201) {
+        console.log("Địa chỉ đã được thêm thành công");
+        setShowForm(false);  // Đóng form sau khi lưu thành công
+      } else {
+        console.error("Lỗi khi thêm địa chỉ:", response.data);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi yêu cầu API:", error);
+      alert("Đã có lỗi xảy ra khi lưu địa chỉ. Vui lòng thử lại.");
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Địa chỉ của bạn</h2>
 
+      {/* Hiển thị địa chỉ hiện tại */}
       {!showForm && (
         <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
           <p className="text-gray-700"><strong>Thành phố:</strong> {defaultAddress.city}</p>
@@ -104,18 +140,6 @@ const AddressForm = () => {
         </button>
       ) : (
         <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* ID người dùng (Không cho nhập) */}
-          <div>
-            <label className="block text-gray-700">ID người dùng:</label>
-            <input
-              type="text"
-              name="userID"
-              value={address.userID}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md bg-gray-200 cursor-not-allowed"
-              readOnly
-            />
-          </div>
-
           {/* Thành phố */}
           <div>
             <label className="block text-gray-700">Thành phố:</label>

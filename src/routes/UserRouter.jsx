@@ -8,8 +8,8 @@ import Wishlist from "../pages/user/Wishlist/cart";
 import ProfilePage from "../pages/user/Profile/page";
 import Profile from "../pages/user/Profile/proflie";
 import ChangePassword from "../pages/user/Profile/changepassword";
-import Lienhe from "../pages/user/LienHe"; // Import Lienhe
 import Address from "../pages/user/Profile/address"; // Import Address
+import Contact from "../pages/user/Contact/Contact";
 
 const UserRouter = () => {
   return (
@@ -18,9 +18,9 @@ const UserRouter = () => {
         {/* Các route chính của user */}
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
-        <Route path="/product/:id" element={<Detail />} />
+        <Route path="/product/:id" element={<Detail />} /> 
         <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/contact" element={<Lienhe />} /> {/* Thêm route cho Lienhe */}
+        <Route path="/contact" element={<Contact />} />
 
         {/* Nhóm route có Sidebar của User */}
         <Route path="/user" element={<ProfilePage />}>

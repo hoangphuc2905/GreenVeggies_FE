@@ -1,12 +1,12 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_PRODUCT_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -89,9 +89,9 @@ export const getProductDetail = async (id) => {
 };
 
 // 🟢 Lấy thông tin người dùng theo ID
-export const getUserInfo = async (id) => {
+export const getUserInfo = async (userID) => {
   try {
-    const response = await userAPI.get(`user/${id}`);
+    const response = await userAPI.get(`user/${userID}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
@@ -100,9 +100,9 @@ export const getUserInfo = async (id) => {
 };
 
 // 🟢 Cập nhật thông tin người dùng
-export const updateUserInfo = async (id, token, updatedData) => {
+export const updateUserInfo = async (userID, token, updatedData) => {
   try {
-    const response = await userAPI.put(`user/${id}`, updatedData, {
+    const response = await userAPI.put(`user/${userID}`, updatedData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
