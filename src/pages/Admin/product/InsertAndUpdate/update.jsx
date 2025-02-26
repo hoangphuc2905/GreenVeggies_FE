@@ -18,8 +18,7 @@ import { useEffect, useState } from "react";
 import { getListProducts, updateProduct } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/insert";
-import InsertStockEntry from "../../StockEntry/insert";
-
+import InsertStockEntry from "../../stockEntry/insert";
 
 const { TextArea } = Input;
 
