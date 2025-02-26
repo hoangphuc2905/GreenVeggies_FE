@@ -10,15 +10,14 @@ const Description = ({ product }) => {
     out_of_stock: { text: "Hết hàng", color: "orange" },
   };
 
-
   const stockQuantity = () => {
-    const result = product.import - product.sold;
+    const result = product.quantity;
     if (result < 0) return 0;
     return result;
   };
 
   const dataSource = [
-    { key: "1", label: "Giá nhập", value: `${product.import} VND / KG` },
+    { key: "1", label: "Giá nhập", value: `${product.price} VND / KG` },
     {
       key: "2",
       label: "Danh mục",
@@ -67,7 +66,7 @@ const Description = ({ product }) => {
           <Col span={4}>
             {product && product.reviews.length > 0 ? (
               <Card
-              className="text-[#808080] shadow-md"
+                className="text-[#808080] shadow-md"
                 title={
                   <span className="font-semibold">
                     Đánh giá:{" "}
@@ -90,7 +89,9 @@ const Description = ({ product }) => {
                 />
               </Card>
             ) : (
-              <Card className="text-[#808080] shadow-md" title="Đánh giá">Chưa có đánh giá</Card>
+              <Card className="text-[#808080] shadow-md" title="Đánh giá">
+                Chưa có đánh giá
+              </Card>
             )}
           </Col>
 
@@ -98,7 +99,7 @@ const Description = ({ product }) => {
           <Col span={4}>
             <Card className="text-[#808080] shadow-md" title="Giá bán">
               {product.price
-                ? `${product.price.toLocaleString()} VND`
+                ? `${(product.price * 1.5).toLocaleString()} VND`
                 : "Chưa cập nhật"}
             </Card>
           </Col>

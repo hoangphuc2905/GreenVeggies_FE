@@ -37,6 +37,7 @@ const ListUser = () => {
       const data = await getUsers("user");
       setUsers(data);
       setOriginalUsers(data);
+      console.log("User: " + data);
     };
 
     fetchUsers();

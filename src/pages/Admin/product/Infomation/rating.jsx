@@ -1,12 +1,4 @@
-import {
-  Avatar,
-  Button,
-  Card,
-  ConfigProvider,
-  Empty,
-  Rate,
-  Typography,
-} from "antd";
+import { Avatar, Card, ConfigProvider, Rate } from "antd";
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { getUserInfo } from "../../../../api/api";
@@ -30,14 +22,17 @@ const Rating = ({ product }) => {
 
         if (!userData[userID]) {
           try {
-            console.log("Fetching user for ID:", userID);
             const response = await getUserInfo(userID);
             console.log("User info:", response);
-
             setUserData((prev) => ({
               ...prev,
-              [userID]: response?.username || "Người dùng ẩn danh",
+              [userID]: {
+                username: response?.username || "Người dùng ẩn danh",
+                avatar: response?.avatar || "/default-avatar.png",
+              },
             }));
+
+            console.log("User data:", userData);
           } catch (error) {
             console.error(`Lỗi khi lấy thông tin user ${userID}:`, error);
             setUserData((prev) => ({
@@ -61,19 +56,19 @@ const Rating = ({ product }) => {
           <div className="grid grid-cols-2 gap-6 py-4 px-5">
             {product.reviews.map((review) => (
               <Card
-                key={review._id}
+                key={review.reviewID}
                 className="shadow-md transition-transform duration-300 hover:scale-105"
               >
                 <Meta
                   avatar={
                     <Avatar
                       className="w-14 h-14"
-                      src={review.avatar || "/default-avatar.png"}
+                      src={userData[review.userID]?.avatar || "/default-avatar.png"}
                     />
                   }
                   title={
                     <p className="text-xl font-semibold">
-                      {userData[review.userID] || "Người dùng ẩn danh"}
+                      {userData[review.userID]?.username || "Người dùng ẩn danh"}
                     </p>
                   }
                   description={

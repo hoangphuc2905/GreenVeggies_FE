@@ -50,6 +50,7 @@ const validateMessages = {
 };
 
 const InsertForm = () => {
+  const [form] = Form.useForm();
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,15 +62,16 @@ const InsertForm = () => {
   };
 
   const navigate = useNavigate();
-  // Hàm fetch danh mục
   const fetchCategories = async () => {
     try {
       const response = await getListProducts("categories");
-      setCategories(response);
-      console.log("Categories updated:", response);
+      console.log("API Response:", response);
+
+      setCategories(Array.isArray(response) ? response : []);
     } catch (error) {
       console.error("Lỗi lấy danh mục:", error);
       message.error("Lỗi tải danh mục!");
+      setCategories([]);
     }
   };
 
@@ -82,7 +84,7 @@ const InsertForm = () => {
 
   const handlerInsertProduct = async (values) => {
     try {
-      setLoading(true); // Bật loading
+      setLoading(true);
 
       const imageUrls =
         values.imageUrl?.map((file) => file.url || file.response?.url) || [];
@@ -91,7 +93,6 @@ const InsertForm = () => {
         name: values.name,
         description: values.description,
         price: values.price,
-        sold: 0,
         quantity: values.import,
         import: values.import,
         category: values.category,
@@ -102,9 +103,10 @@ const InsertForm = () => {
       };
 
       const response = await insertProduct(formData);
-
+      console.log("API Response:", response);
       if (response) {
         message.success("Thêm sản phẩm thành công! 🎉");
+
         setTimeout(() => {
           navigate("/admin/products");
         }, 1000);
@@ -115,7 +117,7 @@ const InsertForm = () => {
       console.error("Lỗi khi thêm sản phẩm:", error);
       message.error("Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
     } finally {
-      setLoading(false); // Tắt loading
+      setLoading(false);
     }
   };
 
@@ -124,6 +126,7 @@ const InsertForm = () => {
       <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
         <Flex gap="middle" vertical>
           <Form
+            form={form}
             size="middle"
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 16 }}
@@ -186,7 +189,12 @@ const InsertForm = () => {
                 </Form.Item>
                 <Form.Item label="Loại danh mục" name="category">
                   <div className="flex items-center gap-2">
-                    <Select className="flex-1">
+                    <Select
+                      className="flex-1"
+                      onChange={(value) => {
+                        form.setFieldsValue({ category: value });
+                      }}
+                    >
                       {categories.map((cat) => (
                         <Select.Option key={cat._id} value={cat._id}>
                           {cat.name}
@@ -220,6 +228,7 @@ const InsertForm = () => {
                   name="imageUrl"
                 >
                   <Upload
+                    multiple={true}
                     action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
                     listType="picture-card"
                     accept="image/*"
@@ -295,14 +304,32 @@ const InsertForm = () => {
                   name="price"
                   rules={[
                     {
-                      required: true,
                       type: "number",
                       min: 0,
                       message: "Giá nhập không hợp lệ!",
                     },
                   ]}
                 >
-                  <InputNumber className="w-full" />
+                  <InputNumber
+                    className="w-full"
+                    onChange={(value) => {
+                      form.setFieldsValue({ entryPrice: (value || 0) * 1.5 });
+                    }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="Giá bán"
+                  name="entryPrice"
+                  rules={[
+                    {
+                      type: "number",
+                      min: 0,
+                      message: "Giá nhập không hợp lệ!",
+                    },
+                  ]}
+                >
+                  <InputNumber className="w-full" disabled={true} />
                 </Form.Item>
 
                 <Form.Item
@@ -319,14 +346,7 @@ const InsertForm = () => {
                 >
                   <InputNumber className="w-full" />
                 </Form.Item>
-                <Form.Item label="Tồn kho">
-                  <InputNumber
-                    className="w-full"
-                    value={0}
-                    disabled={true}
-                    placeholder="0"
-                  />
-                </Form.Item>
+
                 <Form.Item
                   label="Đơn vị"
                   name="unit"
