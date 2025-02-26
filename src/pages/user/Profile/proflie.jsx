@@ -5,22 +5,30 @@ import { fetchUser, updateUser } from "../../../redux/userSlice"; // Action upda
 const Profile = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
+
   const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
+  const userID = localStorage.getItem("userID");
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({});
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "https://i.imgur.com/TdZ9vVu.png");
 
   useEffect(() => {
-    if (!user && userId && token) {
-      dispatch(fetchUser({ userId, token })); // Gọi API để lấy thông tin user
+    if (!user && userID && token) {
+      dispatch(fetchUser({ userID, token }))
+        
+        .catch(error => {
+          console.error("Failed to fetch user:", error);
+        });
     }
-  }, [dispatch, user, userId, token]);
+  }, [dispatch, user, userID, token]);
+  
 
   useEffect(() => {
     if (user) {
       setEditedUser(user);
       setAvatarPreview(user.avatar || "https://i.imgur.com/TdZ9vVu.png");
+
     }
   }, [user]);
 
@@ -46,7 +54,7 @@ const Profile = () => {
       formData.append("avatar", editedUser.avatar); // Gửi ảnh lên server nếu có
     }
 
-    dispatch(updateUser({ userId, token, updatedData: formData })); // Gửi dữ liệu lên server
+    dispatch(updateUser({ userID, token, updatedData: formData })); // Gửi dữ liệu lên server
     setIsEditing(false);
   };
 

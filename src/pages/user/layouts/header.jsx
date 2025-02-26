@@ -90,12 +90,12 @@ const Header = () => {
   // Hàm xử lý đăng nhập thành công
   const handleLoginSuccess = async (userData) => {
     try {
-      const userInfo = await getUserInfo(userData.user.id, userData.token); // Gọi API lấy thông tin người dùng
+      const userInfo = await getUserInfo(userData.user.userID, userData.token); // Gọi API lấy thông tin người dùng
       console.log("User info:", userInfo); // Kiểm tra dữ liệu API trả về
       setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
       setShowLoginForm(false);
       localStorage.setItem("token", userData.token);
-      localStorage.setItem("userId", userData.user.id); // Lưu id vào localStorage
+      localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
     } catch (error) {
       console.error("Failed to fetch user info:", error);
     }
@@ -103,11 +103,11 @@ const Header = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+    const userID = localStorage.getItem("userID");
     console.log("Token:", token);
-    console.log("UserId:", userId);
-    if (token && userId) {
-      getUserInfo(userId, token)
+    console.log("userID:", userID);
+    if (token && userID) {
+      getUserInfo(userID, token)
         .then((userInfo) => {
           console.log("Fetched user:", userInfo); // Kiểm tra user lấy từ API
           setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
@@ -132,7 +132,7 @@ const Header = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
       // Xóa thông tin người dùng và token khỏi localStorage
       localStorage.removeItem("token");
-      localStorage.removeItem("userId");
+      localStorage.removeItem("userID");
       setUser(null); // Cập nhật trạng thái user về null
       alert("Bạn đã đăng xuất!");
       navigate("/"); // Chuyển hướng về trang Home

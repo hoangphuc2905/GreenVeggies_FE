@@ -49,7 +49,7 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
         // Gửi yêu cầu xác thực OTP đến API
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/verify-otp?email=${encodeURIComponent(email)}&otp=${otpValue}`,
+                `http://localhost:8001/api/auth/verify-otp?email=${encodeURIComponent(email)}&otp=${otpValue}`,
                 {
                     method: "POST",
                     headers: {

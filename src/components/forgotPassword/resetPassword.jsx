@@ -32,7 +32,7 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
 
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
+                `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
                 {
                     method: "POST",
                     headers: {
