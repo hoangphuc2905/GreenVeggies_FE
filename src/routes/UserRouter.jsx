@@ -13,13 +13,20 @@ import Contact from "../pages/user/Contact/Contact";
 
 const UserRouter = () => {
   return (
+
     <Provider store={store}>
       <Routes>
         {/* Các route chính của user */}
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
-        <Route path="/product/:id" element={<Detail />} /> 
-        <Route path="/wishlist" element={<Wishlist />} />
+        <Route
+        path="/product/:id"
+        element={<Detail wishlist={wishlist} setWishlist={setWishlist} />}
+      />
+      <Route
+        path="/wishlist"
+        element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />}
+      />
         <Route path="/contact" element={<Contact />} />
 
         {/* Nhóm route có Sidebar của User */}

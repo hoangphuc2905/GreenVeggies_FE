@@ -6,6 +6,8 @@ import Countdown from "react-countdown";
 const countdownDate = new Date("2025-04-13T00:00:00").getTime();
 
 import bgImage from "../../../src/assets/bg.png";
+import bg1Image from "../../../src/assets/bg1.png";
+import bg2Image from "../../../src/assets/bg2.png";
 import shipImage from "../../../src/assets/ship.png";
 import alwayImage from "../../../src/assets/alway.png";
 import supportImage from "../../../src/assets/support.png";
@@ -22,12 +24,12 @@ import Footer from "./layouts/footer";
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
+import Favourite from "./layouts/favourite";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const navigate = useNavigate();
-  const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -39,22 +41,19 @@ const Home = () => {
       const data = await getAllReviews();
       setReviews(data);
     };
-    const fetchRelatedProducts = async () => {
-      try {
-        const productsData = await getProducts();
-        setRelatedProducts(productsData);
-      } catch (error) {
-        console.error("Failed to fetch related products:", error);
-      }
-    };
 
     fetchProducts();
     fetchReviews();
-    fetchRelatedProducts();
   }, []);
 
   const handleProductClick = (id) => {
     navigate(`/product/${id}`);
+  };
+  const formatPrice = (price) => {
+    return price.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    });
   };
 
   const getRandomProducts = (products, count) => {
@@ -72,18 +71,39 @@ const Home = () => {
       {/* Content */}
 
       {/* Lấy hình ảnh */}
-      <div className="container mx-auto relative">
-        <img src={bgImage} alt="Mô tả hình ảnh" className="w-full h-auto" />
-
-        {/* Text Overlay */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <h2 className="text-white text-6xl md:text-8xl font-bold  font-amatic">
-            100% FRESH & ORGANIC FOODS
-          </h2>
-          <h3 className="text-white text-lg md:text-xl font-bold  mt-4">
-            CHÚNG TÔI PHÂN PHỐI RAU CỦ VÀ TRÁI CÂY
-          </h3>
-        </div>
+      <div className="container mx-auto relative mt-10">
+        <Carousel autoplay>
+          <div className="relative">
+            <img
+              src={bgImage}
+              alt="Mô tả hình ảnh"
+              className="w-[1400px] h-[628px]"
+            />
+            {/* Text Overlay */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <h2 className="text-white text-6xl md:text-8xl font-bold  font-amatic">
+                100% FRESH & ORGANIC FOODS
+              </h2>
+              <h3 className="text-white text-lg md:text-xl font-bold  mt-4">
+                CHÚNG TÔI PHÂN PHỐI RAU CỦ VÀ TRÁI CÂY
+              </h3>
+            </div>
+          </div>
+          <div>
+            <img
+              src={bg1Image}
+              alt="Mô tả hình ảnh"
+              className="w-[1400px] h-[628px]"
+            />
+          </div>
+          <div>
+            <img
+              src={bg2Image}
+              alt="Mô tả hình ảnh"
+              className="w-[1400px] h-[628px]"
+            />
+          </div>
+        </Carousel>
       </div>
 
       {/* Danh mục sản phẩm */}
@@ -92,39 +112,9 @@ const Home = () => {
           {/* Danh mục bên trái */}
           <div className="w-full md:w-1/4 ">
             <Menu />
-
-            {/* Sản phẩm bạn có thể thích */}
-            <div>
-              <h2 className="text-white text-2xl bg-[#82AE46] rounded-[15px] p-4 text-center mt-6 w-full">
-                Bạn có thể thích
-              </h2>
-              <div className="grid grid-cols-1 gap-4">
-                {relatedProducts.slice(0, 5).map((product, index) => (
-                  <div
-                    key={index}
-                    className="flex mt-4 cursor-pointer"
-                    onClick={() => handleProductClick(product._id)}
-                  >
-                    <div className="w-1/2 h-[100px] hover:shadow-xl hover:scale-110">
-                      <img
-                        src={
-                          Array.isArray(product.imageUrl)
-                            ? product.imageUrl[0]
-                            : product.imageUrl
-                        }
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="w-1/2 pl-4 flex flex-col justify-center">
-                      <p className="text-gray-700 font-bold">{product.name}</p>
-                      <p className="text-gray-700 font-bold">
-                        {product.price}đ
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className=" mt-6">
+              {/* Sản phẩm bạn có thể thích */}
+              <Favourite />
             </div>
           </div>
 
@@ -132,7 +122,7 @@ const Home = () => {
           <div className="w-full md:w-3/4 p-4">
             {/* Hàng trên: 4 cột */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center">
+              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center  hover:shadow-xl hover:scale-105">
                 {/* Lấy hình ảnh */}
                 <div className="container mx-auto relative h-[120px]">
                   <img
@@ -143,7 +133,7 @@ const Home = () => {
                 </div>
 
                 {/* Thông tin vận chuyển */}
-                <div className="mt-4 text-center text-xl font-bold">
+                <div className="mt-4 text-center text-xl font-bold  ">
                   MIỄN PHÍ VẬN CHUYỂN
                   <div className="text-base text-[#BCBCBC]">
                     CHO ĐƠN HÀNG TRÊN 100.000đ
@@ -151,7 +141,7 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center">
+              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center  hover:shadow-xl hover:scale-105">
                 {/* Lấy hình ảnh */}
                 <div className="container mx-auto relative h-[120px]">
                   <img
@@ -162,7 +152,7 @@ const Home = () => {
                 </div>
 
                 {/* Thông tin vận chuyển */}
-                <div className="mt-4 text-center text-xl font-bold">
+                <div className="mt-4 text-center text-xl font-bold  ">
                   LUÔN LUÔN
                   <div className="text-base text-[#BCBCBC]">
                     SẢN PHẨM ĐƯỢC ĐÓNG GÓI TỐT
@@ -170,7 +160,7 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center">
+              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center  hover:shadow-xl hover:scale-105">
                 {/* Lấy hình ảnh */}
                 <div className="container mx-auto relative h-[120px]">
                   <img
@@ -189,7 +179,7 @@ const Home = () => {
                 </div>
               </div>
 
-              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center">
+              <div className="p-6 rounded-lg shadow-md min-h-[250px] flex flex-col items-center  hover:shadow-xl hover:scale-105">
                 {/* Lấy hình ảnh */}
                 <div className="container mx-auto relative h-[120px]">
                   <img
@@ -209,7 +199,7 @@ const Home = () => {
 
             {/* Hàng dưới: 3 cột, 2 hàng */}
             <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4">
-              <div className="text-white rounded-lg shadow-md min-h-[180px] flex items-center justify-center overflow-hidden">
+              <div className="text-white rounded-lg shadow-md min-h-[180px] flex items-center justify-center overflow-hidden ">
                 <img
                   src={category1Image}
                   alt="Mô tả hình ảnh"
@@ -276,8 +266,7 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product._id)}
-                >
+                  onClick={() => handleProductClick(product.productID)}>
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -301,7 +290,9 @@ const Home = () => {
                     {product.oldPrice && (
                       <span className="line-through">{product.oldPrice}đ</span>
                     )}{" "}
-                    <span className="text-gray-700">{product.price}đ</span>
+                    <span className="text-gray-700">
+                      {formatPrice(product.price)}
+                    </span>
                   </p>
                 </div>
               ))}

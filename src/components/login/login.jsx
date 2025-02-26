@@ -22,7 +22,6 @@ const LoginForm = ({
     e.preventDefault();
     setLoading(true);
     setError("");
-    // const VITE_API_URL_USER = import.meta.env.VITE_API_URL_USER;
 
     try {
       // Gửi email và password trong body, thay vì gửi dưới dạng query string
