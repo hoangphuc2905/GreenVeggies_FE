@@ -11,6 +11,7 @@ const api = axios.create({
   },
 });
 
+// 🟢 Lấy danh sách sản phẩm
 export const getProducts = async () => {
   try {
     const response = await api.get("/products");
@@ -21,7 +22,7 @@ export const getProducts = async () => {
   }
 };
 
-// Hàm lấy thông tin sản phẩm cụ thể theo id
+// 🟢 Lấy thông tin sản phẩm theo ID
 export const getProductById = async (id) => {
   try {
     const response = await api.get(`/products/${id}`);
@@ -31,6 +32,7 @@ export const getProductById = async (id) => {
     return null;
   }
 };
+
 const api_user = axios.create({
   baseURL: API_PRODUCT_URL,
   headers: {
@@ -47,6 +49,7 @@ export const getUserById = async (userID) => {
     return null;
   }
 };
+
 
 const productAPI = axios.create({
   baseURL: API_PRODUCT_URL,
@@ -69,6 +72,7 @@ const reviewAPI = axios.create({
   },
 });
 
+// 🟢 Lấy danh sách sản phẩm theo khóa
 export const getListProducts = async (key) => {
   try {
     const response = await productAPI.get(`/${key}`);
@@ -78,7 +82,6 @@ export const getListProducts = async (key) => {
     return [];
   }
 };
-
 export const getCategories = async () => {
   try {
     const response = await api.get("/categories");
@@ -99,6 +102,7 @@ export const getListUsers = async (key) => {
   }
 };
 
+// 🟢 Lấy thông tin sản phẩm chi tiết theo ID
 export const getProductDetail = async (id) => {
   try {
     const response = await productAPI.get(`products/${id}`);
@@ -108,6 +112,8 @@ export const getProductDetail = async (id) => {
     return null;
   }
 };
+
+// 🟢 Lấy thông tin người dùng theo ID
 
 export const getUserInfo = async (userID) => {
   try {
@@ -119,6 +125,23 @@ export const getUserInfo = async (userID) => {
   }
 };
 
+// 🟢 Cập nhật thông tin người dùng
+export const updateUserInfo = async (userID, token, updatedData) => {
+  try {
+    const response = await userAPI.put(`user/${userID}`, updatedData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật thông tin người dùng:", error);
+    return null;
+  }
+};
+
+// 🟢 Thêm mới sản phẩm
 export const insertProduct = async (data) => {
   try {
     const formattedData = {
@@ -135,8 +158,6 @@ export const insertProduct = async (data) => {
       status: data.status,
     };
 
-    console.log("data", data);
-
     const response = await productAPI.post("/products", formattedData, {
       headers: { "Content-Type": "application/json" },
     });
@@ -147,6 +168,7 @@ export const insertProduct = async (data) => {
   }
 };
 
+// 🟢 Cập nhật sản phẩm theo ID
 export const updateProduct = async (id, data) => {
   try {
     if (data.productID) {
@@ -177,7 +199,7 @@ export const updateProduct = async (id, data) => {
   }
 };
 
-// Hàm lấy tất cả đánh giá
+// 🟢 Lấy tất cả đánh giá sản phẩm
 export const getAllReviews = async () => {
   try {
     const response = await reviewAPI.get("/reviews");
@@ -188,6 +210,7 @@ export const getAllReviews = async () => {
   }
 };
 
+// 🟢 Thêm danh mục mới
 export const insertCategory = async (data) => {
   try {
     const response = await api.post("/categories", data);
