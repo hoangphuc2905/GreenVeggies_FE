@@ -16,6 +16,7 @@ import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
+import logoImage from "../../../assets/green.png";
 
 import {
   SettingOutlined,
@@ -86,12 +87,12 @@ const Header = () => {
   // Hàm xử lý đăng nhập thành công
   const handleLoginSuccess = async (userData) => {
     try {
-      const userInfo = await getUserInfo(userData.user.id, userData.token); // Gọi API lấy thông tin người dùng
+      const userInfo = await getUserInfo(userData.user.userID, userData.token); // Gọi API lấy thông tin người dùng
       console.log("User info:", userInfo); // Kiểm tra dữ liệu API trả về
       setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
       setShowLoginForm(false);
       localStorage.setItem("token", userData.token);
-      localStorage.setItem("userId", userData.user.id); // Lưu id vào localStorage
+      localStorage.setItem("userId", userData.user.userID); // Lưu id vào localStorage
     } catch (error) {
       console.error("Failed to fetch user info:", error);
     }
@@ -99,11 +100,11 @@ const Header = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
+    const userID = localStorage.getItem("userId");
     console.log("Token:", token);
-    console.log("UserId:", userId);
-    if (token && userId) {
-      getUserInfo(userId, token)
+    console.log("UserId:", userID);
+    if (token && userID) {
+      getUserInfo(userID, token)
         .then((userInfo) => {
           console.log("Fetched user:", userInfo); // Kiểm tra user lấy từ API
           setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
@@ -156,7 +157,7 @@ const Header = () => {
   const isCartActive = location.pathname.startsWith("/wishlist");
 
   return (
-    <header className="bg-[#82AE46] w-full max-w-screen flex items-center shadow-md px-6 py-2 fixed top-0 z-50">
+    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md px-6 py-6 fixed top-0 z-50">
       <div className="container mx-auto flex w-full justify-between items-center ">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
@@ -178,8 +179,7 @@ const Header = () => {
               <Dropdown
                 menu={{
                   items,
-                }}
-              >
+                }}>
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
                     <FontAwesomeIcon
@@ -192,9 +192,8 @@ const Header = () => {
             </div>
           ) : (
             <button
-              className="text-white text-l font-bold bg-[#82AE46] px-4 py-2 rounded"
-              onClick={() => setShowLoginForm(true)}
-            >
+              className="text-white text-l font-bold px-4 py-2 rounded"
+              onClick={() => setShowLoginForm(true)}>
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>
@@ -203,9 +202,16 @@ const Header = () => {
 
         <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10">
           <div className="container flex justify-between items-center center mx-auto">
-            <h1 className="text-[#82AE46] text-3xl py-2 font-bold">
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-3xl py-2 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer">
+              <img
+                src={logoImage}
+                alt="Mô tả hình ảnh"
+                className="w-[40px] h-[40px]"
+              />
               GreenVeggies
-            </h1>
+            </Link>
 
             <nav>
               <ul className="flex">
@@ -215,8 +221,7 @@ const Header = () => {
                     isHomeActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link to="/" className="font-bold" onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
@@ -228,13 +233,11 @@ const Header = () => {
                     isProductActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link
                     to="/product"
                     className="font-bold"
-                    onClick={scrollToTop}
-                  >
+                    onClick={scrollToTop}>
                     CỬA HÀNG
                   </Link>
                 </li>
@@ -243,8 +246,7 @@ const Header = () => {
                     isNewsActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
@@ -258,8 +260,7 @@ const Header = () => {
                   <Link
                     to="/contact"
                     className="font-bold"
-                    onClick={scrollToTop}
-                  >
+                    onClick={scrollToTop}>
                     LIÊN HỆ
                   </Link>
                 </li>
@@ -268,13 +269,11 @@ const Header = () => {
                     isCartActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link
                     to="/wishlist"
                     className="font-bold"
-                    onClick={scrollToTop}
-                  >
+                    onClick={scrollToTop}>
                     <Space size="middle">
                       <Badge count={0} showZero>
                         <FontAwesomeIcon

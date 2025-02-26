@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import Header from "../layouts/header";
 import Footer from "../layouts/footer";
-import { getProductById, getProducts, getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm và người dùng
+import { getProductById, getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm và người dùng
 import { Breadcrumb, Divider, InputNumber, Rate } from "antd";
+import Favourite from "../layouts/favourite";
 
 const Detail = ({ wishlist, setWishlist }) => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [userData, setUserData] = useState({});
-  const [relatedProducts, setRelatedProducts] = useState([]);
+
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -19,6 +20,9 @@ const Detail = ({ wishlist, setWishlist }) => {
   const [showDescription, setShowDescription] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
   const [showInformations, setShowInformations] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showSeeMore, setShowSeeMore] = useState(false);
+  const descriptionRef = useRef(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -35,17 +39,7 @@ const Detail = ({ wishlist, setWishlist }) => {
       }
     };
 
-    const fetchRelatedProducts = async () => {
-      try {
-        const productsData = await getProducts();
-        setRelatedProducts(productsData);
-      } catch (error) {
-        console.error("Failed to fetch related products:", error);
-      }
-    };
-
     fetchProduct();
-    fetchRelatedProducts();
   }, [id]);
 
   useEffect(() => {
@@ -84,9 +78,29 @@ const Detail = ({ wishlist, setWishlist }) => {
     fetchUserNames();
   }, [product?.reviews]);
 
-  const handleProductClick = (id) => {
-    navigate(`/product/${id}`);
-  };
+  // Tính điểm trung bình đánh giá, cập nhật mỗi khi reviews thay đổi
+  const averageRating = useMemo(() => {
+    return product?.reviews?.length > 0
+      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+          product.reviews.length
+      : 0;
+  }, [product?.reviews]);
+
+  // Kiểm tra nếu mô tả dài hơn 3 dòng thì hiển thị nút "Xem thêm"
+  useEffect(() => {
+    if (descriptionRef.current) {
+      setShowSeeMore(
+        descriptionRef.current.scrollHeight >
+          descriptionRef.current.clientHeight
+      );
+    }
+  }, [product?.description]);
+
+  // Đặt lại trạng thái khi sản phẩm thay đổi
+  useEffect(() => {
+    setIsExpanded(false);
+    setShowSeeMore(false);
+  }, [id]);
 
   const handleQuantityChange = (value) => {
     setQuantity(value);
@@ -131,23 +145,26 @@ const Detail = ({ wishlist, setWishlist }) => {
 
   const addToWishlist = () => {
     const newWishlistItem = { ...product, quantity };
+    console.log("wishlist:", wishlist);
+    console.log("wishlist type:", typeof wishlist);
+    console.log("wishlist isArray:", Array.isArray(wishlist));
     setWishlist([...wishlist, newWishlistItem]);
     navigate("/wishlist");
+  };
+
+  const formatPrice = (price) => {
+    return price.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    });
   };
 
   if (!product) {
     return <div>Loading...</div>;
   }
 
-  // Tính toán điểm trung bình của các đánh giá
-  const averageRating =
-    product.reviews.length > 0
-      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) /
-        product.reviews.length
-      : 0;
-
   return (
-    <div className="min-h-screen bg-green-50 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <Header />
       {/* Content */}
@@ -173,7 +190,7 @@ const Detail = ({ wishlist, setWishlist }) => {
                 <img
                   src={selectedImage}
                   alt="Ảnh chính"
-                  className="w-full h-96 object-cover rounded-md border cursor-pointer"
+                  className="w-full h-96 object-cover rounded-md  cursor-pointer"
                   onClick={handleImageClick}
                   onMouseMove={isZoomed ? handleMouseMove : null}
                   style={{
@@ -189,7 +206,7 @@ const Detail = ({ wishlist, setWishlist }) => {
                 {isZoomed && (
                   <div
                     id="zoom-frame"
-                    className="absolute border border-gray-300"
+                    className="absolute  border-gray-300"
                     style={{
                       width: "200px",
                       height: "200px",
@@ -236,30 +253,50 @@ const Detail = ({ wishlist, setWishlist }) => {
                   </>
                 )}
             </div>
-            <div className="p-4 w-[416px] h-[416px] overflow-auto ">
+            <div className="p-4 w-[416px] h-[416px] overflow-auto">
               <h1 className="text-3xl font-bold mt-4">{product.name}</h1>
               <div className="mt-4 flex items-center">
-                <Rate allowHalf defaultValue={averageRating} />
+                <Rate allowHalf value={averageRating} disabled />
                 <span className="ml-2">
                   ({product.reviews.length} đánh giá)
                 </span>
               </div>
-              <p className="mt-4 text-wrap">{product.description}</p>
-              <p className="text-xl mt-2 text-[#FEA837]">{product.price} VNĐ</p>
+
+              {/* Mô tả sản phẩm */}
+              <div className="mt-4">
+                <p
+                  ref={descriptionRef}
+                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
+                  {product.description}
+                </p>
+                {showSeeMore && !isExpanded && (
+                  <button
+                    className="text-blue-500 underline mt-2"
+                    onClick={() => setIsExpanded(true)}>
+                    Xem thêm
+                  </button>
+                )}
+              </div>
+
+              <p className="text-xl mt-2 text-[#FEA837]">
+                {formatPrice(product.price)}{" "}
+              </p>
               {product.oldPrice && (
                 <p className="text-xl line-through">
                   {product.oldPrice} <span className="mr-2">VNĐ</span>
                 </p>
               )}
+
               <p className="mt-4">
-                <b>Mã Loại : {product.category.categoryID}</b>
+                <b>Số lượng : {product.quantity}</b>
               </p>
               <p className="mt-4">
                 <b>Loại : {product.category.name}</b>
               </p>
+
               <p className="mt-4 flex items-center text-center">
                 <button
-                  className="px-2 py-1 border rounded-l bg-gray-200  text-center"
+                  className="px-2 py-1 border rounded-l bg-gray-200"
                   onClick={decrementQuantity}>
                   -
                 </button>
@@ -275,46 +312,18 @@ const Detail = ({ wishlist, setWishlist }) => {
                   +
                 </button>
                 <button
-                  className="bg-[#82AE46] text-white px-4 py-2 rounded-lg ml-4 hover:shadow-xl hover:scale-110 active:scale-105 active:shadow-lg transition-all duration-200"
+                  className="text-white text-xl font-bold uppercase tracking-wide text-center 
+               bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
+               rounded-xl p-4 shadow-lg 
+               hover:scale-105 transition duration-300 ease-in-out ml-2"
                   onClick={addToWishlist}>
                   THÊM VÀO GIỎ
                 </button>
               </p>
             </div>
+
             <div className=" p-4  w-[416px] h-[416px] overflow-auto">
-              <div>
-                <h2 className="text-white text-2xl bg-[#82AE46] rounded-[15px] p-4 text-center mt-6 w-full">
-                  Bạn có thể thích
-                </h2>
-                <div className="grid grid-cols-1 gap-4">
-                  {relatedProducts.slice(0, 4).map((product, index) => (
-                    <div
-                      key={index}
-                      className="flex mt-4 cursor-pointer "
-                      onClick={() => handleProductClick(product._id)}>
-                      <div className="w-1/2 h-[100px]">
-                        <img
-                          src={
-                            Array.isArray(product.imageUrl)
-                              ? product.imageUrl[0]
-                              : product.imageUrl
-                          }
-                          alt={product.name}
-                          className="w-full h-full object-over hover:shadow-xl hover:scale-110"
-                        />
-                      </div>
-                      <div className="w-1/2 pl-4 flex flex-col justify-center">
-                        <p className="text-gray-700 font-bold">
-                          {product.name}
-                        </p>
-                        <p className="text-gray-700 font-bold">
-                          {product.price}đ
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <Favourite />
             </div>
           </div>
         </div>
@@ -399,12 +408,16 @@ const Detail = ({ wishlist, setWishlist }) => {
                 gridTemplateColumns: "1fr 1fr",
                 gap: "10px",
               }}>
-              <p>Số lượng: {product.quantity}</p>
+              <p>Danh mục: {product.category.name}</p>
               <p>Nguồn gốc: {product.origin}</p>
               <p>Đơn vị tính: {product.unit}</p>
               <p>
                 Trạng thái:{" "}
-                {product.status === "available" ? "Còn hàng" : "Hết hàng"}
+                {product.status === "available" ? (
+                  "Còn hàng"
+                ) : (
+                  <span className="text-red-500"> Hết hàng</span>
+                )}
               </p>
             </div>
           </div>
@@ -437,6 +450,7 @@ Detail.propTypes = {
     PropTypes.shape({
       _id: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
       price: PropTypes.number.isRequired,
       quantity: PropTypes.number.isRequired,
       imageUrl: PropTypes.oneOfType([

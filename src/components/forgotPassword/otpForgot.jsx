@@ -49,7 +49,7 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
         // Gửi yêu cầu xác thực OTP đến API
         try {
             const response = await fetch(
-                `http://localhost:8009/api/auth/verify-otp-reset?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
+                `http://localhost:8001/api/auth/verify-otp-reset?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
                 {
                     method: "POST",
                     headers: {

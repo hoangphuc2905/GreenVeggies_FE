@@ -1,12 +1,11 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_PRODUCT_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,15 +32,15 @@ export const getProductById = async (id) => {
   }
 };
 const api_user = axios.create({
-  baseURL: API_URL,
+  baseURL: API_PRODUCT_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 // Hàm lấy thông tin sản phẩm cụ thể theo id
-export const getUserById = async (id) => {
+export const getUserById = async (userID) => {
   try {
-    const response = await api_user.get(`/users/${id}`);
+    const response = await api_user.get(`/users/${userID}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
@@ -80,6 +79,16 @@ export const getListProducts = async (key) => {
   }
 };
 
+export const getCategories = async () => {
+  try {
+    const response = await api.get("/categories");
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách danh mục:", error);
+    return [];
+  }
+};
+
 export const getListUsers = async (key) => {
   try {
     const response = await userAPI.get(`/${key}`);
@@ -100,9 +109,9 @@ export const getProductDetail = async (id) => {
   }
 };
 
-export const getUserInfo = async (id) => {
+export const getUserInfo = async (userID) => {
   try {
-    const response = await userAPI.get(`user/${id}`);
+    const response = await userAPI.get(`user/${userID}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);

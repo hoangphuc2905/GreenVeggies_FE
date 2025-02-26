@@ -11,7 +11,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
         setError(""); // Reset error
 
         try {
-            const response = await fetch(`http://localhost:8009/api/auth/forgot-password?email=${emailqmk}`, {
+            const response = await fetch(`http://localhost:8001/api/auth/forgot-password?email=${emailqmk}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
