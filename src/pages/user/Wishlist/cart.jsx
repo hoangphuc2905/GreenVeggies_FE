@@ -102,9 +102,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
                       alt={item.name}
                       className="w-[80px] h-auto"
                     />
-                    <p className="max-w-[300px] break-words">
-                      {item.description}
-                    </p>
+                    <p className="max-w-[300px] break-words">{item.name}</p>
                   </div>
 
                   <div className="col-span-1 text-center">

@@ -19,8 +19,8 @@ const Favourite = () => {
     fetchProducts();
   }, []);
 
-  const handleProductClick = (id) => {
-    navigate(`/product/${id}`);
+  const handleProductClick = (productID) => {
+    navigate(`/product/${productID}`);
   };
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN", {
@@ -38,13 +38,13 @@ const Favourite = () => {
                hover:scale-105 transition duration-300 ease-in-out">
         Bạn có thể thích
       </h2>
-      <div className="grid grid-cols-1 gap-4 overflow-y-auto ">
+      <div className="grid grid-cols-1 gap-4">
         {products.slice(0, 4).map((product, index) => (
           <div
             key={index}
             className="flex mt-4 cursor-pointer hover:shadow-xl hover:scale-110"
-            onClick={() => handleProductClick(product._id)}>
-            <div className="w-1/2 h-[100px] ">
+            onClick={() => handleProductClick(product.productID)}>
+            <div className="w-1/2 h-[100px]">
               <img
                 src={
                   Array.isArray(product.imageUrl)

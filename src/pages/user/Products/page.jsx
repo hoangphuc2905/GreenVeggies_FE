@@ -116,56 +116,66 @@ const Product = () => {
             {/* 80% */}
             <div className="flex flex-col w-full">
               <div className="grid grid-cols-4 grid-rows-2 gap-4">
-                {currentProducts.map((product, index) => (
-                  <Link
-                    className=""
-                    to={`/product/${product.productID}`}
-                    key={index}>
-                    <div
-                      id={`product-${index}`}
-                      className="p-4 bg-white rounded-sm shadow-md ml-4 h-[270px] relative hover:shadow-xl hover:scale-105">
-                      {product.discount && (
-                        <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
-                          {product.discount}%
+                {currentProducts.map((product, index) => {
+                  const averageRating =
+                    product.reviews?.length > 0
+                      ? product.reviews.reduce(
+                          (sum, review) => sum + review.rating,
+                          0
+                        ) / product.reviews.length
+                      : 0;
+
+                  return (
+                    <Link
+                      className=""
+                      to={`/product/${product.productID}`}
+                      key={index}>
+                      <div
+                        id={`product-${index}`}
+                        className="p-4 bg-white rounded-sm shadow-md ml-4 h-[270px] relative hover:shadow-xl hover:scale-105">
+                        {product.discount && (
+                          <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
+                            {product.discount}%
+                          </div>
+                        )}
+                        <div className="container mx-auto relative h-[150px]">
+                          <img
+                            src={
+                              Array.isArray(product.imageUrl)
+                                ? product.imageUrl[0]
+                                : product.imageUrl
+                            }
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      )}
-                      <div className="container mx-auto relative h-[150px]">
-                        <img
-                          src={
-                            Array.isArray(product.imageUrl)
-                              ? product.imageUrl[0]
-                              : product.imageUrl
-                          }
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <p className="text-gray-700 font-bold text-center overflow-hidden text-ellipsis line-clamp-2">
-                        {product.name}
-                      </p>
+                        <p className="text-gray-700 font-bold text-center overflow-hidden text-ellipsis line-clamp-2">
+                          {product.name}
+                        </p>
 
-                      <p className="text-gray-700 text-center">
-                        {product.oldPrice && (
-                          <span className="line-through">
-                            {formatPrice(product.oldPrice)}
+                        <p className="text-gray-700 text-center">
+                          {product.oldPrice && (
+                            <span className="line-through">
+                              {formatPrice(product.oldPrice)}
+                            </span>
+                          )}{" "}
+                          <span className="text-gray-700">
+                            {formatPrice(product.price)}
                           </span>
-                        )}{" "}
-                        <span className="text-gray-700">
-                          {formatPrice(product.price)}
-                        </span>
-                      </p>
+                        </p>
 
-                      {/* Hiển thị số lượng đã bán */}
-                      <div className="absolute bottom-2 right-2  text-gray-700 text-xs px-2 py-1 rounded-md">
-                        Đã bán: {product.sold}
+                        {/* Hiển thị số lượng đã bán */}
+                        <div className="absolute bottom-2 right-2  text-gray-700 text-xs px-2 py-1 rounded-md">
+                          Đã bán: {product.sold}
+                        </div>
+                        {/* Hiển thị số lượng đã bán */}
+                        <div className="absolute bottom-2 left-2  text-gray-700 text-xs px-2 py-1 rounded-md">
+                          Đánh giá: {averageRating.toFixed(1)}
+                        </div>
                       </div>
-                      {/* Hiển thị số lượng đã bán */}
-                      <div className="absolute bottom-2 left-2  text-gray-700 text-xs px-2 py-1 rounded-md">
-                        Đánh giá: {product.review}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
 
               <div className="w-full flex justify-center mt-6 text-[#82AE46]">

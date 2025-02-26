@@ -14,8 +14,6 @@ const Detail = ({ wishlist, setWishlist }) => {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomPosition, setZoomPosition] = useState({ top: 0, left: 0 });
   const navigate = useNavigate();
   const [showDescription, setShowDescription] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
@@ -48,31 +46,36 @@ const Detail = ({ wishlist, setWishlist }) => {
 
       const uniqueUserIDs = [...new Set(product.reviews.map((r) => r.userID))];
 
-      uniqueUserIDs.forEach(async (userID) => {
-        if (!userID) {
-          console.error("Lỗi: userID bị null hoặc undefined");
-          return;
-        }
+      try {
+        const userInfoArray = await Promise.all(
+          uniqueUserIDs.map(async (userID) => {
+            if (!userID) return null;
+            if (userData[userID]) return { userID, username: userData[userID] };
 
-        if (!userData[userID]) {
-          try {
-            console.log("Fetching user for ID:", userID);
-            const response = await getUserInfo(userID);
-            console.log("User info:", response);
+            try {
+              console.log("Fetching user for ID:", userID);
+              const response = await getUserInfo(userID);
+              return {
+                userID,
+                username: response?.username || "Người dùng ẩn danh",
+              };
+            } catch (error) {
+              console.error(`Lỗi khi lấy thông tin user ${userID}:`, error);
+              return { userID, username: "Người dùng ẩn danh" };
+            }
+          })
+        );
 
-            setUserData((prev) => ({
-              ...prev,
-              [userID]: response?.username || "Người dùng ẩn danh",
-            }));
-          } catch (error) {
-            console.error(`Lỗi khi lấy thông tin user ${userID}:`, error);
-            setUserData((prev) => ({
-              ...prev,
-              [userID]: "Người dùng ẩn danh",
-            }));
-          }
-        }
-      });
+        // Cập nhật userData
+        const newUserData = {};
+        userInfoArray.forEach((user) => {
+          if (user) newUserData[user.userID] = user.username;
+        });
+
+        setUserData((prev) => ({ ...prev, ...newUserData }));
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách user:", error);
+      }
     };
 
     fetchUserNames();
@@ -112,17 +115,6 @@ const Detail = ({ wishlist, setWishlist }) => {
 
   const decrementQuantity = () => {
     setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
-  };
-
-  const handleMouseMove = (e) => {
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setZoomPosition({ top: y, left: x });
-  };
-
-  const handleImageClick = () => {
-    setIsZoomed(!isZoomed);
   };
 
   const toggleDescription = () => {
@@ -190,36 +182,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                 <img
                   src={selectedImage}
                   alt="Ảnh chính"
-                  className="w-full h-96 object-cover rounded-md  cursor-pointer"
-                  onClick={handleImageClick}
-                  onMouseMove={isZoomed ? handleMouseMove : null}
-                  style={{
-                    transition: "transform 0.3s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = "scale(1.2)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = "scale(1)";
-                  }}
+                  className="w-full h-96 object-cover rounded-md cursor-pointer"
                 />
-                {isZoomed && (
-                  <div
-                    id="zoom-frame"
-                    className="absolute  border-gray-300"
-                    style={{
-                      width: "200px",
-                      height: "200px",
-                      top: zoomPosition.top - 100,
-                      left: zoomPosition.left + 220, // Đặt khung phóng to kế bên ảnh chính
-                      backgroundImage: `url(${selectedImage})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: `${-zoomPosition.left + 100}px ${
-                        -zoomPosition.top + 100
-                      }px`,
-                      pointerEvents: "none",
-                    }}></div>
-                )}
               </div>
               {/* Ảnh dạng slider nếu có nhiều ảnh */}
               {Array.isArray(product.imageUrl) &&
@@ -238,15 +202,6 @@ const Detail = ({ wishlist, setWishlist }) => {
                               : "border-gray-300"
                           }`}
                           onClick={() => setSelectedImage(img)}
-                          style={{
-                            transition: "transform 0.3s ease",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.target.style.transform = "scale(1.2)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.transform = "scale(1)";
-                          }}
                         />
                       ))}
                     </div>
@@ -322,7 +277,7 @@ const Detail = ({ wishlist, setWishlist }) => {
               </p>
             </div>
 
-            <div className=" p-4  w-[416px] h-[416px] overflow-auto">
+            <div className="p-4 w-[416px] h-[416px] overflow-auto">
               <Favourite />
             </div>
           </div>
@@ -425,17 +380,20 @@ const Detail = ({ wishlist, setWishlist }) => {
         {showReviews && (
           <div className="mt-4 p-4  rounded-lg bg-[#f0fdf4]">
             <h2 className="text-2xl font-bold">Đánh giá sản phẩm</h2>
-            {product.reviews.map((review, index) => (
-              <div key={index} className="mt-2">
-                <p>
-                  <b>{userData[review.userID]}</b> -{" "}
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </p>
-                <Rate disabled defaultValue={review.rating} />
-                <p>{review.comment}</p>
-                <Divider />
-              </div>
-            ))}
+            {product.reviews.map((review, index) => {
+              console.log("Review:", review); // Kiểm tra review có userID không
+              return (
+                <div key={index} className="mt-2">
+                  <p>
+                    <b>{userData[review.userID] || "Người dùng ẩn danh"}</b> -{" "}
+                    {new Date(review.createdAt).toLocaleDateString()}
+                  </p>
+                  <Rate disabled defaultValue={review.rating} />
+                  <p>{review.comment}</p>
+                  <Divider />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
