@@ -17,7 +17,7 @@ import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
-import logoImage from "../../../assets/green.png";
+import logoImage from "../../../assets/Green.png";
 
 import {
   SettingOutlined,
