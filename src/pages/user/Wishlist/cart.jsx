@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import Header from "../layouts/header";
+
 import Footer from "../layouts/footer";
 import { Divider, InputNumber } from "antd";
 import bgImage from "../../../assets/bg_1.png";

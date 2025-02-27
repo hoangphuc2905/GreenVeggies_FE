@@ -28,7 +28,6 @@ import {
 import { Dropdown } from "antd";
 
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
-// import { User } from "lucide-react";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -46,6 +45,8 @@ const Header = () => {
 
   const [emailqmk, setEmailqmk] = useState("");
   const [otpqmk, setOtpqmk] = useState("");
+
+  const [searchQuery, setSearchQuery] = useState(""); // Thêm trạng thái cho từ khóa tìm kiếm
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
@@ -177,9 +178,17 @@ const Header = () => {
   const isNewsActive = location.pathname.startsWith("/news");
   const isCartActive = location.pathname.startsWith("/wishlist");
 
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && searchQuery.trim() !== "") {
+      navigate(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(""); // Reset thanh tìm kiếm về giá trị rỗng
+    }
+  };
+
   return (
     <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
-      <div className="container mx-auto flex w-full justify-between items-center ">
+      <div className="container mx-auto flex w-full justify-between items-center  ">
+
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
           <div className="text-white text-l font-bold ml-2">
@@ -193,7 +202,7 @@ const Header = () => {
             khoinhokboddy@gmail.com
           </div>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 ">
           {user ? (
             <div className="text-white text-l font-bold">
               Xin chào, {user.username}
@@ -214,9 +223,8 @@ const Header = () => {
             </div>
           ) : (
             <button
-              className="text-white text-l font-bold px-4 py-2 rounded"
-              onClick={() => setShowLoginForm(true)}
-            >
+              className="text-white text-l font-bold px-4  rounded"
+              onClick={() => setShowLoginForm(true)}>
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>
@@ -323,6 +331,9 @@ const Header = () => {
                     type="text"
                     placeholder="Tìm kiếm"
                     className="px-3 py-2 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 w-[300px] bg-[#D9D9D9]"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearch}
                   />
                   <FontAwesomeIcon
                     icon={faMagnifyingGlass}

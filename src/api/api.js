@@ -1,6 +1,5 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
@@ -50,7 +49,6 @@ export const getUserById = async (userID) => {
     return null;
   }
 };
-
 
 const productAPI = axios.create({
   baseURL: API_PRODUCT_URL,
@@ -233,6 +231,29 @@ export const insertCategory = async (data) => {
     return null;
   }
 };
+// 🟢 Lấy tất cả sản phẩm
+export const getAllProducts = async () => {
+  try {
+    const response = await api.get("/products");
+    console.log("API response:", response.data); // In ra dữ liệu trả về từ API
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách tất cả sản phẩm:", error);
+    return [];
+  }
+};
+// 🟢 Lấy danh sách danh mục từ sản phẩm
+export const getCategoriesFromProducts = async () => {
+  try {
+    const products = await getAllProducts();
+    const categories = [...new Set(products.map(product => product.category))];
+    return categories;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
+    return [];
+  }
+};
+
 // 🟢 Lấy thông tin nhập hàng
 export const getStockEntry = async (id) => {
   try {
