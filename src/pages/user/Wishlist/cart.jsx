@@ -50,8 +50,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Header />
+    <div className="min-h-screen bg-white flex flex-col  px-[10%]">
       <div className="container mx-auto mt-14">
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
         <div className="relative">

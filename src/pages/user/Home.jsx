@@ -64,14 +64,8 @@ const Home = () => {
   const randomProducts = getRandomProducts(products, 6);
 
   return (
-    <div className="h-screen w-full bg-white flex flex-col">
-      {/* //<Headers */}
-      <Header />
-
-      {/* Content */}
-
-      {/* Lấy hình ảnh */}
-      <div className="container mx-auto relative mt-10">
+    <div className="h-screen w-full bg-white flex flex-col  px-[10%]">
+      <div className="container mx-auto relative mt-10 ">
         <Carousel autoplay>
           <div className="relative">
             <img
@@ -266,7 +260,8 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product.productID)}>
+                  onClick={() => handleProductClick(product.productID)}
+                >
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%

@@ -11,11 +11,13 @@ import ChangePassword from "../pages/user/Profile/changepassword";
 import Address from "../pages/user/Profile/address"; // Import Address
 import Contact from "../pages/user/Contact/Contact";
 import { useState } from "react";
+import Header from "../pages/user/layouts/header";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
   return (
     <Provider store={store}>
+      <Header></Header>
       <Routes>
         {/* Các route chính của user */}
         <Route path="/" element={<Home />} />

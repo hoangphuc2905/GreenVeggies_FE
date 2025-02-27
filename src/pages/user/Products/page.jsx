@@ -55,13 +55,10 @@ const Product = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <Header />
-      {/* Content */}
+    <div className="min-h-screen bg-white flex flex-col  px-[10%]">
       <div className="container mx-auto">
         {/* Lấy hình ảnh */}
-        <div className="container mx-auto relative">
+        <div className="container mx-auto relative mt-[8.8%]">
           <img src={bgImage} alt="Mô tả hình ảnh" className="w-full h-auto" />
 
           {/* Text Overlay */}
@@ -129,10 +126,12 @@ const Product = () => {
                     <Link
                       className=""
                       to={`/product/${product.productID}`}
-                      key={index}>
+                      key={index}
+                    >
                       <div
                         id={`product-${index}`}
-                        className="p-4 bg-white rounded-sm shadow-md ml-4 h-[270px] relative hover:shadow-xl hover:scale-105">
+                        className="p-4 bg-white rounded-sm shadow-md ml-4 h-[270px] relative hover:shadow-xl hover:scale-105"
+                      >
                         {product.discount && (
                           <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                             {product.discount}%

@@ -1,13 +1,8 @@
-import Header from "../layouts/header";
 import Footer from "../layouts/footer";
 
 const Lienhe = () => {
   return (
-    <>
-      {/* Header */}
-      <Header />
-
-      {/* Hero Section với nền hình ảnh rõ nét */}
+    <div className="px-[10%]">
       <div className="container mx-auto relative">
         <img
           src="src\assets\thuan10.webp"
@@ -42,18 +37,35 @@ const Lienhe = () => {
               📢 Vegefoods - Đồng hành cùng sức khỏe gia đình bạn!
             </h2>
             <p className="text-gray-700">
-              Chào mừng bạn đến với <strong>Vegefoods</strong>, nơi cung cấp <strong>thực phẩm sạch, tươi ngon</strong> mỗi ngày. Chúng tôi cam kết mang đến <strong>rau củ quả chất lượng cao</strong>, đảm bảo <strong>an toàn sức khỏe</strong> cho mọi gia đình. Với mong muốn phục vụ tốt nhất, Vegefoods luôn tuyển chọn kỹ lưỡng từng sản phẩm, đảm bảo nguồn gốc rõ ràng và đạt tiêu chuẩn an toàn thực phẩm.
+              Chào mừng bạn đến với <strong>Vegefoods</strong>, nơi cung cấp{" "}
+              <strong>thực phẩm sạch, tươi ngon</strong> mỗi ngày. Chúng tôi cam
+              kết mang đến <strong>rau củ quả chất lượng cao</strong>, đảm bảo{" "}
+              <strong>an toàn sức khỏe</strong> cho mọi gia đình. Với mong muốn
+              phục vụ tốt nhất, Vegefoods luôn tuyển chọn kỹ lưỡng từng sản
+              phẩm, đảm bảo nguồn gốc rõ ràng và đạt tiêu chuẩn an toàn thực
+              phẩm.
             </p>
             <div className="mt-4 space-y-2 text-gray-700">
-              <p>📍 <strong>Địa chỉ:</strong> 12 Phạm Văn Bảo, P.1, Gò Vấp, TP.HCM</p>
-              <p>📞 <strong>Hotline hỗ trợ:</strong> (+84) 987-654-321</p>
-              <p>📧 <strong>Email liên hệ:</strong> khoinhokboddy@gmail.com</p>
+              <p>
+                📍 <strong>Địa chỉ:</strong> 12 Phạm Văn Bảo, P.1, Gò Vấp,
+                TP.HCM
+              </p>
+              <p>
+                📞 <strong>Hotline hỗ trợ:</strong> (+84) 987-654-321
+              </p>
+              <p>
+                📧 <strong>Email liên hệ:</strong> khoinhokboddy@gmail.com
+              </p>
             </div>
             <p className="mt-4 text-gray-700">
-              Nếu bạn có bất kỳ câu hỏi nào về sản phẩm hoặc cần tư vấn, <strong>đừng ngần ngại liên hệ với chúng tôi</strong>! Vegefoods luôn sẵn sàng hỗ trợ và đồng hành cùng bạn.
+              Nếu bạn có bất kỳ câu hỏi nào về sản phẩm hoặc cần tư vấn,{" "}
+              <strong>đừng ngần ngại liên hệ với chúng tôi</strong>! Vegefoods
+              luôn sẵn sàng hỗ trợ và đồng hành cùng bạn.
             </p>
             <p className="mt-4 text-green-600 font-bold text-center">
-              🌿 Đặt hàng ngay hôm nay để nhận <strong>ưu đãi đặc biệt</strong> và cùng Vegefoods xây dựng một <strong>lối sống xanh, lành mạnh!</strong> 🚀
+              🌿 Đặt hàng ngay hôm nay để nhận <strong>ưu đãi đặc biệt</strong>{" "}
+              và cùng Vegefoods xây dựng một{" "}
+              <strong>lối sống xanh, lành mạnh!</strong> 🚀
             </p>
           </div>
         </div>
@@ -97,7 +109,7 @@ const Lienhe = () => {
 
       {/* Footer */}
       <Footer />
-    </>
+    </div>
   );
 };
 
