@@ -61,7 +61,7 @@ const CategoryPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col mx-[10%]">
       {/* Header */}
       
       {/* Content */}
