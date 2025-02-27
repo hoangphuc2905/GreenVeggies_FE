@@ -78,9 +78,9 @@ const Home = () => {
       {/* //<Headers */}
 
       <div
-        className="container mx-auto relative mt-28
+        className="container mx-auto relative mt-[100px]
       ">
-        <Carousel arrows infinite={false}>
+        <Carousel arrows autoplay infinite={false}>
           {images.map((item) => (
             <div key={item.id} className="relative">
               <img
@@ -262,7 +262,7 @@ const Home = () => {
               {randomProducts.map((product, index) => (
                 <div
                   key={index}
-                  className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
+                  className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
                   onClick={() => handleProductClick(product.productID)}
                 >
                   {product.discount && (

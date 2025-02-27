@@ -158,7 +158,7 @@ const Detail = ({ wishlist, setWishlist }) => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col mx-[10%]">
       <div className="mt-20">
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
       </div>
