@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import Header from "../layouts/header";
+
 import Footer from "../layouts/footer";
 import { getProductById, getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm và người dùng
-import { Breadcrumb, Divider, InputNumber, Rate } from "antd";
+import { Breadcrumb, Divider, InputNumber, Pagination, Rate } from "antd";
 import Favourite from "../layouts/favourite";
 
 const Detail = ({ wishlist, setWishlist }) => {
@@ -21,7 +21,9 @@ const Detail = ({ wishlist, setWishlist }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSeeMore, setShowSeeMore] = useState(false);
   const descriptionRef = useRef(null);
-
+  const [selectedTab, setSelectedTab] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -158,7 +160,7 @@ const Detail = ({ wishlist, setWishlist }) => {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <Header />
+      
       {/* Content */}
       <div className="mt-20">
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
@@ -171,7 +173,11 @@ const Detail = ({ wishlist, setWishlist }) => {
           <Breadcrumb.Item>
             <Link to="/product">Products</Link>
           </Breadcrumb.Item>
-          <Breadcrumb.Item>Trái Cây</Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <Link to={`/category/${product.category.categoryID}`}>
+              {product.category.name}
+            </Link>
+          </Breadcrumb.Item>
         </Breadcrumb>
         <div className="flex flex-col items-center">
           <br></br>
@@ -277,7 +283,7 @@ const Detail = ({ wishlist, setWishlist }) => {
               </p>
             </div>
 
-            <div className="p-4 w-[416px] h-[416px] overflow-auto">
+            <div className="overflow-y-auto overflow-x-hidden max-h-[416px] pr-2">
               <Favourite />
             </div>
           </div>
@@ -285,66 +291,64 @@ const Detail = ({ wishlist, setWishlist }) => {
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
         <div className="grid grid-cols-3 gap-4">
           <button
-            className="hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200"
+            className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+              selectedTab === "description"
+                ? "bg-[#82AE46] text-white font-bold"
+                : ""
+            }`}
             style={{
-              backgroundColor: "#f0fdf4", // bg-green-50
-              color: "#82AE46",
+              backgroundColor:
+                selectedTab === "description" ? "#82AE46" : "#f0fdf4",
+              color: selectedTab === "description" ? "white" : "#82AE46",
               padding: "16px",
               borderRadius: "8px",
               border: "2px solid #82AE46",
-              transition: "background-color 0.3s, color 0.3s",
             }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = "#82AE46";
-              e.target.style.color = "white";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "#f0fdf4"; // bg-green-50
-              e.target.style.color = "#82AE46";
-            }}
-            onClick={toggleDescription}>
+            onClick={() => {
+              setSelectedTab("description");
+              toggleDescription();
+            }}>
             MÔ TẢ
           </button>
           <button
-            className="hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200"
+            className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+              selectedTab === "informations"
+                ? "bg-[#82AE46] text-white font-bold"
+                : ""
+            }`}
             style={{
-              backgroundColor: "#f0fdf4", // bg-green-50
-              color: "#82AE46",
+              backgroundColor:
+                selectedTab === "informations" ? "#82AE46" : "#f0fdf4",
+              color: selectedTab === "informations" ? "white" : "#82AE46",
               padding: "16px",
               borderRadius: "8px",
               border: "2px solid #82AE46",
-              transition: "background-color 0.3s, color 0.3s",
             }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = "#82AE46";
-              e.target.style.color = "white";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "#f0fdf4"; // bg-green-50
-              e.target.style.color = "#82AE46";
-            }}
-            onClick={toggleInformations}>
+            onClick={() => {
+              setSelectedTab("informations");
+              toggleInformations();
+            }}>
             THÔNG TIN LIÊN QUAN
           </button>
+
           <button
-            className="hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200"
+            className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+              selectedTab === "reviews"
+                ? "bg-[#82AE46] text-white font-bold"
+                : ""
+            }`}
             style={{
-              backgroundColor: "#f0fdf4", // bg-green-50
-              color: "#82AE46",
+              backgroundColor:
+                selectedTab === "reviews" ? "#82AE46" : "#f0fdf4",
+              color: selectedTab === "reviews" ? "white" : "#82AE46",
               padding: "16px",
               borderRadius: "8px",
               border: "2px solid #82AE46",
-              transition: "background-color 0.3s, color 0.3s",
             }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = "#82AE46";
-              e.target.style.color = "white";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = "#f0fdf4"; // bg-green-50
-              e.target.style.color = "#82AE46";
-            }}
-            onClick={toggleReviews}>
+            onClick={() => {
+              setSelectedTab("reviews");
+              toggleReviews();
+            }}>
             ĐÁNH GIÁ
           </button>
         </div>
@@ -378,11 +382,13 @@ const Detail = ({ wishlist, setWishlist }) => {
           </div>
         )}
         {showReviews && (
-          <div className="mt-4 p-4  rounded-lg bg-[#f0fdf4]">
+          <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
             <h2 className="text-2xl font-bold">Đánh giá sản phẩm</h2>
-            {product.reviews.map((review, index) => {
-              console.log("Review:", review); // Kiểm tra review có userID không
-              return (
+
+            {/* Xác định phạm vi đánh giá hiển thị */}
+            {product.reviews
+              .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+              .map((review, index) => (
                 <div key={index} className="mt-2">
                   <p>
                     <b>{userData[review.userID] || "Người dùng ẩn danh"}</b> -{" "}
@@ -392,8 +398,16 @@ const Detail = ({ wishlist, setWishlist }) => {
                   <p>{review.comment}</p>
                   <Divider />
                 </div>
-              );
-            })}
+              ))}
+
+            {/* Phân trang */}
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={product.reviews.length}
+              onChange={(page) => setCurrentPage(page)}
+              className="mt-4 flex justify-center"
+            />
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import Header from "../layouts/header";
+
 import Footer from "../layouts/footer";
 import { Divider, InputNumber } from "antd";
 import bgImage from "../../../assets/bg_1.png";
@@ -51,7 +51,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <Header />
+      {/* Header */}
       <div className="container mx-auto mt-14">
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
         <div className="relative">

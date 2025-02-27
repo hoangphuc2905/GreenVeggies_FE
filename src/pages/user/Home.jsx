@@ -19,12 +19,22 @@ import category3Image from "../../../src/assets/category-3.png";
 import category4Image from "../../../src/assets/category-4.png";
 import bg3Image from "../../../src/assets/bg_3_1.png";
 
-import Header from "./layouts/header";
 import Footer from "./layouts/footer";
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
 import Favourite from "./layouts/favourite";
+
+const images = [
+  {
+    id: 1,
+    src: bgImage,
+    description: "100% FRESH & ORGANIC FOODS",
+    subText: "CHÚNG TÔI PHÂN PHỐI RAU CỦ VÀ TRÁI CÂY",
+  },
+  { id: 2, src: bg1Image },
+  { id: 3, src: bg2Image },
+];
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -64,45 +74,32 @@ const Home = () => {
   const randomProducts = getRandomProducts(products, 6);
 
   return (
-    <div className="h-screen w-full bg-white flex flex-col">
+    <div className="h-screen w-full bg-white flex flex-col  px-[10%]">
       {/* //<Headers */}
-      <Header />
 
-      {/* Content */}
-
-      {/* Lấy hình ảnh */}
-      <div className="container mx-auto relative mt-10">
-        <Carousel autoplay>
-          <div className="relative">
-            <img
-              src={bgImage}
-              alt="Mô tả hình ảnh"
-              className="w-[1400px] h-[628px]"
-            />
-            {/* Text Overlay */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h2 className="text-white text-6xl md:text-8xl font-bold  font-amatic">
-                100% FRESH & ORGANIC FOODS
-              </h2>
-              <h3 className="text-white text-lg md:text-xl font-bold  mt-4">
-                CHÚNG TÔI PHÂN PHỐI RAU CỦ VÀ TRÁI CÂY
-              </h3>
+      <div
+        className="container mx-auto relative mt-28
+      ">
+        <Carousel arrows infinite={false}>
+          {images.map((item) => (
+            <div key={item.id} className="relative">
+              <img
+                src={item.src}
+                alt="Mô tả hình ảnh"
+                className="w-full h-[70vh] object-fill"
+              />
+              {item.description && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <h2 className="text-white text-6xl md:text-8xl font-bold font-amatic">
+                    {item.description}
+                  </h2>
+                  <h3 className="text-white text-lg md:text-xl font-bold mt-4">
+                    {item.subText}
+                  </h3>
+                </div>
+              )}
             </div>
-          </div>
-          <div>
-            <img
-              src={bg1Image}
-              alt="Mô tả hình ảnh"
-              className="w-[1400px] h-[628px]"
-            />
-          </div>
-          <div>
-            <img
-              src={bg2Image}
-              alt="Mô tả hình ảnh"
-              className="w-[1400px] h-[628px]"
-            />
-          </div>
+          ))}
         </Carousel>
       </div>
 
@@ -112,7 +109,7 @@ const Home = () => {
           {/* Danh mục bên trái */}
           <div className="w-full md:w-1/4 ">
             <Menu />
-            <div className=" mt-6">
+            <div className=" mt-6 overflow-y-auto overflow-x-hidden max-h-[max] pr-2">
               {/* Sản phẩm bạn có thể thích */}
               <Favourite />
             </div>

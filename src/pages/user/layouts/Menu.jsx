@@ -32,7 +32,7 @@ const Menu = () => {
         </h2>
       </div>
       {categories.map((category, index) => (
-        <Link key={index} to={`/category/${category.slug}`}>
+        <Link key={index} to={`/category/${category.categoryID}`}>
           <div className="p-4 border rounded-lg shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
             <h3 className="text-xl font-semibold">
               <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" />{" "}
