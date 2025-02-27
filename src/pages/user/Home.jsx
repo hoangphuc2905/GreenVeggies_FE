@@ -263,7 +263,8 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[300px] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product.productID)}>
+                  onClick={() => handleProductClick(product.productID)}
+                >
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%

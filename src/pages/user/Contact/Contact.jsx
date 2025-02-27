@@ -1,13 +1,8 @@
-import Header from "../layouts/header";
 import Footer from "../layouts/footer";
 
 const Lienhe = () => {
   return (
-    <>
-      {/* Header */}
-      <Header />
-
-      {/* Hero Section với nền hình ảnh rõ nét */}
+    <div className="px-[10%]">
       <div className="container mx-auto relative">
         <img
           src="src\assets\thuan10.webp"
@@ -90,7 +85,7 @@ const Lienhe = () => {
 
       {/* Footer */}
       <Footer />
-    </>
+    </div>
   );
 };
 

@@ -20,6 +20,7 @@ const UserRouter = () => {
   return (
     <Provider store={store}>
      <Header></Header>
+
       <Routes>
         {/* Các route chính của user */}
         <Route path="/" element={<Home />} />

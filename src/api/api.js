@@ -254,6 +254,15 @@ export const getCategoriesFromProducts = async () => {
   }
 };
 
-
+// 🟢 Lấy thông tin nhập hàng
+export const getStockEntry = async (id) => {
+  try {
+    const response = await productAPI.get(`/stock-entries/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin nhập hàng:", error);
+    return null;
+  }
+};
 
 export default api;

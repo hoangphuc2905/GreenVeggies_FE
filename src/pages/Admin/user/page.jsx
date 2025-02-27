@@ -31,6 +31,7 @@ const ListUser = () => {
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -72,27 +73,23 @@ const ListUser = () => {
     } else {
       setSelectedOptions(value);
     }
-    applyFilters(value, searchQuery); // Áp dụng lọc dựa trên vai trò và tìm kiếm
+    applyFilters(value, searchQuery);
   };
 
   const onSearch = (value) => {
     setSearchQuery(value);
-    applyFilters(selectedOptions, value); // Áp dụng lọc dựa trên vai trò và tìm kiếm
+    applyFilters(selectedOptions, value);
   };
 
-  // Hàm áp dụng cả bộ lọc vai trò và tìm kiếm
   const applyFilters = (roles, query) => {
     let filteredUsers = originalUsers;
 
-    // Lọc theo vai trò (nếu không chọn "Tất cả")
     if (!roles.includes("Tất cả")) {
       const upperCaseRoles = roles.map((item) => item.toUpperCase());
       filteredUsers = filteredUsers.filter((user) =>
         upperCaseRoles.includes(user.role.toUpperCase())
       );
     }
-
-    // Lọc theo tìm kiếm
     if (query) {
       filteredUsers = filteredUsers.filter((user) =>
         user.username.toLowerCase().includes(query.toLowerCase())
@@ -102,13 +99,14 @@ const ListUser = () => {
     setUsers(filteredUsers);
   };
 
+  useEffect(() => {
+    applyFilters(selectedOptions, searchQuery);
+  }, [selectedOptions, searchQuery]);
+
   const showUserDetails = (user) => {
     setSelectedUser(user);
     setIsModalOpen(true);
   };
-
-  // State lưu giá trị tìm kiếm
-  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <Layout className="overflow-hidden">
@@ -137,8 +135,6 @@ const ListUser = () => {
               type="primary"
               className="bg-[#EAF3FE] text-[#689CF8] font-bold"
               icon={<PlusCircleOutlined />}
-              // loading={loadings[3]}
-              // onClick={() => enterLoading(3)}
             >
               Thêm người dùng
             </Button>
@@ -154,12 +150,12 @@ const ListUser = () => {
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
           <Table
-            size="large"
+            size="small"
             dataSource={users}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             rowKey="_id"
             pagination={{ pageSize: 5 }}
-            className="hover:cursor-pointer"
+            className="text-sm font-thin hover:cursor-pointer "
             onRow={(record) => ({
               onClick: () => showUserDetails(record),
             })}
