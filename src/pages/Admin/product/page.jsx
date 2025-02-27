@@ -9,6 +9,7 @@ import {
   Select,
   Image,
   ConfigProvider,
+  message,
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
@@ -46,6 +47,9 @@ const Products = () => {
   const [pageSize, setPageSize] = useState(5);
   const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [warningMessage, setWarningMessage] = useState(null);
+  const [successMessgae, setSuccessMessage] = useState(null);
 
   const openInsertStockEntry = (product) => {
     setIsStockEntryOpen(true);
@@ -62,6 +66,7 @@ const Products = () => {
     const fetchUsers = async () => {
       const data = await fetchProducts("products");
       setProducts(data);
+      setFilteredProducts(data);
     };
     const fetchCategories = async () => {
       const data = await fetchProducts("categories");
@@ -84,18 +89,42 @@ const Products = () => {
       setSelectedOptions(value.filter((v) => v !== "Tất cả"));
     } else if (value.includes("Tất cả")) {
       setSelectedOptions(["Tất cả"]);
+    } else if (value.length === 0) {
+      setSelectedOptions(["Tất cả"]);
     } else {
       setSelectedOptions(value);
     }
+    applyFilters(value.includes("Tất cả") ? ["Tất cả"] : value, searchQuery);
   };
 
   const onSearch = (value) => {
     setSearchQuery(value);
+    applyFilters(selectedOptions, value);
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const applyFilters = (categories, query) => {
+    let filteredProducts = products;
+
+    // Nếu chọn "Tất cả", hiển thị toàn bộ sản phẩm
+    if (!categories.includes("Tất cả")) {
+      filteredProducts = filteredProducts.filter((product) =>
+        categories.includes(product.category?._id)
+      );
+    }
+
+    // Lọc theo tên sản phẩm
+    if (query) {
+      filteredProducts = filteredProducts.filter((product) =>
+        product.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    setFilteredProducts(filteredProducts);
+  };
+
+  useEffect(() => {
+    applyFilters(selectedOptions, searchQuery);
+  }, [selectedOptions, searchQuery]);
 
   const navigate = useNavigate();
   const handlerClickUpdate = useHandlerClickUpdate();
@@ -109,8 +138,13 @@ const Products = () => {
   const handlerClickAddProduct = () => {
     navigate(`/admin/add-product`);
   };
+
   const handlerStopSell = async (value) => {
     try {
+      if (value.status === "unavailable") {
+        setWarningMessage("Sản phẩm này đã ngưng bán");
+        return;
+      }
       if (!window.confirm("Bạn có chắc chắn muốn ngừng bán sản phẩm này?"))
         return;
 
@@ -122,12 +156,8 @@ const Products = () => {
       });
 
       if (response) {
-        const newProducts = products.map((product) =>
-          product.productID === value.productID
-            ? { ...product, status: "unavailable" }
-            : product
-        );
-        setProducts(newProducts);
+        setSuccessMessage("Đã ngừng bán sản phẩm thành công!");
+        await reloadProducts(); // ✅ Cập nhật lại danh sách sản phẩm
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật sản phẩm:", error);
@@ -142,7 +172,20 @@ const Products = () => {
   const reloadProducts = async () => {
     const data = await fetchProducts("products");
     setProducts(data);
+    setFilteredProducts(data);
   };
+
+  useEffect(() => {
+    if (warningMessage) {
+      message.warning(warningMessage);
+      setWarningMessage(null);
+    }
+    if (successMessgae) {
+      message.success(successMessgae);
+      setSuccessMessage(null);
+    }
+  }, [warningMessage, successMessgae]);
+
   return (
     <Layout className="h-fit">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
@@ -210,6 +253,7 @@ const Products = () => {
             <Column
               title="Tên sản phẩm"
               dataIndex="name"
+              ellipsis={true}
               key="name"
               align="center"
             />
@@ -304,7 +348,7 @@ const Products = () => {
               key="action"
               align="center"
               render={(text, record) => (
-                <Space size="middle">
+                <Space size="small">
                   <ConfigProvider
                     theme={{
                       components: {
@@ -312,14 +356,16 @@ const Products = () => {
                           defaultHoverBg: "bg-opacity",
                           defaultHoverColor: "white",
                           defaultHoverBorderColor: "none",
+                          onlyIconSize: "8px",
                         },
                       },
                     }}
                   >
                     <Button
+                      size="small"
                       type="default"
                       icon={<EditFilled />}
-                      className="bg-[#27A743] text-white mr-[5px]"
+                      className="bg-[#27A743] text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         handlerClickUpdate(record);
@@ -328,13 +374,14 @@ const Products = () => {
                         (e.target.style.backgroundColor = "#15803d")
                       }
                       onMouseLeave={(e) =>
-                        (e.target.style.backgroundColor = "#22c55e")
+                        (e.target.style.backgroundColor = "#15803d")
                       }
                     />
                     <Button
+                      size="small"
                       type="default"
                       icon={<TagFilled />}
-                      className="bg-[#138cff] text-white mr-[5px]"
+                      className="bg-[#138cff] text-white"
                       onClick={(e) => {
                         e.stopPropagation();
                         openInsertStockEntry(record);
@@ -347,6 +394,7 @@ const Products = () => {
                       }
                     />
                     <Button
+                      size="small"
                       type="default"
                       icon={<DeleteFilled />}
                       className="bg-red-500 text-white"

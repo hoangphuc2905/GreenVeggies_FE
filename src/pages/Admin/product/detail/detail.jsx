@@ -4,10 +4,11 @@ import { PlusCircleFilled, TagOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
 import { getProductDetail } from "../../../../api/api";
 import Description from "./description";
-import Rating from "./rating";
+import Rating from "./Rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";
 import { useLocation } from "react-router-dom";
 import InsertStockEntry from "../../stockEntry/insert";
+import History from "../../stockEntry/History";
 
 const Detail = () => {
   const location = useLocation();
@@ -132,6 +133,7 @@ const Detail = () => {
               items={[
                 { label: "Thông tin chi tiết", key: "Detail" },
                 { label: "Phản hồi của khách hàng", key: "Rate" },
+                { label: "Lịch sử nhập hàng", key: "Stock" },
               ]}
               selectedKeys={[selectedKey]}
               onClick={(e) => setSelectedKey(e.key)}
@@ -150,6 +152,7 @@ const Detail = () => {
       >
         {selectedKey === "Detail" && <Description product={product} />}
         {selectedKey === "Rate" && <Rating product={product} />}
+        {selectedKey === "Stock" && <History product={product} />}
       </motion.div>
 
       <InsertStockEntry
