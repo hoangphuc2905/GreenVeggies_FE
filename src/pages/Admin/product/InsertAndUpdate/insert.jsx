@@ -18,6 +18,8 @@ import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/insert";
+import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
+
 
 const { TextArea } = Input;
 
@@ -44,6 +46,7 @@ const STATUS_OPTIONS = [
   },
 ];
 
+// Message hiển thị khi validate form
 const validateMessages = {
   required: "${label} không được để trống!",
   types: { number: "${label} phải là số hợp lệ!" },
@@ -54,14 +57,21 @@ const InsertForm = () => {
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Lấy danh sách danh mục khi load trang
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Mở modal thêm danh mục
   const openInsertCategory = () => {
     console.log("Open modal");
     setIsModalOpen(true);
   };
 
-  const navigate = useNavigate();
+  // Lấy danh sách danh mục
   const fetchCategories = async () => {
     try {
       const response = await getListProducts("categories");
@@ -75,13 +85,12 @@ const InsertForm = () => {
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  // Xử lý khi thêm danh mục
   const handleCategoryAdded = async () => {
     await fetchCategories();
   };
 
+  // Xử lý khi nhấn nút Lưu
   const handlerInsertProduct = async (values) => {
     try {
       setLoading(true);
@@ -103,7 +112,6 @@ const InsertForm = () => {
       };
 
       const response = await insertProduct(formData);
-      console.log("API Response:", response);
       if (response) {
         message.success("Thêm sản phẩm thành công! 🎉");
 
@@ -121,13 +129,14 @@ const InsertForm = () => {
     }
   };
 
+
   return (
     <Layout className="h-fit">
       <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
         <Flex gap="middle" vertical>
           <Form
             form={form}
-            size="middle"
+            size="small"
             labelCol={{ span: 8 }}
             wrapperCol={{ span: 16 }}
             labelAlign="left"
@@ -233,60 +242,8 @@ const InsertForm = () => {
                     listType="picture-card"
                     accept="image/*"
                     data={() => ({ upload_preset: "ml_default" })}
-                    beforeUpload={(file) => {
-                      const isImage = file.type.startsWith("image/");
-                      if (!isImage) {
-                        message.error("Chỉ được tải lên file hình ảnh!");
-                        return false;
-                      }
-
-                      return new Promise((resolve, reject) => {
-                        const img = new Image();
-                        img.src = URL.createObjectURL(file);
-                        img.onload = () => {
-                          const canvas = document.createElement("canvas");
-                          const ctx = canvas.getContext("2d");
-                          canvas.width = 768;
-                          canvas.height = 768;
-                          ctx.drawImage(img, 0, 0, 768, 768);
-
-                          canvas.toBlob((blob) => {
-                            if (blob) {
-                              const resizedFile = new File([blob], file.name, {
-                                type: file.type,
-                              });
-                              resolve(resizedFile);
-                            } else {
-                              message.error("Lỗi khi resize ảnh!");
-                              reject(false);
-                            }
-                          }, file.type);
-                        };
-                        img.onerror = () => {
-                          message.error("Không thể đọc file ảnh!");
-                          reject(false);
-                        };
-                      });
-                    }}
-                    onChange={(info) => {
-                      if (info.file.status === "done") {
-                        const imageUrl = info.file.response?.secure_url;
-                        if (imageUrl) {
-                          message.success(
-                            `Tải lên thành công: ${info.file.name}`
-                          );
-                          console.log("Cloudinary URL:", imageUrl);
-                        } else {
-                          message.error(
-                            "Không tìm thấy URL ảnh trong phản hồi"
-                          );
-                          console.log("Response lỗi:", info.file.response);
-                        }
-                      } else if (info.file.status === "error") {
-                        message.error(`Tải lên thất bại: ${info.file.name}`);
-                        console.error("Lỗi upload:", info.file.response);
-                      }
-                    }}
+                    beforeUpload={handlerBeforeUpload}
+                    onChange={handlerChange}
                   >
                     <button
                       style={{ border: 0, background: "none" }}
