@@ -176,9 +176,10 @@ const Products = () => {
             </Button>
           </Flex>
           <Table
-            size="large"
+            size="small"
             dataSource={filteredProducts}
             rowKey="productID"
+            className="text-sm font-thin hover:cursor-pointer "
             pagination={{
               pageSize,
               current: currentPage,
@@ -217,6 +218,7 @@ const Products = () => {
               dataIndex="imageUrl"
               key="imageUrl"
               align="center"
+              onClick={(e) => e.stopPropagation()}
               render={(imageUrl) => {
                 const firstImage = Array.isArray(imageUrl)
                   ? imageUrl[0]
@@ -225,8 +227,8 @@ const Products = () => {
                   <div className="flex justify-center items-center">
                     {firstImage ? (
                       <Image
-                        width={65}
-                        height={65}
+                        width={50}
+                        height={50}
                         src={firstImage}
                         alt="product"
                         className="object-cover"

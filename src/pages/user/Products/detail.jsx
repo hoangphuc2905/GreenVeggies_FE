@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import Header from "../layouts/header";
 import Footer from "../layouts/footer";
 import { getProductById, getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm và người dùng
 import { Breadcrumb, Divider, InputNumber, Rate } from "antd";
@@ -157,9 +156,6 @@ const Detail = ({ wishlist, setWishlist }) => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <Header />
-      {/* Content */}
       <div className="mt-20">
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
       </div>
@@ -221,13 +217,15 @@ const Detail = ({ wishlist, setWishlist }) => {
               <div className="mt-4">
                 <p
                   ref={descriptionRef}
-                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
+                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}
+                >
                   {product.description}
                 </p>
                 {showSeeMore && !isExpanded && (
                   <button
                     className="text-blue-500 underline mt-2"
-                    onClick={() => setIsExpanded(true)}>
+                    onClick={() => setIsExpanded(true)}
+                  >
                     Xem thêm
                   </button>
                 )}
@@ -252,7 +250,8 @@ const Detail = ({ wishlist, setWishlist }) => {
               <p className="mt-4 flex items-center text-center">
                 <button
                   className="px-2 py-1 border rounded-l bg-gray-200"
-                  onClick={decrementQuantity}>
+                  onClick={decrementQuantity}
+                >
                   -
                 </button>
                 <InputNumber
@@ -263,7 +262,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                 />
                 <button
                   className="px-2 py-1 border rounded-r bg-gray-200"
-                  onClick={incrementQuantity}>
+                  onClick={incrementQuantity}
+                >
                   +
                 </button>
                 <button
@@ -271,7 +271,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
                rounded-xl p-4 shadow-lg 
                hover:scale-105 transition duration-300 ease-in-out ml-2"
-                  onClick={addToWishlist}>
+                  onClick={addToWishlist}
+                >
                   THÊM VÀO GIỎ
                 </button>
               </p>
@@ -302,7 +303,8 @@ const Detail = ({ wishlist, setWishlist }) => {
               e.target.style.backgroundColor = "#f0fdf4"; // bg-green-50
               e.target.style.color = "#82AE46";
             }}
-            onClick={toggleDescription}>
+            onClick={toggleDescription}
+          >
             MÔ TẢ
           </button>
           <button
@@ -323,7 +325,8 @@ const Detail = ({ wishlist, setWishlist }) => {
               e.target.style.backgroundColor = "#f0fdf4"; // bg-green-50
               e.target.style.color = "#82AE46";
             }}
-            onClick={toggleInformations}>
+            onClick={toggleInformations}
+          >
             THÔNG TIN LIÊN QUAN
           </button>
           <button
@@ -344,7 +347,8 @@ const Detail = ({ wishlist, setWishlist }) => {
               e.target.style.backgroundColor = "#f0fdf4"; // bg-green-50
               e.target.style.color = "#82AE46";
             }}
-            onClick={toggleReviews}>
+            onClick={toggleReviews}
+          >
             ĐÁNH GIÁ
           </button>
         </div>
@@ -362,7 +366,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: "10px",
-              }}>
+              }}
+            >
               <p>Danh mục: {product.category.name}</p>
               <p>Nguồn gốc: {product.origin}</p>
               <p>Đơn vị tính: {product.unit}</p>

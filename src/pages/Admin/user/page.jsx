@@ -154,12 +154,12 @@ const ListUser = () => {
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
           <Table
-            size="large"
+            size="small"
             dataSource={users}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             rowKey="_id"
             pagination={{ pageSize: 5 }}
-            className="hover:cursor-pointer"
+            className="text-sm font-thin hover:cursor-pointer "
             onRow={(record) => ({
               onClick: () => showUserDetails(record),
             })}
