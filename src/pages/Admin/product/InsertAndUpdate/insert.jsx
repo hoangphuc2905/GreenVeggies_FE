@@ -20,7 +20,6 @@ import { useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/insert";
 import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
 
-
 const { TextArea } = Input;
 
 const normFile = (e) => (Array.isArray(e) ? e : e?.fileList ?? []);
@@ -129,7 +128,6 @@ const InsertForm = () => {
     }
   };
 
-
   return (
     <Layout className="h-fit">
       <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
@@ -163,25 +161,23 @@ const InsertForm = () => {
                       defaultActiveBg: "#5A7E30",
                       defaultActiveColor: "#ffffff",
                       defaultActiveBorderColor: "#5A7E30",
-                      contentFontSize: "17px",
+                      // contentFontSize: "10px",
                     },
                   },
                 }}
               >
-                <div className="flex justify-center gap-5">
+                <div className="flex justify-center gap-2">
                   <Button
+                    size="small"
                     type="default"
                     htmlType="submit"
-                    className="h-12 w-44 px-10 font-medium"
+                    className="py-4 px-10 w-defaultWidth"
                     loading={loading}
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
 
-                  <Button
-                    type="default"
-                    className="h-12 w-44 px-10 font-medium"
-                  >
+                  <Button size="small" type="default" className="py-4 px-10 w-defaultWidth">
                     Nhập Excel
                   </Button>
                 </div>
