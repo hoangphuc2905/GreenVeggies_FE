@@ -145,6 +145,37 @@ export const updateUserInfo = async (userID, token, updatedData) => {
   }
 };
 
+const auth = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export const changePassword = async (email, oldPassword, newPassword, token) => {
+  try {
+    const response = await auth.post(
+      "/auth/change-password",
+      {
+        email,
+        oldPassword,
+        newPassword,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi thay đổi mật khẩu:", error);
+    return null;
+  }
+};
+
+
 // 🟢 Thêm mới sản phẩm
 export const insertProduct = async (data) => {
   try {

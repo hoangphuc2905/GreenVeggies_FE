@@ -88,9 +88,8 @@ const AddressForm = () => {
     }
 
     try {
-      // Xây dựng URL với query parameters
-      const url = new URL("/api/address", window.location.origin);
-      const params = new URLSearchParams({
+      // Gửi yêu cầu POST với dữ liệu trong body thay vì query params
+      const response = await axios.post("/api/address", {
         userID: address.userID,
         city: address.city,
         district: address.district,
@@ -99,15 +98,9 @@ const AddressForm = () => {
         isDefault: address.isDefault,
       });
 
-      // Thêm query parameters vào URL
-      url.search = params.toString();
-
-      // Gửi yêu cầu POST với các tham số query
-      const response = await axios.post(url);
-
       if (response.status === 201) {
         console.log("Địa chỉ đã được thêm thành công");
-        setShowForm(false);  // Đóng form sau khi lưu thành công
+        setShowForm(false); // Đóng form sau khi lưu thành công
       } else {
         console.error("Lỗi khi thêm địa chỉ:", response.data);
       }

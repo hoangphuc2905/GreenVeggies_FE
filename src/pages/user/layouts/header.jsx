@@ -96,7 +96,7 @@ const Header = () => {
       setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
       setShowLoginForm(false);
       localStorage.setItem("token", userData.token);
-
+      localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
 
     } catch (error) {

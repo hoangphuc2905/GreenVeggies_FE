@@ -17,16 +17,6 @@ export const fetchUser = createAsyncThunk("user/fetchUser", async ({ userID, tok
   }
 });
 
-// Action cập nhật user
-export const updateUser = createAsyncThunk("user/updateUser", async ({ userID, token, updatedData }) => {
-  const response = await axios.put(`http://localhost:8002/api/user/${userID}`, updatedData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return response.data;
-});
 
 const userSlice = createSlice({
   name: "user",
@@ -48,10 +38,8 @@ const userSlice = createSlice({
       .addCase(fetchUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
-      })
-      .addCase(updateUser.fulfilled, (state, action) => {
-        state.user = action.payload;
       });
+
   },
 });
 
