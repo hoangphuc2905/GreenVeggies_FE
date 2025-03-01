@@ -141,7 +141,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
         title={
           <div className=" flex items-center justify-center gap-4">
             <img src={logo} className="w-14 h-14" alt="Logo" />
-            <div className="py-3 font-bold text-xl text-[#82AE46]">
+            <div className="py-3 font-bold text-xl text-primary">
               THÊM MỚI DANH MỤC
             </div>
           </div>
@@ -211,6 +211,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
               <Form.Item className="w-full">
                 <Button
                   htmlType="button"
+                  size="small"
                   onClick={handleCancel}
                   icon={<ArrowLeftOutlined />}
                   className="w-full bg-[#FF3D00] hover:bg-red-600 text-white py-6 text-base"
@@ -224,7 +225,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
                   type="default"
                   htmlType="submit"
                   icon={<SaveFilled />}
-                  className="w-full bg-[#82AE46] hover:bg-green-600 text-white py-6 text-base"
+                  className="w-full bg-primary hover:bg-green-600 text-white py-6 text-base"
                 >
                   Thêm mới
                 </Button>
@@ -233,6 +234,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
               <Form.Item className="w-full">
                 <Button
                   htmlType="button"
+                  size="small"
                   onClick={handleRefresh}
                   icon={<ReloadOutlined />}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-base"

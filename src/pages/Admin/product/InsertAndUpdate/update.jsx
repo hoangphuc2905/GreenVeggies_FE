@@ -20,7 +20,6 @@ import FormInsertCategory from "../../category/insert";
 import InsertStockEntry from "../../stockEntry/insert";
 import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
 
-
 const { TextArea } = Input;
 
 const normFile = (e) => (Array.isArray(e) ? e : e?.fileList ?? []);
@@ -50,7 +49,6 @@ const validateMessages = {
   required: "${label} không được để trống!",
   types: { number: "${label} phải là số hợp lệ!" },
 };
-
 
 const UpdateForm = () => {
   const { message } = App.useApp();
@@ -152,7 +150,7 @@ const UpdateForm = () => {
             initialValues={{ status: "available", quantity: 0 }}
           >
             <Flex className="mb-[10vh]" justify="space-between" align="center">
-              <div className="text-2xl text-[#82AE46] font-bold">
+              <div className="text-2xl text-primary font-bold">
                 Chỉnh sửa thông tin sản phẩm
               </div>
               <ConfigProvider
@@ -174,26 +172,29 @@ const UpdateForm = () => {
                   },
                 }}
               >
-                <div className="flex justify-center gap-5">
+                <div className="flex justify-center gap-2 items-center">
                   <Button
+                    size="small"
                     type="default"
-                    className="h-12 w-44 px-10 font-medium"
+                    className="w-24 p-4"
                     onClick={() => navigate(-1)}
                   >
                     Hủy
                   </Button>{" "}
                   <Button
+                    size="small"
                     type="default"
                     htmlType="submit"
-                    className="h-12 w-44 px-10 font-medium"
+                    className="w-24 p-4"
                     loading={loading}
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
                   <Button
+                    size="small"
                     type="default"
                     htmlType="button"
-                    className="h-12 w-44 px-10 font-medium"
+                    className="w-24 p-4"
                     onClick={openInsertStockEntry}
                   >
                     Nhập hàng
@@ -228,7 +229,7 @@ const UpdateForm = () => {
                     <button
                       onClick={openInsertCategory}
                       type="button"
-                      className="text-[#82AE46] bg-none  w-12 h-12 flex items-center justify-center  hover:text-[#34C759]"
+                      className="text-primary bg-none  w-12 h-12 flex items-center justify-center  hover:text-[#34C759]"
                     >
                       <PlusOutlined className="text-4xl font-extrabold" />
                     </button>

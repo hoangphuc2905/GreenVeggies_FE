@@ -5,7 +5,7 @@ import logo from "../../../assets/Green.png";
 
 const AdminHeader = () => {
   return (
-    <div className="flex justify-between items-center h-[80px] px-11 bg-[#82AE46] fixed z-[1000] w-screen shadow-md">
+    <div className="flex justify-between items-center h-[65px] px-11 bg-primary fixed z-[1000] w-screen shadow-md">
       <div className="flex w-full justify-between">
         <a href="/" className="flex items-center py-2">
           <img src={logo} alt="logo" className="h-10 mx-4" />
