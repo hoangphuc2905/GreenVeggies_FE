@@ -5,7 +5,7 @@ const Lienhe = () => {
     <div className="px-[10%]">
       <div className="container mx-auto relative">
         <img
-          src="src\assets\thuan10.webp"
+          src="src\assets\Lienhe.jpg"
           alt="Background"
           className="w-full h-[550px]"
         />

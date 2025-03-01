@@ -387,7 +387,7 @@ const Home = () => {
                     className="w-full h-full object-contain rounded-full"
                   />
                 </div>
-                <p className="mt-4">{review.userID.username}</p>
+                <p className="mt-4">{review.userID}</p>
                 <h3 className="text-xl font-semibold mt-4">{review.comment}</h3>
                 <p className="text-sm">{review.rating}</p>
               </div>
