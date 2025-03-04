@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { getAddressByID } from "../../../api/api";
 
 const AddressForm = () => {
   const [showForm, setShowForm] = useState(false);
-  const [cities, setCities] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
+  const [userID, setUserID] = useState(localStorage.getItem("userID") || ""); 
+  const [addresses, setAddresses] = useState([]);
   const [address, setAddress] = useState({
-    userID: "123456",
     city: "",
     district: "",
     ward: "",
@@ -15,56 +14,27 @@ const AddressForm = () => {
     isDefault: false,
   });
 
-  const defaultAddress = {
-    city: "Hồ Chí Minh",
-    district: "Gò Vấp",
-    ward: "Phường 1",
-    street: "12 Phạm Văn Bảo",
-  };
-
-  // Fetch danh sách tỉnh/thành phố
+  // Chỉ gọi API khi `userID` hợp lệ
   useEffect(() => {
-    axios
-      .get("https://provinces.open-api.vn/api/?depth=1")
-      .then((res) => setCities(res.data))
-      .catch((err) => console.error("Lỗi khi tải tỉnh/thành phố:", err));
-  }, []);
-
-  // Fetch danh sách quận/huyện khi chọn tỉnh
-  const handleCityChange = async (e) => {
-    const selectedCity = e.target.value;
-    setAddress((prev) => ({ ...prev, city: selectedCity, district: "", ward: "" }));
-
-    if (!selectedCity) {
-      setDistricts([]);
-      setWards([]);
-      return;
+    if (userID) {
+      fetchUserAddress();
     }
+  }, [userID]);
 
+  const fetchUserAddress = async () => {
     try {
-      const res = await axios.get(`https://provinces.open-api.vn/api/p/${selectedCity}?depth=2`);
-      setDistricts(res.data.districts || []);
-      setWards([]);
+      const userAddress = await getAddressByID(userID);
+      
+      if (userAddress && Array.isArray(userAddress) && userAddress.length > 0) {
+        setAddresses(userAddress); 
+      } else if (userAddress && typeof userAddress === "object") {
+        setAddresses([userAddress]);
+      } else {
+        setAddresses([]); 
+      }
     } catch (error) {
-      console.error("Lỗi khi tải quận/huyện:", error);
-    }
-  };
-
-  // Fetch danh sách phường/xã khi chọn quận/huyện
-  const handleDistrictChange = async (e) => {
-    const selectedDistrict = e.target.value;
-    setAddress((prev) => ({ ...prev, district: selectedDistrict, ward: "" }));
-
-    if (!selectedDistrict) {
-      setWards([]);
-      return;
-    }
-
-    try {
-      const res = await axios.get(`https://provinces.open-api.vn/api/d/${selectedDistrict}?depth=2`);
-      setWards(res.data.wards || []);
-    } catch (error) {
-      console.error("Lỗi khi tải phường/xã:", error);
+      console.error("❌ Lỗi khi lấy địa chỉ từ API:", error);
+      setAddresses([]);
     }
   };
 
@@ -76,37 +46,35 @@ const AddressForm = () => {
     }));
   };
 
-  // Submit form và gọi API POST
+  // ✅ Gửi API POST để thêm địa chỉ mới
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Address submitted:", address);
 
-    // Kiểm tra dữ liệu trước khi gửi API
     if (!address.city || !address.district || !address.ward || !address.street) {
-      alert("Vui lòng điền đầy đủ thông tin địa chỉ!");
+      alert("⚠ Vui lòng điền đầy đủ thông tin địa chỉ!");
       return;
     }
 
     try {
-      // Gửi yêu cầu POST với dữ liệu trong body thay vì query params
-      const response = await axios.post("/api/address", {
-        userID: address.userID,
+      const response = await axios.post("http://localhost:8004/api/address", {
+        userID: userID, // Lấy userID từ localStorage
         city: address.city,
         district: address.district,
         ward: address.ward,
         street: address.street,
-        isDefault: address.isDefault,
+        isDefault: address.isDefault || false,
       });
 
       if (response.status === 201) {
-        console.log("Địa chỉ đã được thêm thành công");
-        setShowForm(false); // Đóng form sau khi lưu thành công
+        alert("✅ Địa chỉ đã được thêm thành công!");
+        setShowForm(false);
+        fetchUserAddress(); // 🔹 Cập nhật lại địa chỉ sau khi thêm mới
       } else {
-        console.error("Lỗi khi thêm địa chỉ:", response.data);
+        alert("❌ Lỗi khi thêm địa chỉ: " + response.data.message);
       }
     } catch (error) {
-      console.error("Lỗi khi gửi yêu cầu API:", error);
-      alert("Đã có lỗi xảy ra khi lưu địa chỉ. Vui lòng thử lại.");
+      alert("❌ Lỗi khi gửi yêu cầu API, vui lòng thử lại.");
+      console.error("Lỗi API:", error);
     }
   };
 
@@ -115,12 +83,17 @@ const AddressForm = () => {
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Địa chỉ của bạn</h2>
 
       {/* Hiển thị địa chỉ hiện tại */}
-      {!showForm && (
-        <div className="bg-gray-100 p-4 rounded-lg shadow-md mb-4">
-          <p className="text-gray-700"><strong>Thành phố:</strong> {defaultAddress.city}</p>
-          <p className="text-gray-700"><strong>Quận/Huyện:</strong> {defaultAddress.district}</p>
-          <p className="text-gray-700"><strong>Phường/Xã:</strong> {defaultAddress.ward}</p>
-          <p className="text-gray-700"><strong>Địa chỉ cụ thể:</strong> {defaultAddress.street}</p>
+      {!showForm && addresses.length > 0 && (
+        <div className="grid grid-cols-1 gap-4">
+          {addresses.map((addr, index) => (
+            <div key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
+              <p className="text-gray-700"><strong>Thành phố:</strong> {addr.city}</p>
+              <p className="text-gray-700"><strong>Quận/Huyện:</strong> {addr.district}</p>
+              <p className="text-gray-700"><strong>Phường/Xã:</strong> {addr.ward}</p>
+              <p className="text-gray-700"><strong>Địa chỉ cụ thể:</strong> {addr.street}</p>
+              {addr.isDefault && <p className="text-green-500 font-bold">Mặc định</p>}
+            </div>
+          ))}
         </div>
       )}
 
@@ -136,60 +109,40 @@ const AddressForm = () => {
           {/* Thành phố */}
           <div>
             <label className="block text-gray-700">Thành phố:</label>
-            <select
+            <input
+              type="text"
               name="city"
               value={address.city}
-              onChange={handleCityChange}
+              onChange={handleChange}
               className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
               required
-            >
-              <option value="">Chọn thành phố</option>
-              {cities.map((city) => (
-                <option key={city.code} value={city.code}>
-                  {city.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Quận/Huyện */}
           <div>
             <label className="block text-gray-700">Quận/Huyện:</label>
-            <select
+            <input
+              type="text"
               name="district"
               value={address.district}
-              onChange={handleDistrictChange}
+              onChange={handleChange}
               className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
               required
-              disabled={!districts.length}
-            >
-              <option value="">Chọn Quận/Huyện</option>
-              {districts.map((district) => (
-                <option key={district.code} value={district.code}>
-                  {district.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Phường/Xã */}
           <div>
             <label className="block text-gray-700">Phường/Xã:</label>
-            <select
+            <input
+              type="text"
               name="ward"
               value={address.ward}
               onChange={handleChange}
               className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
               required
-              disabled={!wards.length}
-            >
-              <option value="">Chọn Phường/Xã</option>
-              {wards.map((ward) => (
-                <option key={ward.code} value={ward.name}>
-                  {ward.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Địa chỉ cụ thể */}
@@ -206,15 +159,15 @@ const AddressForm = () => {
           </div>
 
           {/* Địa chỉ mặc định */}
-          <div className="flex items-center">
+          <div>
+            <label className="block text-gray-700">Địa chỉ mặc định:</label>
             <input
               type="checkbox"
               name="isDefault"
               checked={address.isDefault}
               onChange={handleChange}
-              className="mr-2"
+              className="rounded-md focus:ring-2 focus:ring-green-500"
             />
-            <label className="text-gray-700">Đánh dấu là địa chỉ mặc định</label>
           </div>
 
           <button type="submit" className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition">
