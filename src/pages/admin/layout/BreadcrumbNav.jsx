@@ -35,6 +35,12 @@ const breadcrumbItems = {
     { href: "/admin/user-management", title: "Quản lý User" },
     { href: "/admin/add-user", title: "Tạo User mới" },
   ],
+  "/admin/dashboard/revenue":
+  [
+    { href: "/admin/dashboard", title: "Bảng thống kê" },
+    { href: "/admin/dashboard/revenue", title: "Thống kê doanh thu" },
+  ]
+
 };
 
 const BreadcrumbNav = () => {

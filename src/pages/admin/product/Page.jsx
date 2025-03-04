@@ -19,11 +19,11 @@ import {
   PlusCircleOutlined,
   TagFilled,
 } from "@ant-design/icons";
-import userRender from "../userRender/userRender";
 import { useNavigate } from "react-router-dom";
 import { getListProducts, updateProduct } from "../../../api/api";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
-import InsertStockEntry from "../stockEntry/insert";
+import InsertStockEntry from "../stockEntry/InsertStockEntry";
+import UserRender from "../userRender/UserRender";
 
 const { Search } = Input;
 
@@ -37,7 +37,7 @@ const fetchProducts = async (key) => {
   }
 };
 
-const Products = () => {
+const Page = () => {
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
@@ -190,13 +190,13 @@ const Products = () => {
     <Layout className="h-fit">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
         <Flex gap="middle" vertical>
-          <div className="text-2xl text-[#82AE46] font-bold mt-3">
+          <div className="text-2xl text-primary font-bold mt-3">
             Danh sách sản phẩm
           </div>
           <Flex gap="middle">
             <Select
               mode="multiple"
-              tagRender={userRender}
+              tagRender={UserRender}
               value={selectedOptions}
               className="w-72"
               options={categories}
@@ -427,4 +427,4 @@ const Products = () => {
   );
 };
 
-export default Products;
+export default Page;

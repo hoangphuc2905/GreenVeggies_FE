@@ -16,9 +16,9 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import { getListProducts, updateProduct } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
-import FormInsertCategory from "../../category/insert";
-import InsertStockEntry from "../../stockEntry/insert";
+import FormInsertCategory from "../../category/FormInsertCategory";
 import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
+import InsertStockEntry from "../../stockEntry/InsertStockEntry";
 
 const { TextArea } = Input;
 
@@ -50,9 +50,11 @@ const validateMessages = {
   types: { number: "${label} phải là số hợp lệ!" },
 };
 
-const UpdateForm = () => {
+const UpdateProduct = () => {
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
+  const [product, setProduct] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -60,19 +62,20 @@ const UpdateForm = () => {
   const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
 
   const location = useLocation();
-  const product = location.state?.product; // Lấy product từ location.state
+  const getProduct = location.state?.product; // Lấy product từ location.state
 
   const fetchCategories = async () => {
     try {
       const response = await getListProducts("categories");
       setCategories(response);
     } catch (error) {
-      message.error("Lỗi tải danh mục!");
+      message.error("Lỗi tải danh mục!" + error);
     }
   };
 
-  const openInsertStockEntry = () => {
+  const openInsertStockEntry = (product) => {
     setIsStockEntryOpen(true);
+    setProduct(product);
   };
 
   useEffect(() => {
@@ -87,21 +90,23 @@ const UpdateForm = () => {
     console.log("Open modal");
     setIsModalOpen(true);
   };
+
   useEffect(() => {
-    if (product) {
+    if (getProduct) {
+      setProduct(getProduct);
       if (categories.length > 0) {
         const selectedCategory = categories.find(
-          (cat) => cat._id === product.category?._id
+          (cat) => cat._id === getProduct?.category?._id
         );
         form.setFieldsValue({
-          name: product.name || "",
+          name: getProduct.name || "",
           category: selectedCategory?._id || null,
-          origin: product.origin || "",
-          description: product.description || "",
-          unit: product.unit || "piece",
-          status: product.status || "available",
-          imageUrl: product.imageUrl
-            ? product.imageUrl.map((url, index) => ({
+          origin: getProduct.origin || "",
+          description: getProduct.description || "",
+          unit: getProduct.unit || "piece",
+          status: getProduct.status || "available",
+          imageUrl: getProduct.imageUrl
+            ? getProduct.imageUrl.map((url, index) => ({
                 uid: index,
                 name: `image-${index}`,
                 url,
@@ -111,7 +116,7 @@ const UpdateForm = () => {
         });
       }
     }
-  }, [product, categories]); // Chạy lại khi product hoặc categories thay đổi
+  }, [getProduct, categories]); // Chạy lại khi product hoặc categories thay đổi
 
   const handlerUpdateProduct = async (values) => {
     try {
@@ -127,7 +132,7 @@ const UpdateForm = () => {
         message.error("Cập nhật thất bại. Vui lòng thử lại!");
       }
     } catch (error) {
-      message.error("Lỗi hệ thống, vui lòng thử lại sau!");
+      message.error("Lỗi hệ thống, vui lòng thử lại sau!" + error);
     } finally {
       setLoading(false);
     }
@@ -195,7 +200,7 @@ const UpdateForm = () => {
                     type="default"
                     htmlType="button"
                     className="w-24 p-4"
-                    onClick={openInsertStockEntry}
+                    onClick={() => openInsertStockEntry(product)}
                   >
                     Nhập hàng
                   </Button>
@@ -214,7 +219,7 @@ const UpdateForm = () => {
                 <Form.Item label="Loại danh mục" name="category">
                   <div className="flex items-center gap-2">
                     <Select
-                      defaultValue={product.category?._id}
+                      defaultValue={product?.category?._id}
                       placeholder="Chọn danh mục"
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
@@ -313,6 +318,8 @@ const UpdateForm = () => {
           <InsertStockEntry
             isOpen={isStockEntryOpen}
             onClose={() => setIsStockEntryOpen(false)}
+            productID={product?.productID}
+            productName={product?.name}
           ></InsertStockEntry>
         </Flex>
       </div>
@@ -320,5 +327,5 @@ const UpdateForm = () => {
   );
 };
 
-UpdateForm.propTypes = { product: PropTypes.object };
-export default UpdateForm;
+UpdateProduct.propTypes = { product: PropTypes.object };
+export default UpdateProduct;

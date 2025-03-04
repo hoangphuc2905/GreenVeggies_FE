@@ -17,7 +17,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
-import FormInsertCategory from "../../category/insert";
+import FormInsertCategory from "../../category/FormInsertCategory";
 import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
 
 const { TextArea } = Input;
@@ -51,7 +51,7 @@ const validateMessages = {
   types: { number: "${label} phải là số hợp lệ!" },
 };
 
-const InsertForm = () => {
+const InsertProduct = () => {
   const [form] = Form.useForm();
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
@@ -177,7 +177,11 @@ const InsertForm = () => {
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
 
-                  <Button size="small" type="default" className="py-4 px-10 w-defaultWidth">
+                  <Button
+                    size="small"
+                    type="default"
+                    className="py-4 px-10 w-defaultWidth"
+                  >
                     Nhập Excel
                   </Button>
                 </div>
@@ -347,4 +351,4 @@ const InsertForm = () => {
   );
 };
 
-export default InsertForm;
+export default InsertProduct;

@@ -1,14 +1,15 @@
 import { Routes, Route } from "react-router-dom";
 import { App, Layout, theme } from "antd";
 import AdminHeader from "../pages/Admin/layout/header";
-import DefaultPage from "../pages/Admin/defaultPage/defaultPage";
 import AdminSidebar from "../pages/Admin/layout/menu";
-import Products from "../pages/Admin/product/page";
-import Detail from "../pages/Admin/product/detail/detail";
-import ListUser from "../pages/Admin/user/page";
 import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
-import InsertProduct from "../pages/Admin/product/InsertAndUpdate/insert";
-import UpdateForm from "../pages/Admin/product/InsertAndUpdate/update";
+import Revenue from "../pages/Admin/revenue/Index";
+import Detail from "../pages/Admin/product/detail/detail";
+import ListUser from "../pages/admin/user/ListUser";
+
+import Page from "../pages/Admin/product/page";
+import InsertProduct from "../pages/admin/product/InsertAndUpdate/InsertProduct";
+import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
 
 const AdminRouter = () => {
   const {
@@ -34,12 +35,16 @@ const AdminRouter = () => {
                 }}
               />
               <Routes>
-                <Route path="/" element={<DefaultPage />} />
-                <Route path="/products" element={<Products />} />
+                <Route path="/" element={<Revenue />} />
+                <Route path="/products" element={<Page />} />
                 <Route path="/products/:id" element={<Detail />} />
                 <Route path="/user-list" element={<ListUser />} />
                 <Route path="/add-product" element={<InsertProduct />} />
-                <Route path="/products/update-product/:id" element={<UpdateForm />} />
+                <Route
+                  path="/products/update-product/:id"
+                  element={<UpdateProduct />}
+                />
+                <Route path="/dashboard/revenue" element={<Revenue />} />
               </Routes>
             </Layout>
           </Layout>

@@ -1,6 +1,6 @@
 import { Tag } from "antd";
 
-const userRender = (props) => {
+const UserRender = (props) => {
   const { label, closable, onClose } = props;
   const onPreventMouseDown = (event) => {
     event.preventDefault();
@@ -21,4 +21,4 @@ const userRender = (props) => {
   );
 };
 
-export default userRender;
+export default UserRender;

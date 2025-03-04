@@ -68,9 +68,9 @@ const Description = ({ product }) => {
               <Card
                 className="text-[#808080] shadow-md"
                 title={
-                  <span className="font-semibold">
+                  <span className="">
                     Đánh giá:{" "}
-                    <span className="text-lg font-bold">
+                    <span className="font-bold">
                       {(
                         product.reviews.reduce((sum, r) => sum + r.rating, 0) /
                         product.reviews.length
@@ -86,6 +86,9 @@ const Description = ({ product }) => {
                     product.reviews.reduce((sum, r) => sum + r.rating, 0) /
                     product.reviews.length
                   }
+                  style={{
+                    marginTop: "-10px",
+                  }}
                 />
               </Card>
             ) : (

@@ -1,4 +1,4 @@
-import { Avatar, Card, ConfigProvider, Rate, Button } from "antd";
+import { Avatar, Card, ConfigProvider, Rate, Button, Divider } from "antd";
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { getUserInfo } from "../../../../api/api";
@@ -32,7 +32,10 @@ const Rating = ({ product }) => {
             console.error(`Lỗi khi lấy thông tin user ${userID}:`, error);
             setUserData((prev) => ({
               ...prev,
-              [userID]: { username: "Người dùng ẩn danh", avatar: "/default-avatar.png" },
+              [userID]: {
+                username: "Người dùng ẩn danh",
+                avatar: "/default-avatar.png",
+              },
             }));
           }
         }
@@ -40,14 +43,29 @@ const Rating = ({ product }) => {
     };
 
     fetchUserNames();
-  }, [product?.reviews]);
+  }, [product?.reviews, userData]);
 
   const handleShowMore = () => {
     setVisibleReviews((prev) => prev + 4); // Mở thêm 4 đánh giá mỗi lần bấm
   };
 
   return (
-    <ConfigProvider>
+    <ConfigProvider
+      theme={{
+        components: {
+          Button: {
+            defaultHoverBg: "bg-opacity",
+            defaultHoverColor: "#4096ff",
+            defaultActiveBg: "none",
+            defaultActiveColor: "#4096ff",
+            defaultActiveBorderColor: "none",
+            defaultHoverBorderColor: "none",
+            defaultBorderColor: "none",
+            defaultBg: "none"
+          },
+        },
+      }}
+    >
       <div>
         <div className="px-2 text-[#808080]">Phản hồi của khách hàng</div>
 
@@ -63,12 +81,16 @@ const Rating = ({ product }) => {
                     avatar={
                       <Avatar
                         className="w-14 h-14"
-                        src={userData[review.userID]?.avatar || "/default-avatar.png"}
+                        src={
+                          userData[review.userID]?.avatar ||
+                          "/default-avatar.png"
+                        }
                       />
                     }
                     title={
                       <p className="text-xl font-semibold">
-                        {userData[review.userID]?.username || "Người dùng ẩn danh"}
+                        {userData[review.userID]?.username ||
+                          "Người dùng ẩn danh"}
                       </p>
                     }
                     description={
@@ -77,9 +99,15 @@ const Rating = ({ product }) => {
                           <p className="font-medium">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </p>
-                          <Rate disabled defaultValue={review.rating} className="text-sm" />
+                          <Rate
+                            disabled
+                            defaultValue={review.rating}
+                            className="text-sm"
+                          />
                         </div>
-                        <p className="text-[14px] text-black mt-10">{review.comment}</p>
+                        <p className="text-[14px] text-black mt-10">
+                          {review.comment}
+                        </p>
                       </>
                     }
                   />
@@ -87,13 +115,17 @@ const Rating = ({ product }) => {
               ))}
             </div>
 
-            {/* Nút "Xem thêm" */}
             {visibleReviews < product.reviews.length && (
-              <div className="text-center mt-4">
-                <Button type="primary" onClick={handleShowMore}>
+              <Divider className="text-center mt-4">
+                <Button
+                  type="default"
+                  htmlType="button"
+                  onClick={handleShowMore}
+                  className="text-sm"
+                >
                   Xem thêm
                 </Button>
-              </div>
+              </Divider>
             )}
           </>
         ) : (

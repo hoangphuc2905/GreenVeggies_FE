@@ -14,11 +14,7 @@ import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { getListProducts, insertCategory } from "../../../api/api";
-import {
-  ArrowLeftOutlined,
-  ReloadOutlined,
-  SaveFilled,
-} from "@ant-design/icons";
+import { ReloadOutlined, SaveFilled } from "@ant-design/icons";
 
 const fetchCategories = async (page, limit) => {
   try {
@@ -92,10 +88,6 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
     }
 
     setLoading(false);
-  };
-
-  const handleCancel = () => {
-    onClose();
   };
 
   const handleInsertCategory = async (values) => {
@@ -210,22 +202,10 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
             <div className="mt-4 flex justify-between w-full gap-4">
               <Form.Item className="w-full">
                 <Button
-                  htmlType="button"
-                  size="small"
-                  onClick={handleCancel}
-                  icon={<ArrowLeftOutlined />}
-                  className="w-full bg-[#FF3D00] hover:bg-red-600 text-white py-6 text-base"
-                >
-                  Hủy bỏ
-                </Button>
-              </Form.Item>
-
-              <Form.Item className="w-full">
-                <Button
                   type="default"
                   htmlType="submit"
                   icon={<SaveFilled />}
-                  className="w-full bg-primary hover:bg-green-600 text-white py-6 text-base"
+                  className="min-w-defaultWidth max-w-full w-full bg-primary hover:bg-green-600 text-white py-4"
                 >
                   Thêm mới
                 </Button>
@@ -237,7 +217,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
                   size="small"
                   onClick={handleRefresh}
                   icon={<ReloadOutlined />}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-base"
+                  className="min-w-defaultWidth max-w-full w-full bg-blue-500 hover:bg-blue-600 text-white py-4"
                 >
                   Làm mới
                 </Button>

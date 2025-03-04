@@ -13,11 +13,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { insertStockEntry } from "../../../api/api";
-import {
-  ArrowLeftOutlined,
-  ReloadOutlined,
-  SaveFilled,
-} from "@ant-design/icons";
+import { ReloadOutlined, SaveFilled } from "@ant-design/icons";
 import logo from "../../../assets/Green.png";
 
 dayjs.extend(customParseFormat);
@@ -149,21 +145,10 @@ const InsertStockEntry = ({
           <div className="mt-4 flex justify-between w-full gap-4">
             <Form.Item className="w-full">
               <Button
-                htmlType="button"
-                onClick={handleCancel}
-                icon={<ArrowLeftOutlined />}
-                className="w-full bg-[#FF3D00] hover:bg-red-600 text-white py-6 text-base"
-              >
-                Hủy bỏ
-              </Button>
-            </Form.Item>
-
-            <Form.Item className="w-full">
-              <Button
                 type="default"
                 htmlType="submit"
                 icon={<SaveFilled />}
-                className="w-full bg-[#82AE46] hover:bg-green-600 text-white py-6 text-base"
+                className="min-w-full bg-[#82AE46] hover:bg-green-600 text-white py-4"
               >
                 Thêm mới
               </Button>
@@ -174,7 +159,7 @@ const InsertStockEntry = ({
                 htmlType="button"
                 onClick={handleRefresh}
                 icon={<ReloadOutlined />}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-6 text-base"
+                className="min-w-full bg-blue-500 hover:bg-blue-600 text-white py-4 "
               >
                 Làm mới
               </Button>

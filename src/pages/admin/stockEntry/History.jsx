@@ -83,14 +83,17 @@ const History = () => {
       key: "createdAt",
       filters: Array.from(
         new Set(
-          stockDetails.map((stock) =>
-            new Date(stock.createdAt).toLocaleDateString("vi-VN")
+          stockDetails.map(
+            (stock) => new Date(stock.createdAt).toLocaleDateString("vi-VN") // Chỉ lấy ngày
           )
         )
-      ).map((date) => ({ text: date, value: date })), // Loại bỏ ngày trùng lặp
+      ).map((date) => ({ text: date, value: date })), // Tạo danh sách lọc không trùng
+
       filteredValue: filteredInfo.createdAt || null,
-      onFilter: (value, record) => record.createdAt === value,
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      onFilter: (value, record) =>
+        record.rawDate.toLocaleDateString("vi-VN") === value, // So sánh đúng định dạng
+
+      sorter: (a, b) => a.rawDate - b.rawDate, // Sắp xếp theo Date Object
       sortOrder: sortedInfo.columnKey === "createdAt" ? sortedInfo.order : null,
       ellipsis: true,
     },
@@ -123,16 +126,15 @@ const History = () => {
 
   const totalEntryPrice = (quantity, price) => {
     return quantity * price;
-  }
+  };
 
-  // Dữ liệu cho bảng
   const dataSource = stockDetails.map((stock, index) => ({
     key: index,
     id: index + 1,
-    createdAt: new Date(stock.createdAt).toLocaleString(),
+    rawDate: new Date(stock.createdAt), // Lưu lại ngày gốc để lọc & sắp xếp
+    createdAt: new Date(stock.createdAt).toLocaleString("vi-VN"), // Hiển thị có giờ phút giây
     entryQuantity: stock.entryQuantity,
     entryPrice: stock.entryPrice,
-    
   }));
 
   return (

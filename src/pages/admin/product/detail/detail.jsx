@@ -7,8 +7,8 @@ import Description from "./description";
 import Rating from "./Rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";
 import { useLocation } from "react-router-dom";
-import InsertStockEntry from "../../stockEntry/insert";
-import History from "../../stockEntry/History";
+import History from "../../stockEntry/history";
+import InsertStockEntry from "../../stockEntry/InsertStockEntry";
 
 const Detail = () => {
   const location = useLocation();

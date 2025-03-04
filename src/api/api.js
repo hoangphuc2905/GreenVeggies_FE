@@ -41,7 +41,12 @@ const auth = axios.create({
     "Content-Type": "application/json",
   },
 });
-
+const address = axios.create({
+  baseURL: API_ADDRESS_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 // 🟢 Lấy danh sách sản phẩm
 export const getProducts = async () => {
   try {
@@ -148,12 +153,6 @@ export const updateUserInfo = async (userID, token, updatedData) => {
   }
 };
 
-const address = axios.create({
-  baseURL: API_ADDRESS_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 // 🟢 Lấy địa chỉ người dùng theo ID
 export const getAddressByID = async (userID) => {
   try {
@@ -193,8 +192,6 @@ export const addNewAddress = async (addressData) => {
     };
   }
 };
-
-
 export const changePassword = async (
   email,
   oldPassword,
@@ -222,7 +219,6 @@ export const changePassword = async (
     return null;
   }
 };
-
 
 // 🟢 Thêm mới sản phẩm
 export const insertProduct = async (data) => {

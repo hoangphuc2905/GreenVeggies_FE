@@ -5,6 +5,7 @@ import {
   UserAddOutlined,
   ProductOutlined,
   AppstoreAddOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
@@ -24,7 +25,12 @@ const AdminSidebar = ({ colorBgContainer }) => {
       icon: <BarChartOutlined />,
       label: "Bảng thống kê",
       children: [
-        { key: "/admin/dashboard-revenue", label: "Thống kê doanh thu" },
+        {
+          key: "/admin/dashboard/revenue",
+          label: "Thống kê doanh thu",
+          icon: <DollarOutlined />,
+          onClick: () => navigate("/admin/dashboard/revenue"),
+        },
         { key: "/admin/dashboard-orders", label: "Thống kê đơn hàng" },
       ],
     },
@@ -45,7 +51,6 @@ const AdminSidebar = ({ colorBgContainer }) => {
           icon: <AppstoreAddOutlined />,
           onClick: () => navigate("/admin/add-product"),
         },
-        
       ],
     },
     {
