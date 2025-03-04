@@ -81,6 +81,7 @@ export const getListProducts = async (key) => {
     return [];
   }
 };
+// 🟢 Lấy danh sách sản phẩm theo Category
 export const getCategories = async () => {
   try {
     const response = await api.get("/categories");

@@ -56,9 +56,12 @@ const Home = () => {
     fetchReviews();
   }, []);
 
-  const handleProductClick = (id) => {
-    navigate(`/product/${id}`);
+  const handleProductClick = (product) => {
+    navigate(`/product/${product.id || product._id}`, {
+      state: { productID: product.productID },
+    });
   };
+
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN", {
       style: "currency",
@@ -77,9 +80,7 @@ const Home = () => {
     <div className="h-screen w-full bg-white flex flex-col  px-[10%]">
       {/* //<Headers */}
 
-      <div
-        className="container mx-auto relative mt-[100px]
-      ">
+      <div className="container mx-auto relative mt-[100px]">
         <Carousel arrows autoplay infinite={false}>
           {images.map((item) => (
             <div key={item.id} className="relative">
@@ -263,8 +264,7 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product.productID)}
-                >
+                  onClick={() => handleProductClick(product)}>
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -300,7 +300,11 @@ const Home = () => {
 
         <div className="container mx-auto relative z-0">
           {/* {Lấy ảnh}  */}
-          <img src={bg3Image} alt="Mô tả hình ảnh" className="w-full h-auto" />
+          <img
+            src={bg3Image}
+            alt="Mô tả hình ảnh"
+            className="w-full h-[80vh] object-fill"
+          />
           <div className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 gap-4 z-10">
             <div className="p-4 rounded-lg">{/* Nội dung cột 1 */}</div>
             <div className="p-4 rounded-lg">

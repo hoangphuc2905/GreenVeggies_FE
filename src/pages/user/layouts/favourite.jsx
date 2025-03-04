@@ -19,9 +19,10 @@ const Favourite = () => {
     fetchProducts();
   }, []);
 
-  const handleProductClick = (productID) => {
-    navigate(`/product/${productID}`);
+  const handleProductClick = (product) => {
+    navigate(`/product/${product._id}`, { state: { productID: product.productID } });
   };
+  
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN", {
       style: "currency",
@@ -43,7 +44,8 @@ const Favourite = () => {
           <div
             key={index}
             className="flex mt-4 cursor-pointer hover:shadow-xl hover:scale-110"
-            onClick={() => handleProductClick(product.productID)}>
+            
+            onClick={() => handleProductClick(product)}>
             <div className="w-1/2 h-[100px]">
               <img
                 src={
