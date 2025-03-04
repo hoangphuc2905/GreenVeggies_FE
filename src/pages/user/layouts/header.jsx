@@ -202,14 +202,15 @@ const Header = () => {
             khoinhokboddy@gmail.com
           </div>
         </div>
-        <div className="flex items-center space-x-4 ">
+        <div className="flex items-center space-x-4 hover:cursor-pointer">
           {user ? (
-            <div className="text-white text-l font-bold">
-              Xin chào, {user.username}
+            <div className="text-white text-l font-bold ">
+              Xin chào, {user.username} 
               <Dropdown
                 menu={{
                   items,
                 }}
+                className="ml-2"
               >
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
@@ -223,7 +224,7 @@ const Header = () => {
             </div>
           ) : (
             <button
-              className="text-white text-l font-bold px-4  rounded"
+              className="text-white text-l font-bold px-4  rounded hover:cursor-pointer"
               onClick={() => setShowLoginForm(true)}>
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký

@@ -3,9 +3,40 @@ import axios from "axios";
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
+const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
+const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
+
 
 const api = axios.create({
   baseURL: API_PRODUCT_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const productAPI = axios.create({
+  baseURL: API_PRODUCT_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const userAPI = axios.create({
+  baseURL: API_URL_USER,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const reviewAPI = axios.create({
+  baseURL: API_REVIEW_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const auth = axios.create({
+  baseURL: API_AUTH_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,43 +64,16 @@ export const getProductById = async (id) => {
   }
 };
 
-const api_user = axios.create({
-  baseURL: API_PRODUCT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 // Hàm lấy thông tin sản phẩm cụ thể theo id
 export const getUserById = async (userID) => {
   try {
-    const response = await api_user.get(`/users/${userID}`);
+    const response = await userAPI.get(`/users/${userID}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
     return null;
   }
 };
-
-const productAPI = axios.create({
-  baseURL: API_PRODUCT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const userAPI = axios.create({
-  baseURL: API_URL_USER,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const reviewAPI = axios.create({
-  baseURL: API_REVIEW_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
 // 🟢 Lấy danh sách sản phẩm theo khóa
 export const getListProducts = async (key) => {
@@ -144,14 +148,59 @@ export const updateUserInfo = async (userID, token, updatedData) => {
   }
 };
 
-const auth = axios.create({
-  baseURL: API_URL,
+const address = axios.create({
+  baseURL: API_ADDRESS_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
+// 🟢 Lấy địa chỉ người dùng theo ID
+export const getAddressByID = async (userID) => {
+  try {
+    const response = await address.get(`/address?userID=${userID}`);
+    return response.data; // Trả về dữ liệu từ API
+  } catch (error) {
+    console.error("Lỗi khi lấy địa chỉ:", error);
+    return null; 
+  }
+};
 
-export const changePassword = async (email, oldPassword, newPassword, token) => {
+// 🟢 API thêm địa chỉ mới cho người dùng
+export const addNewAddress = async (addressData) => {
+  try {
+    const response = await address.post("/address", addressData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 201) {
+      return {
+        success: true,
+        message: "✅ Địa chỉ đã được thêm thành công!",
+      };
+    } else {
+      return {
+        success: false,
+        message: response.data.message || "❌ Lỗi khi thêm địa chỉ.",
+      };
+    }
+  } catch (error) {
+    console.error("❌ Lỗi khi gửi API thêm địa chỉ:", error);
+    return {
+      success: false,
+      message: "❌ Lỗi kết nối hoặc dữ liệu không hợp lệ.",
+    };
+  }
+};
+
+
+export const changePassword = async (
+  email,
+  oldPassword,
+  newPassword,
+  token
+) => {
   try {
     const response = await auth.post(
       "/auth/change-password",
@@ -278,7 +327,9 @@ export const getAllProducts = async () => {
 export const getCategoriesFromProducts = async () => {
   try {
     const products = await getAllProducts();
-    const categories = [...new Set(products.map(product => product.category))];
+    const categories = [
+      ...new Set(products.map((product) => product.category)),
+    ];
     return categories;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
