@@ -3,9 +3,38 @@ import axios from "axios";
 const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
+const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 
 const api = axios.create({
   baseURL: API_PRODUCT_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const productAPI = axios.create({
+  baseURL: API_PRODUCT_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const userAPI = axios.create({
+  baseURL: API_URL_USER,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const reviewAPI = axios.create({
+  baseURL: API_REVIEW_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+const auth = axios.create({
+  baseURL: API_AUTH_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -33,43 +62,16 @@ export const getProductById = async (id) => {
   }
 };
 
-const api_user = axios.create({
-  baseURL: API_PRODUCT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 // Hàm lấy thông tin sản phẩm cụ thể theo id
 export const getUserById = async (userID) => {
   try {
-    const response = await api_user.get(`/users/${userID}`);
+    const response = await userAPI.get(`/users/${userID}`);
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
     return null;
   }
 };
-
-const productAPI = axios.create({
-  baseURL: API_PRODUCT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const userAPI = axios.create({
-  baseURL: API_URL_USER,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const reviewAPI = axios.create({
-  baseURL: API_REVIEW_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
 // 🟢 Lấy danh sách sản phẩm theo khóa
 export const getListProducts = async (key) => {
@@ -143,14 +145,12 @@ export const updateUserInfo = async (userID, token, updatedData) => {
   }
 };
 
-const auth = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export const changePassword = async (email, oldPassword, newPassword, token) => {
+export const changePassword = async (
+  email,
+  oldPassword,
+  newPassword,
+  token
+) => {
   try {
     const response = await auth.post(
       "/auth/change-password",
@@ -172,7 +172,6 @@ export const changePassword = async (email, oldPassword, newPassword, token) => 
     return null;
   }
 };
-
 
 // 🟢 Thêm mới sản phẩm
 export const insertProduct = async (data) => {
@@ -277,7 +276,9 @@ export const getAllProducts = async () => {
 export const getCategoriesFromProducts = async () => {
   try {
     const products = await getAllProducts();
-    const categories = [...new Set(products.map(product => product.category))];
+    const categories = [
+      ...new Set(products.map((product) => product.category)),
+    ];
     return categories;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
