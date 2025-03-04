@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 
 import Footer from "../layouts/footer";
@@ -8,7 +8,9 @@ import { Breadcrumb, Divider, InputNumber, Pagination, Rate } from "antd";
 import Favourite from "../layouts/favourite";
 
 const Detail = ({ wishlist, setWishlist }) => {
-  const { id } = useParams();
+  const location = useLocation();
+  const id = location.state?.productID;
+
   const [product, setProduct] = useState(null);
   const [userData, setUserData] = useState({});
 
@@ -171,7 +173,7 @@ const Detail = ({ wishlist, setWishlist }) => {
             <Link to="/product">Products</Link>
           </Breadcrumb.Item>
           <Breadcrumb.Item>
-            <Link to={`/category/${product.category.categoryID}`}>
+            <Link to={`/category/${product.category._id}`}>
               {product.category.name}
             </Link>
           </Breadcrumb.Item>
@@ -179,7 +181,7 @@ const Detail = ({ wishlist, setWishlist }) => {
         <div className="flex flex-col items-center">
           <br></br>
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-4">
+            <div className="p-4 ">
               {/* Ảnh chính */}
               <div className="mb-4 relative">
                 <img
@@ -211,7 +213,7 @@ const Detail = ({ wishlist, setWishlist }) => {
                   </>
                 )}
             </div>
-            <div className="p-4 w-[416px] h-[416px] overflow-auto">
+            <div className="p-4 w-full h-[416px] overflow-auto">
               <h1 className="text-3xl font-bold mt-4">{product.name}</h1>
               <div className="mt-4 flex items-center">
                 <Rate allowHalf value={averageRating} disabled />
@@ -224,15 +226,13 @@ const Detail = ({ wishlist, setWishlist }) => {
               <div className="mt-4">
                 <p
                   ref={descriptionRef}
-                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}
-                >
+                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
                   {product.description}
                 </p>
                 {showSeeMore && !isExpanded && (
                   <button
                     className="text-blue-500 underline mt-2"
-                    onClick={() => setIsExpanded(true)}
-                  >
+                    onClick={() => setIsExpanded(true)}>
                     Xem thêm
                   </button>
                 )}
@@ -257,8 +257,7 @@ const Detail = ({ wishlist, setWishlist }) => {
               <p className="mt-4 flex items-center text-center">
                 <button
                   className="px-2 py-1 border rounded-l bg-gray-200"
-                  onClick={decrementQuantity}
-                >
+                  onClick={decrementQuantity}>
                   -
                 </button>
                 <InputNumber
@@ -269,29 +268,27 @@ const Detail = ({ wishlist, setWishlist }) => {
                 />
                 <button
                   className="px-2 py-1 border rounded-r bg-gray-200"
-                  onClick={incrementQuantity}
-                >
+                  onClick={incrementQuantity}>
                   +
                 </button>
                 <button
-                  className="text-white text-xl font-bold uppercase tracking-wide text-center 
+                  className="text-white text-xs font-bold tracking-wide text-center 
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
-               rounded-xl p-4 shadow-lg 
+               rounded-lg p-3 shadow-lg 
                hover:scale-105 transition duration-300 ease-in-out ml-2"
-                  onClick={addToWishlist}
-                >
+                  onClick={addToWishlist}>
                   THÊM VÀO GIỎ
                 </button>
               </p>
             </div>
 
-            <div className="overflow-y-auto overflow-x-hidden max-h-[416px] pr-2">
+            <div className="overflow-y-auto overflow-x-hidden max-h-[416px] pr-2 w-full">
               <Favourite />
             </div>
           </div>
         </div>
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4 mb-">
           <button
             className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
               selectedTab === "description"
@@ -310,7 +307,6 @@ const Detail = ({ wishlist, setWishlist }) => {
               setSelectedTab("description");
               toggleDescription();
             }}>
-
             MÔ TẢ
           </button>
           <button
@@ -331,7 +327,6 @@ const Detail = ({ wishlist, setWishlist }) => {
               setSelectedTab("informations");
               toggleInformations();
             }}>
-
             THÔNG TIN LIÊN QUAN
           </button>
 
@@ -353,7 +348,6 @@ const Detail = ({ wishlist, setWishlist }) => {
               setSelectedTab("reviews");
               toggleReviews();
             }}>
-
             ĐÁNH GIÁ
           </button>
         </div>
@@ -371,8 +365,7 @@ const Detail = ({ wishlist, setWishlist }) => {
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: "10px",
-              }}
-            >
+              }}>
               <p>Danh mục: {product.category.name}</p>
               <p>Nguồn gốc: {product.origin}</p>
               <p>Đơn vị tính: {product.unit}</p>

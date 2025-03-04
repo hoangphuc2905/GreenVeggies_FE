@@ -4,6 +4,8 @@ const API_URL_USER = import.meta.env.VITE_API_USER_URL;
 const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
+const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
+
 
 const api = axios.create({
   baseURL: API_PRODUCT_URL,
@@ -39,7 +41,12 @@ const auth = axios.create({
     "Content-Type": "application/json",
   },
 });
-
+const address = axios.create({
+  baseURL: API_ADDRESS_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 // 🟢 Lấy danh sách sản phẩm
 export const getProducts = async () => {
   try {
@@ -83,6 +90,7 @@ export const getListProducts = async (key) => {
     return [];
   }
 };
+// 🟢 Lấy danh sách sản phẩm theo Category
 export const getCategories = async () => {
   try {
     const response = await api.get("/categories");
@@ -145,6 +153,45 @@ export const updateUserInfo = async (userID, token, updatedData) => {
   }
 };
 
+// 🟢 Lấy địa chỉ người dùng theo ID
+export const getAddressByID = async (userID) => {
+  try {
+    const response = await address.get(`/address?userID=${userID}`);
+    return response.data; // Trả về dữ liệu từ API
+  } catch (error) {
+    console.error("Lỗi khi lấy địa chỉ:", error);
+    return null; 
+  }
+};
+
+// 🟢 API thêm địa chỉ mới cho người dùng
+export const addNewAddress = async (addressData) => {
+  try {
+    const response = await address.post("/address", addressData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 201) {
+      return {
+        success: true,
+        message: "✅ Địa chỉ đã được thêm thành công!",
+      };
+    } else {
+      return {
+        success: false,
+        message: response.data.message || "❌ Lỗi khi thêm địa chỉ.",
+      };
+    }
+  } catch (error) {
+    console.error("❌ Lỗi khi gửi API thêm địa chỉ:", error);
+    return {
+      success: false,
+      message: "❌ Lỗi kết nối hoặc dữ liệu không hợp lệ.",
+    };
+  }
+};
 export const changePassword = async (
   email,
   oldPassword,
