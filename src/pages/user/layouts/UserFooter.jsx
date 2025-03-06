@@ -17,11 +17,11 @@ const scrollToTop = () => {
 
 const UserFooter = () => {
   return (
-    <footer className="px-[10%]">
+    <footer className="px-[10%] border-t-[10px] border-primary">
       <div className="container mx-auto relative bg-[#F7F6F2] p-8">
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 ">
-            <h3 className=" text-2xl font-bold text-[#82AE46]">
+            <h3 className=" text-2xl font-bold text-primary">
               Đăng ký vào Bản tin của chúng tôi
             </h3>
             <p className=" text-lg text-gray-700 mt-4">
@@ -37,7 +37,8 @@ const UserFooter = () => {
             />
             <button
               className="p-2 bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white rounded-r-lg
-             hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200">
+             hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200"
+            >
               Đăng ký
             </button>
           </div>
@@ -69,7 +70,8 @@ const UserFooter = () => {
             <Link
               to="/product"
               className="text-gray-700 mt-4 block hover:text-green-600"
-              onClick={scrollToTop}>
+              onClick={scrollToTop}
+            >
               Cửa hàng
             </Link>
             <p className="text-gray-700 mt-4 hover:text-green-600">Về</p>
