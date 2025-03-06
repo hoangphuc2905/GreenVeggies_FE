@@ -6,16 +6,16 @@ import logo from "../../../assets/Green.png";
 
 const AdminHeader = () => {
   return (
-    <div className="flex justify-between items-center h-[65px] px-11 bg-primary fixed z-[1000] w-screen shadow-md">
+    <div className="flex justify-between items-center px-[1%] h-[65px] bg-primary fixed z-[1000] w-full shadow-md">
       <div className="flex w-full justify-between">
-        <a href="/" className="flex items-center py-2">
-          <img src={logo} alt="logo" className="h-10 mx-4" />
+        <a href="/" className="flex items-center">
+          <img src={logo} alt="logo" className="h-10" />
           <span className="text-lg font-bold text-[#ffffff]">
             GreenVeggies
           </span>{" "}
         </a>
         <div>
-          <div className="text-[#ffffff] font-bold text-xl">
+          <div className="text-[#ffffff] font-bold text-l">
             Chào mừng quay trở lại, Admin
           </div>
           <div>
