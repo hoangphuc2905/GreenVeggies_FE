@@ -32,7 +32,7 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
 
         try {
             const response = await fetch(
-                `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
+                `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(emailStored)}&newPassword=${encodeURIComponent(newPassword)}`,
                 {
                     method: "POST",
                     headers: {
@@ -57,7 +57,6 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
             setLoading(false);
         }
     };
-
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">

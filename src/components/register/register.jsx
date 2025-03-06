@@ -19,10 +19,9 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
     setLoading(true);
     setError("");
 
-    const VITE_API_URL_USER = import.meta.env.VITE_API_URL_USER;
     try {
       const response = await fetch(
-        VITE_API_URL_USER`/auth/send-otp?email=${encodeURIComponent(email)}`,
+        `http://localhost:8001/api/auth/send-otp?email=${encodeURIComponent(email)}`,
         {
           method: "POST",
           headers: {
@@ -53,14 +52,16 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
       {/* Nút quay lại */}
       <button
         onClick={goBack} // Gọi goBack để quay về trang đăng nhập
-        className="absolute top-2 left-2 flex items-center text-gray-500 hover:text-gray-700 transition">
+        className="absolute top-2 left-2 flex items-center text-gray-500 hover:text-gray-700 transition"
+      >
         <ArrowLeft size={24} />
       </button>
 
       {/* Nút đóng ở góc trên bên phải */}
       <button
         onClick={closeRegisterForm}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
+        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+      >
         &times;
       </button>
 
@@ -73,15 +74,9 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
       </div>
 
       <div className="w-full md:w-1/2 p-6">
-        <h2 className="text-xl font-bold text-green-700 text-center">
-          GREENVEGGIES
-        </h2>
-        <h3 className="text-xl font-bold mb-4 text-black text-center">
-          Register an account
-        </h3>
-        <p className="text-center text-gray-500 mb-3">
-          Please enter your email address to receive the verification code
-        </p>
+        <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
+        <h3 className="text-xl font-bold mb-4 text-black text-center">Đăng ký tài khoản</h3>
+        <p className="text-center text-gray-500 mb-3">Vui lòng nhập địa chỉ email để nhận mã xác thực</p>
 
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
@@ -99,16 +94,18 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
           <button
             type="submit"
             className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
-            disabled={loading}>
-            {loading ? "Đang gửi mã..." : "Continue"}
+            disabled={loading}
+          >
+            {loading ? "Đang gửi mã..." : "Tiếp tục"}
           </button>
         </form>
 
         <div className="text-center text-sm text-gray-500 mt-2">
           <button
             onClick={goBack} // Gọi goBack để quay lại trang đăng nhập
-            className="text-green-500 hover:underline">
-            Back to login
+            className="text-green-500 hover:underline"
+          >
+            Quay lại trang đăng nhập
           </button>
         </div>
       </div>

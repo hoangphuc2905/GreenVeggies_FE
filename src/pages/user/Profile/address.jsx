@@ -14,7 +14,7 @@ const AddressForm = () => {
     isDefault: false,
   });
 
-  // Chỉ gọi API khi `userID` hợp lệ
+  // Gọi API khi userID hợp lệ
   useEffect(() => {
     if (userID) {
       fetchUserAddress();
@@ -46,7 +46,7 @@ const AddressForm = () => {
     }));
   };
 
-  // ✅ Gửi API POST để thêm địa chỉ mới
+  // Gửi API POST để thêm địa chỉ mới
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -57,7 +57,7 @@ const AddressForm = () => {
 
     try {
       const response = await axios.post("http://localhost:8004/api/address", {
-        userID: userID, // Lấy userID từ localStorage
+        userID: userID,
         city: address.city,
         district: address.district,
         ward: address.ward,
@@ -67,8 +67,23 @@ const AddressForm = () => {
 
       if (response.status === 201) {
         alert("✅ Địa chỉ đã được thêm thành công!");
-        setShowForm(false);
-        fetchUserAddress(); // 🔹 Cập nhật lại địa chỉ sau khi thêm mới
+
+        // Thêm địa chỉ vào danh sách và đánh dấu nếu là địa chỉ mặc định
+        const newAddress = {
+          ...address,
+          isDefault: address.isDefault || false,
+        };
+
+        // Cập nhật danh sách địa chỉ
+        setAddresses((prevAddresses) => {
+          if (address.isDefault) {
+            // Nếu là địa chỉ mặc định, làm mặc định cho địa chỉ vừa thêm
+            return [newAddress, ...prevAddresses];
+          }
+          return [...prevAddresses, newAddress];
+        });
+
+        setShowForm(false); // Đóng form sau khi thêm
       } else {
         alert("❌ Lỗi khi thêm địa chỉ: " + response.data.message);
       }
@@ -82,16 +97,26 @@ const AddressForm = () => {
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Địa chỉ của bạn</h2>
 
-      {/* Hiển thị địa chỉ hiện tại */}
+      {/* Hiển thị địa chỉ hiện có */}
       {!showForm && addresses.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {addresses.map((addr, index) => (
-            <div key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
+            <div
+              key={index}
+              className={`p-4 rounded-lg shadow-md border ${
+                addr.isDefault ? "border-green-500 bg-green-50" : "border-gray-300 bg-gray-100"
+              }`}
+            >
               <p className="text-gray-700"><strong>Thành phố:</strong> {addr.city}</p>
               <p className="text-gray-700"><strong>Quận/Huyện:</strong> {addr.district}</p>
               <p className="text-gray-700"><strong>Phường/Xã:</strong> {addr.ward}</p>
               <p className="text-gray-700"><strong>Địa chỉ cụ thể:</strong> {addr.street}</p>
-              {addr.isDefault && <p className="text-green-500 font-bold">Mặc định</p>}
+
+              {addr.isDefault && (
+                <span className="mt-2 inline-block bg-green-500 text-white px-3 py-1 text-sm font-semibold rounded-full">
+                  ✅ Mặc định
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -159,15 +184,15 @@ const AddressForm = () => {
           </div>
 
           {/* Địa chỉ mặc định */}
-          <div>
-            <label className="block text-gray-700">Địa chỉ mặc định:</label>
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               name="isDefault"
               checked={address.isDefault}
               onChange={handleChange}
-              className="rounded-md focus:ring-2 focus:ring-green-500"
+              className="rounded focus:ring-2 focus:ring-green-500"
             />
+            <label className="text-gray-700">Đặt làm địa chỉ mặc định</label>
           </div>
 
           <button type="submit" className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition">

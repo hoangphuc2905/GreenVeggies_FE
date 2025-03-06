@@ -82,7 +82,7 @@ const LoginForm = ({
           GREENVEGGIES
         </h2>
         <h3 className="text-xl font-bold mb-4 text-black text-center">
-          Welcome Back
+          Chào mừng trở lại
         </h3>
 
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
@@ -102,7 +102,7 @@ const LoginForm = ({
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Password"
+            placeholder="Mật khẩu"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
             required
           />
@@ -112,7 +112,7 @@ const LoginForm = ({
               type="button"
               onClick={openForgotPasswordForm}
               className="hover:underline">
-              Forgot password?
+              Quên mật khẩu?
             </button>
           </div>
 
@@ -120,25 +120,25 @@ const LoginForm = ({
             type="submit"
             className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
             disabled={loading}>
-            {loading ? "Đang đăng nhập..." : "Login"}
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
 
           <div className="text-center text-sm text-gray-500 mt-2">
-            Don't have an account?{" "}
+            Chưa có tài khoản?{" "}
             <button
               type="button"
               onClick={switchToRegister}
               className="text-green-500 hover:underline">
-              Sign up
+              Đăng ký
             </button>
           </div>
         </form>
 
-        {/* Conditionally render user role */}
+        {/* Hiển thị vai trò người dùng */}
         {userRole && (
           <div className="text-center mt-4">
             <p className="font-semibold">
-              {userRole === "admin" ? "Admin" : "User"}
+              {userRole === "admin" ? "Quản trị viên" : "Người dùng"}
             </p>
           </div>
         )}

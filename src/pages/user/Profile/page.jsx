@@ -1,20 +1,20 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Header from "../../user/layouts/header";
 import Footer from "../layouts/UserFooter";
 import { useState } from "react";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null); // Thêm trạng thái để lưu thông tin người dùng
+  const location = useLocation(); // Lấy đường dẫn hiện tại
+  const [user, setUser] = useState(null);
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-      // Xóa thông tin người dùng và token khỏi localStorage
       localStorage.removeItem("token");
       localStorage.removeItem("userID");
-      setUser(null); // Cập nhật trạng thái user về null
+      setUser(null);
       alert("Bạn đã đăng xuất!");
-      navigate("/"); // Chuyển hướng về trang Home
+      navigate("/");
     }
   };
 
@@ -30,13 +30,31 @@ const ProfilePage = () => {
           <div className="w-1/4 p-4">
             <div className="bg-white rounded-lg shadow-md p-4">
               <ul className="space-y-2">
-                <li className="p-2 cursor-pointer text-gray-600 hover:text-green-500">
+                <li
+                  className={`p-2 cursor-pointer ${
+                    location.pathname === "/user/profile"
+                      ? "text-green-500 font-bold" // Màu xanh khi đang ở trang đó
+                      : "text-gray-600 hover:text-green-500"
+                  }`}
+                >
                   <Link to="/user/profile">Thông tin cá nhân</Link>
                 </li>
-                <li className="p-2 cursor-pointer text-gray-600 hover:text-green-500">
+                <li
+                  className={`p-2 cursor-pointer ${
+                    location.pathname === "/user/change-password"
+                      ? "text-green-500 font-bold"
+                      : "text-gray-600 hover:text-green-500"
+                  }`}
+                >
                   <Link to="/user/change-password">Đặt lại mật khẩu</Link>
                 </li>
-                <li className="p-2 cursor-pointer text-gray-600 hover:text-green-500">
+                <li
+                  className={`p-2 cursor-pointer ${
+                    location.pathname === "/user/address"
+                      ? "text-green-500 font-bold"
+                      : "text-gray-600 hover:text-green-500"
+                  }`}
+                >
                   <Link to="/user/address">Địa chỉ của bạn</Link>
                 </li>
                 <li
