@@ -24,7 +24,7 @@ const Menu = () => {
     <div className="flex flex-col ">
       <div>
         <h2
-          className="text-white text-2xl font-bold uppercase tracking-wide text-center 
+          className="text-white text-l font-bold uppercase tracking-wide text-center 
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
                rounded-xl p-4 shadow-lg 
                hover:scale-105 transition duration-300 ease-in-out">
@@ -34,7 +34,7 @@ const Menu = () => {
       {categories.map((category, index) => (
         <Link key={index} to={`/category/${category._id}`}>
           <div className="p-4 border rounded-lg shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
-            <h3 className="text-xl font-semibold">
+            <h3 className="text-l font-semibold">
               <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" />{" "}
               {category.name}
             </h3>

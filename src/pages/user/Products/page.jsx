@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 
-import Footer from "../layouts/footer";
+
 import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/bg_1.png";
 
 import Favourite from "../layouts/favourite";
 import ListProduct from "../layouts/listProduct";
-import FilterPrice from "../layouts/filterPrice"; // Import FilterPrice từ layout
+import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
 
 const Product = () => {
   const [minPrice, setMinPrice] = useState(0);
@@ -86,7 +86,7 @@ const Product = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

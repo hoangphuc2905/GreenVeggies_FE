@@ -1,19 +1,15 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import PropTypes from "prop-types";
-
-import Footer from "../layouts/footer";
-import { getProductById, getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin sản phẩm và người dùng
 import { Breadcrumb, Divider, InputNumber, Pagination, Rate } from "antd";
 import Favourite from "../layouts/favourite";
+import { getProductById, getUserInfo, saveShoppingCarts } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 
-const Detail = ({ wishlist, setWishlist }) => {
+const Detail = () => {
   const location = useLocation();
   const id = location.state?.productID;
 
   const [product, setProduct] = useState(null);
   const [userData, setUserData] = useState({});
-
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
@@ -26,6 +22,7 @@ const Detail = ({ wishlist, setWishlist }) => {
   const [selectedTab, setSelectedTab] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -139,13 +136,21 @@ const Detail = ({ wishlist, setWishlist }) => {
     setShowReviews(false);
   };
 
-  const addToWishlist = () => {
-    const newWishlistItem = { ...product, quantity };
-    console.log("wishlist:", wishlist);
-    console.log("wishlist type:", typeof wishlist);
-    console.log("wishlist isArray:", Array.isArray(wishlist));
-    setWishlist([...wishlist, newWishlistItem]);
-    navigate("/wishlist");
+  const addToWishlist = async () => {
+    const newWishlistItem = {
+      productID: product._id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      quantity: quantity,
+      imageUrl: product.imageUrl,
+    };
+    try {
+      await saveShoppingCarts(newWishlistItem); // Gọi API để lưu thông tin sản phẩm vào order
+      navigate("/wishlist");
+    } catch (error) {
+      console.error("Failed to save order:", error);
+    }
   };
 
   const formatPrice = (price) => {
@@ -226,13 +231,15 @@ const Detail = ({ wishlist, setWishlist }) => {
               <div className="mt-4">
                 <p
                   ref={descriptionRef}
-                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
+                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}
+                >
                   {product.description}
                 </p>
                 {showSeeMore && !isExpanded && (
                   <button
                     className="text-blue-500 underline mt-2"
-                    onClick={() => setIsExpanded(true)}>
+                    onClick={() => setIsExpanded(true)}
+                  >
                     Xem thêm
                   </button>
                 )}
@@ -257,7 +264,8 @@ const Detail = ({ wishlist, setWishlist }) => {
               <p className="mt-4 flex items-center text-center">
                 <button
                   className="px-2 py-1 border rounded-l bg-gray-200"
-                  onClick={decrementQuantity}>
+                  onClick={decrementQuantity}
+                >
                   -
                 </button>
                 <InputNumber
@@ -268,7 +276,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                 />
                 <button
                   className="px-2 py-1 border rounded-r bg-gray-200"
-                  onClick={incrementQuantity}>
+                  onClick={incrementQuantity}
+                >
                   +
                 </button>
                 <button
@@ -276,7 +285,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
                rounded-lg p-3 shadow-lg 
                hover:scale-105 transition duration-300 ease-in-out ml-2"
-                  onClick={addToWishlist}>
+                  onClick={addToWishlist}
+                >
                   THÊM VÀO GIỎ
                 </button>
               </p>
@@ -306,7 +316,8 @@ const Detail = ({ wishlist, setWishlist }) => {
             onClick={() => {
               setSelectedTab("description");
               toggleDescription();
-            }}>
+            }}
+          >
             MÔ TẢ
           </button>
           <button
@@ -326,7 +337,8 @@ const Detail = ({ wishlist, setWishlist }) => {
             onClick={() => {
               setSelectedTab("informations");
               toggleInformations();
-            }}>
+            }}
+          >
             THÔNG TIN LIÊN QUAN
           </button>
 
@@ -347,7 +359,8 @@ const Detail = ({ wishlist, setWishlist }) => {
             onClick={() => {
               setSelectedTab("reviews");
               toggleReviews();
-            }}>
+            }}
+          >
             ĐÁNH GIÁ
           </button>
         </div>
@@ -365,7 +378,8 @@ const Detail = ({ wishlist, setWishlist }) => {
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: "10px",
-              }}>
+              }}
+            >
               <p>Danh mục: {product.category.name}</p>
               <p>Nguồn gốc: {product.origin}</p>
               <p>Đơn vị tính: {product.unit}</p>
@@ -411,26 +425,8 @@ const Detail = ({ wishlist, setWishlist }) => {
         )}
       </div>
       {/* Footer */}
-      <Footer />
     </div>
   );
-};
-
-Detail.propTypes = {
-  wishlist: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      description: PropTypes.string.isRequired,
-      price: PropTypes.number.isRequired,
-      quantity: PropTypes.number.isRequired,
-      imageUrl: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.arrayOf(PropTypes.string),
-      ]).isRequired,
-    })
-  ).isRequired,
-  setWishlist: PropTypes.func.isRequired,
 };
 
 export default Detail;

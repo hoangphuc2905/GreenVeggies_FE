@@ -33,7 +33,7 @@ const Favourite = () => {
   return (
     <div>
       <h2
-        className="text-white text-2xl font-bold uppercase tracking-wide text-center 
+        className="text-white text-l font-bold uppercase tracking-wide text-center 
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
                rounded-xl p-4 shadow-lg 
                hover:scale-105 transition duration-300 ease-in-out">
