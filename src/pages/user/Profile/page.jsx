@@ -1,6 +1,4 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import Header from "../../user/layouts/header";
-import Footer from "../layouts/UserFooter";
 import { useState } from "react";
 
 const ProfilePage = () => {
@@ -20,12 +18,10 @@ const ProfilePage = () => {
 
   return (
     <>
-      {/* Header */}
-      <Header />
 
       {/* Main Content */}
       <div className="container mx-auto relative">
-        <div className="flex justify-center items-start py-8 bg-gray-100 min-h-screen mt-32">
+        <div className="flex justify-center items-start py-8 bg-grey-50 min-h-screen mt-32">
           {/* Sidebar */}
           <div className="w-1/4 p-4">
             <div className="bg-white rounded-lg shadow-md p-4">
@@ -76,8 +72,6 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
     </>
   );
 };
