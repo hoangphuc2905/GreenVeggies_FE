@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-import Footer from "../layouts/footer";
+
 import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/bg_1.png";
 
 import Favourite from "../layouts/favourite";
 import { getAllProducts } from "../../../api/api"; // Import hàm API để lấy tất cả sản phẩm
-import FilterPrice from "../layouts/filterPrice"; // Import FilterPrice từ layout
+import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
 import ProductList from "../layouts/listProductByCatelogyID"; // Import ProductList từ layout
 
 const CategoryPage = () => {
@@ -105,7 +105,7 @@ const CategoryPage = () => {
       </div>
 
       {/* Footer */}
-      <Footer />
+      
     </div>
   );
 };

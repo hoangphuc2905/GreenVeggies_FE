@@ -5,7 +5,7 @@ const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
-
+const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL; // Thêm URL cho API order
 
 const api = axios.create({
   baseURL: API_PRODUCT_URL,
@@ -41,12 +41,32 @@ const auth = axios.create({
     "Content-Type": "application/json",
   },
 });
+
 const address = axios.create({
   baseURL: API_ADDRESS_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+const orderAPI = axios.create({
+  baseURL: API_ORDER_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// 🟢 Lưu thông tin sản phẩm vào order
+export const saveShoppingCarts = async (orderData) => {
+  try {
+    const response = await orderAPI.post("/shopping-carts", orderData);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lưu thông tin sản phẩm vào order:", error);
+    return null;
+  }
+};
+
 // 🟢 Lấy danh sách sản phẩm
 export const getProducts = async () => {
   try {
@@ -90,6 +110,7 @@ export const getListProducts = async (key) => {
     return [];
   }
 };
+
 // 🟢 Lấy danh sách sản phẩm theo Category
 export const getCategories = async () => {
   try {
@@ -126,7 +147,6 @@ export const getProductDetail = async (id) => {
 };
 
 // 🟢 Lấy thông tin người dùng theo ID
-
 export const getUserInfo = async (userID) => {
   try {
     const response = await userAPI.get(`user/${userID}`);
@@ -160,7 +180,7 @@ export const getAddressByID = async (userID) => {
     return response.data; // Trả về dữ liệu từ API
   } catch (error) {
     console.error("Lỗi khi lấy địa chỉ:", error);
-    return null; 
+    return null;
   }
 };
 
@@ -192,6 +212,7 @@ export const addNewAddress = async (addressData) => {
     };
   }
 };
+
 export const changePassword = async (
   email,
   oldPassword,
@@ -308,6 +329,7 @@ export const insertCategory = async (data) => {
     return null;
   }
 };
+
 // 🟢 Lấy tất cả sản phẩm
 export const getAllProducts = async () => {
   try {
@@ -319,6 +341,7 @@ export const getAllProducts = async () => {
     return [];
   }
 };
+
 // 🟢 Lấy danh sách danh mục từ sản phẩm
 export const getCategoriesFromProducts = async () => {
   try {

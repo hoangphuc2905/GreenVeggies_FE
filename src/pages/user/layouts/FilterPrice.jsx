@@ -116,7 +116,7 @@ const FilterPrice = ({
 
   return (
     <div className="p-4 border rounded-lg shadow-md mt-6 mb-6">
-      <h3 className="text-white text-xl font-bold uppercase tracking-wide text-center bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] rounded-xl p-4 shadow-lg hover:scale-105 transition duration-300 ease-in-out">
+      <h3 className="text-white text-l font-bold uppercase tracking-wide text-center bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] rounded-xl p-4 shadow-lg hover:scale-105 transition duration-300 ease-in-out">
         Lọc theo giá
       </h3>
       <div className="flex flex-col space-y-4 mt-4">
@@ -173,7 +173,7 @@ const FilterPrice = ({
         {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
         <button
           onClick={handleFilter}
-          className="text-white text-xl font-bold uppercase tracking-wide text-center bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] rounded-xl p-2 shadow-lg hover:scale-105 transition duration-300 ease-in-out">
+          className="text-white text-l font-bold uppercase tracking-wide text-center bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] rounded-xl p-2 shadow-lg hover:scale-105 transition duration-300 ease-in-out">
           Tìm kiếm
         </button>
       </div>

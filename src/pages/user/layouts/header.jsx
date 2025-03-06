@@ -177,6 +177,8 @@ const Header = () => {
   const isProductActive = location.pathname.startsWith("/product");
   const isNewsActive = location.pathname.startsWith("/news");
   const isCartActive = location.pathname.startsWith("/wishlist");
+  const isContactActive = location.pathname.startsWith("/contact");
+  const isBlogActive = location.pathname.startsWith("/posts");
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchQuery.trim() !== "") {
@@ -288,12 +290,21 @@ const Header = () => {
                     TIN TỨC
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+                <li className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                    isBlogActive
+                      ? "text-[#82AE46] underline font-bold"
+                      : "hover:text-[#82AE46] hover:underline active:scale-95"
+                  }`}
+                >
                   <Link to="/posts" className="font-bold" onClick={scrollToTop}>
                     BÀI VIẾT
                   </Link>
                 </li>
-                <li className="mx-4 py-2 text-sm mt-1 hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
+                <li className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                    isContactActive
+                      ? "text-[#82AE46] underline font-bold"
+                      : "hover:text-[#82AE46] hover:underline active:scale-95"
+                  }`}>
                   <Link
                     to="/contact"
                     className="font-bold"

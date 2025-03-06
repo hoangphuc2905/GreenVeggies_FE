@@ -1,6 +1,4 @@
 import PropTypes from "prop-types";
-
-import Footer from "../layouts/footer";
 import { Divider, InputNumber } from "antd";
 import bgImage from "../../../assets/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -36,8 +34,10 @@ const Wishlist = ({ wishlist, setWishlist }) => {
     setWishlist(wishlist.filter((item) => item._id !== id));
   };
 
-  const handleProductClick = (id) => {
-    navigate(`/product/${id}`);
+  const handleProductClick = (product) => {
+    navigate(`/product/${product.id || product._id}`, {
+      state: { productID: product.productID },
+    });
   };
 
   const handleQuantityChange = (id, value) => {
@@ -47,6 +47,10 @@ const Wishlist = ({ wishlist, setWishlist }) => {
         item._id === id ? { ...item, quantity: value } : item
       )
     );
+  };
+
+  const handleCheckout = () => {
+    navigate("/order");
   };
 
   return (
@@ -95,7 +99,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
 
                   <div
                     className="col-span-2 flex items-center gap-4 "
-                    onClick={() => handleProductClick(item._id)}>
+                    onClick={() => handleProductClick(item)}>
                     <img
                       src={item.imageUrl}
                       alt={item.name}
@@ -129,33 +133,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
             );
           })}
         </div>
-        <Divider style={{ borderColor: "#7cb305" }} />
-        <div className="container mx-auto mt-4">
-          <div className="grid grid-cols-6 bg-white p-4">
-            <div className="bg-white py-4"></div>
-            <div className="bg-white py-4">
-              <p className="mb-4 font-bold">Phiếu ưu đãi</p>
-            </div>
-            <div className="bg-white text-center py-4"></div>
-            <div className="bg-white text-center py-4"></div>
-
-            {/* Ô nhập mã giảm giá */}
-            <div className="bg-white text-center py-4 mt-10 col-span-2">
-              <input
-                type="text"
-                placeholder="Nhập mã giảm giá"
-                className="border p-2 rounded-md w-full"
-              />
-            </div>
-
-            {/* Nút "Áp dụng" vào cột 5 và 6 */}
-            <div className="col-span-2 col-start-5 flex justify-end mt-4">
-              <button className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full">
-                Áp dụng
-              </button>
-            </div>
-          </div>
-        </div>
+        
         <Divider style={{ borderColor: "#7cb305" }} />
         <div className="container mx-auto mt-4">
           <div className="grid grid-cols-6 bg-white p-4">
@@ -175,14 +153,15 @@ const Wishlist = ({ wishlist, setWishlist }) => {
 
             {/* Thêm nút thanh toán vào cột 5 và 6 */}
             <div className="col-span-2 col-start-5 flex justify-end mt-4">
-              <button className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full">
+              <button
+                className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
+                onClick={handleCheckout}>
                 Tiến hành thanh toán
               </button>
             </div>
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

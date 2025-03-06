@@ -15,9 +15,9 @@ const scrollToTop = () => {
   window.scrollTo(0, 0);
 };
 
-const footer = () => {
+const UserFooter = () => {
   return (
-    <footer>
+    <footer className="px-[10%]">
       <div className="container mx-auto relative bg-[#F7F6F2] p-8">
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 ">
@@ -120,4 +120,4 @@ const footer = () => {
   );
 };
 
-export default footer;
+export default UserFooter;

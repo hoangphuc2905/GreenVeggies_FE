@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import Header from "../../user/layouts/header";
-import Footer from "../../user/layouts/footer";
+import Footer from "../layouts/UserFooter";
 import { useState } from "react";
 
 const ProfilePage = () => {
@@ -41,8 +41,7 @@ const ProfilePage = () => {
                 </li>
                 <li
                   className="p-2 cursor-pointer text-gray-600 hover:text-red-500"
-                  onClick={handleLogout}
-                >
+                  onClick={handleLogout}>
                   Đăng xuất
                 </li>
               </ul>
@@ -52,7 +51,8 @@ const ProfilePage = () => {
           {/* Nội dung thay đổi theo route */}
           <div className="w-2/4 p-4">
             <div className="bg-white rounded-lg shadow-md p-6 border border-gray-300">
-              <Outlet /> {/* Hiển thị nội dung của Profile hoặc ChangePassword */}
+              <Outlet />{" "}
+              {/* Hiển thị nội dung của Profile hoặc ChangePassword */}
             </div>
           </div>
         </div>

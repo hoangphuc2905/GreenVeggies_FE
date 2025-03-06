@@ -19,7 +19,6 @@ import category3Image from "../../../src/assets/category-3.png";
 import category4Image from "../../../src/assets/category-4.png";
 import bg3Image from "../../../src/assets/bg_3_1.png";
 
-import Footer from "./layouts/footer";
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
@@ -77,13 +76,11 @@ const Home = () => {
   const randomProducts = getRandomProducts(products, 6);
 
   return (
-    <div className="h-screen w-full bg-white flex flex-col  px-[10%]">
-      {/* //<Headers */}
-
-      <div className="container mx-auto relative mt-[100px]">
+    <div className="h-full w-full bg-white flex flex-col px-[10%]">
+      <div className="container mx-auto mt-[100px]">
         <Carousel arrows autoplay infinite={false}>
           {images.map((item) => (
-            <div key={item.id} className="relative">
+            <div key={item.id} className="">
               <img
                 src={item.src}
                 alt="Mô tả hình ảnh"
@@ -104,8 +101,7 @@ const Home = () => {
         </Carousel>
       </div>
 
-      {/* Danh mục sản phẩm */}
-      <div className="container mx-auto mt-5">
+      <div className="relative container mx-auto mt-5">
         <div className="flex flex-wrap">
           {/* Danh mục bên trái */}
           <div className="w-full md:w-1/4 ">
@@ -399,9 +395,6 @@ const Home = () => {
           </Carousel>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

@@ -10,16 +10,19 @@ import Profile from "../pages/user/Profile/proflie";
 import ChangePassword from "../pages/user/Profile/changepassword";
 import Address from "../pages/user/Profile/address"; // Import Address
 import Contact from "../pages/user/Contact/Contact";
+import OrderPage from "../pages/user/Order/OrderPage"; // Import OrderPage
 
 import { useState } from "react";
 import CategoryPage from "../pages/user/Category/CategoryPage";
 import Header from "../pages/user/layouts/header";
+import UserFooter from "../pages/user/layouts/UserFooter";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
+
   return (
     <Provider store={store}>
-     <Header></Header>
+      <Header></Header>
 
       <Routes>
         {/* Các route chính của user */}
@@ -35,7 +38,8 @@ const UserRouter = () => {
         />
         <Route path="/contact" element={<Contact />} />
         <Route path="/category/:id" element={<CategoryPage />} />
-
+        <Route path="/order" element={<OrderPage />} />{" "}
+        {/* Thêm route cho OrderPage */}
         {/* Nhóm route có Sidebar của User */}
         <Route path="/user" element={<ProfilePage />}>
           <Route path="profile" element={<Profile />} />
@@ -44,6 +48,7 @@ const UserRouter = () => {
           {/* Thêm route cho Address */}
         </Route>
       </Routes>
+      <UserFooter></UserFooter>
     </Provider>
   );
 };
