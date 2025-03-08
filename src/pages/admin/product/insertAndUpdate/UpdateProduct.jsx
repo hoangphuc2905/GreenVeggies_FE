@@ -139,8 +139,8 @@ const UpdateProduct = () => {
   };
 
   return (
-    <Layout className="h-fit">
-      <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
+    <Layout className="h-full">
+      <div className="w-full bg-white rounded-md px-[2%] py-[1%] shadow-md">
         <Flex gap="middle" vertical>
           <Form
             form={form}
@@ -154,8 +154,8 @@ const UpdateProduct = () => {
             validateMessages={validateMessages}
             initialValues={{ status: "available", quantity: 0 }}
           >
-            <Flex className="mb-[10vh]" justify="space-between" align="center">
-              <div className="text-2xl text-primary font-bold">
+            <Flex className="mb-[5vh]" justify="space-between" align="center">
+              <div className="text-xl text-primary font-bold">
                 Chỉnh sửa thông tin sản phẩm
               </div>
               <ConfigProvider
@@ -165,32 +165,30 @@ const UpdateProduct = () => {
                       defaultBg: "#82AE46",
                       defaultColor: "#ffffff",
                       defaultBorderColor: "#82AE46",
-
                       defaultHoverBg: "#6D9539",
                       defaultHoverColor: "#ffffff",
                       defaultHoverBorderColor: "#6D9539",
                       defaultActiveBg: "#5A7E30",
                       defaultActiveColor: "#ffffff",
                       defaultActiveBorderColor: "#5A7E30",
-                      contentFontSize: "17px",
                     },
                   },
                 }}
               >
-                <div className="flex justify-center gap-2 items-center">
+                <div className="flex justify-center gap-2">
                   <Button
                     size="small"
                     type="default"
-                    className="w-24 p-4"
+                    className="py-2 px-6"
                     onClick={() => navigate(-1)}
                   >
                     Hủy
-                  </Button>{" "}
+                  </Button>
                   <Button
                     size="small"
                     type="default"
                     htmlType="submit"
-                    className="w-24 p-4"
+                    className="py-2 px-6"
                     loading={loading}
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
@@ -199,7 +197,7 @@ const UpdateProduct = () => {
                     size="small"
                     type="default"
                     htmlType="button"
-                    className="w-24 p-4"
+                    className="py-2 px-6"
                     onClick={() => openInsertStockEntry(product)}
                   >
                     Nhập hàng
@@ -207,7 +205,7 @@ const UpdateProduct = () => {
                 </div>
               </ConfigProvider>
             </Flex>
-            <Row gutter={24}>
+            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   label="Tên sản phẩm"
@@ -234,9 +232,9 @@ const UpdateProduct = () => {
                     <button
                       onClick={openInsertCategory}
                       type="button"
-                      className="text-primary bg-none  w-12 h-12 flex items-center justify-center  hover:text-[#34C759]"
+                      className="text-[#82AE46] bg-none w-8 h-8 flex items-center justify-center hover:text-[#34C759]"
                     >
-                      <PlusOutlined className="text-4xl font-extrabold" />
+                      <PlusOutlined />
                     </button>
                   </div>
                 </Form.Item>
@@ -249,7 +247,7 @@ const UpdateProduct = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">
-                  <TextArea rows={8} />
+                  <TextArea rows={6} />
                 </Form.Item>
               </Col>
               <Col span={12}>

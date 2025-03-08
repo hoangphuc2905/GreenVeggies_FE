@@ -98,7 +98,14 @@ const Header = () => {
       setShowLoginForm(false);
       localStorage.setItem("token", userData.token);
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
+
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
+
+      if (userInfo.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error("Failed to fetch user info:", error);
     }
@@ -190,7 +197,6 @@ const Header = () => {
   return (
     <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
       <div className="container mx-auto flex w-full justify-between items-center  ">
-
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
           <div className="text-white text-l font-bold ml-2">
@@ -207,7 +213,7 @@ const Header = () => {
         <div className="flex items-center space-x-4 hover:cursor-pointer">
           {user ? (
             <div className="text-white text-l font-bold ">
-              Xin chào, {user.username} 
+              Xin chào, {user.username}
               <Dropdown
                 menu={{
                   items,
@@ -227,7 +233,8 @@ const Header = () => {
           ) : (
             <button
               className="text-white text-l font-bold px-4  rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}>
+              onClick={() => setShowLoginForm(true)}
+            >
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>
@@ -290,7 +297,8 @@ const Header = () => {
                     TIN TỨC
                   </Link>
                 </li>
-                <li className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
                     isBlogActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
@@ -300,11 +308,13 @@ const Header = () => {
                     BÀI VIẾT
                   </Link>
                 </li>
-                <li className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
                     isContactActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to="/contact"
                     className="font-bold"
