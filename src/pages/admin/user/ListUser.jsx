@@ -113,7 +113,7 @@ const ListUser = () => {
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
         <Flex gap="middle" vertical>
           <Flex gap="middle">
-            <div className="text-2xl text-[#82AE46] font-bold mt-3">
+            <div className="text-2xl text-primary font-bold mt-3">
               Danh sách người dùng
             </div>
           </Flex>

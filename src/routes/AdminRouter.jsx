@@ -8,8 +8,8 @@ import AdminHeader from "../pages/Admin/layout/AdminHeader";
 import AdminSidebar from "../pages/Admin/layout/AdminSidebar";
 
 import Page from "../pages/Admin/product/page";
-import InsertProduct from "../pages/admin/product/InsertAndUpdate/InsertProduct";
 import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
+import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct";
 
 const AdminRouter = () => {
   const {
