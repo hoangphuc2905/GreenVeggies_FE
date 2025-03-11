@@ -186,11 +186,28 @@ const Header = () => {
       setSearchQuery(""); // Reset thanh tìm kiếm về giá trị rỗng
     }
   };
+  const [cartItemCount, setCartItemCount] = useState(0);
+
+  useEffect(() => {
+    // Lấy giỏ hàng từ localStorage khi trang được tải
+    const storedWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+    setCartItemCount(storedWishlist.length);
+
+    // Lắng nghe sự kiện cập nhật giỏ hàng
+    const handleWishlistUpdated = (event) => {
+      setCartItemCount(event.detail);
+    };
+
+    window.addEventListener("wishlistUpdated", handleWishlistUpdated);
+
+    return () => {
+      window.removeEventListener("wishlistUpdated", handleWishlistUpdated);
+    };
+  }, []);
 
   return (
     <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
       <div className="container mx-auto flex w-full justify-between items-center  ">
-
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
           <div className="text-white text-l font-bold ml-2">
@@ -207,13 +224,12 @@ const Header = () => {
         <div className="flex items-center space-x-4 hover:cursor-pointer">
           {user ? (
             <div className="text-white text-l font-bold ">
-              Xin chào, {user.username} 
+              Xin chào, {user.username}
               <Dropdown
                 menu={{
                   items,
                 }}
-                className="ml-2"
-              >
+                className="ml-2">
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
                     <FontAwesomeIcon
@@ -238,8 +254,7 @@ const Header = () => {
           <div className="container flex justify-between items-center center mx-auto">
             <Link
               to="/"
-              className="flex items-center gap-2 text-3xl py-2 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer"
-            >
+              className="flex items-center gap-2 text-3xl py-2 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer">
               <img
                 src={logoImage}
                 alt="Mô tả hình ảnh"
@@ -256,8 +271,7 @@ const Header = () => {
                     isHomeActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link to="/" className="font-bold" onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
@@ -269,13 +283,11 @@ const Header = () => {
                     isProductActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link
                     to="/product"
                     className="font-bold"
-                    onClick={scrollToTop}
-                  >
+                    onClick={scrollToTop}>
                     CỬA HÀNG
                   </Link>
                 </li>
@@ -284,23 +296,23 @@ const Header = () => {
                     isNewsActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
                 </li>
-                <li className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
                     isBlogActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link to="/posts" className="font-bold" onClick={scrollToTop}>
                     BÀI VIẾT
                   </Link>
                 </li>
-                <li className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
+                <li
+                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
                     isContactActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
@@ -308,8 +320,7 @@ const Header = () => {
                   <Link
                     to="/contact"
                     className="font-bold"
-                    onClick={scrollToTop}
-                  >
+                    onClick={scrollToTop}>
                     LIÊN HỆ
                   </Link>
                 </li>
@@ -318,15 +329,13 @@ const Header = () => {
                     isCartActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link
                     to="/wishlist"
                     className="font-bold"
-                    onClick={scrollToTop}
-                  >
+                    onClick={scrollToTop}>
                     <Space size="middle">
-                      <Badge count={0} showZero>
+                      <Badge count={cartItemCount} showZero>
                         <FontAwesomeIcon
                           icon={faCartShopping}
                           className={`text-xl ${
@@ -337,7 +346,6 @@ const Header = () => {
                     </Space>
                   </Link>
                 </li>
-
                 <li className="mx-4 relative hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
                   <input
                     type="text"

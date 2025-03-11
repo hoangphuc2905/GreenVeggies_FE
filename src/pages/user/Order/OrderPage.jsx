@@ -1,5 +1,6 @@
 import { Divider, Button, Form, Input, Radio } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getUserInfo } from "../../../api/api"; // Giả sử bạn có API để lấy thông tin người dùng
 
 const style = {
   display: "flex",
@@ -23,7 +24,7 @@ const validateMessages = {
     number: "${label} is not a valid number!",
   },
   number: {
-    range: "${label} must be between ${min} and ${max}",
+    range: "${label} must be between ${min} và ${max}",
   },
 };
 
@@ -33,9 +34,95 @@ const onFinish = (values) => {
 
 const OrderPage = () => {
   const [value, setValue] = useState(1);
+  const [cartItems, setCartItems] = useState([]);
+  const [showQR, setShowQR] = useState(false);
+  const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
+
+  useEffect(() => {
+    // Lấy danh sách sản phẩm từ localStorage hoặc state quản lý toàn cục
+    const storedCartItems = JSON.parse(localStorage.getItem("wishlist")) || [];
+    console.log("Stored Cart Items:", storedCartItems); // Thêm dòng này để kiểm tra dữ liệu giỏ hàng
+    setCartItems(storedCartItems);
+
+    // Lấy userID từ localStorage hoặc state quản lý toàn cục
+    const userID = localStorage.getItem("userID"); // Giả sử userID được lưu trong localStorage
+    if (userID) {
+      // Gọi API để lấy thông tin người dùng
+      getUserInfo(userID)
+        .then((userInfo) => {
+          console.log("User Info:", userInfo); // In ra đối tượng userInfo để kiểm tra cấu trúc
+
+          // Lấy thông tin địa chỉ từ mảng address
+          const address = userInfo.address[0];
+
+          // Điền thông tin người dùng vào form
+          form.setFieldsValue({
+            user: {
+              firstName: userInfo.username,
+              lastName: userInfo.username,
+              address: address.street,
+              city: address.city,
+              phone: userInfo.phone,
+              email: userInfo.email,
+            },
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user info:", error);
+          message.error("Không thể lấy thông tin người dùng");
+        });
+    }
+  }, [form]);
+
   const onChange = (e) => {
     setValue(e.target.value);
+    if (e.target.value === 2 || e.target.value === 3) {
+      setShowQR(true);
+    } else {
+      setShowQR(false);
+    }
   };
+
+  // Tính tổng tiền sản phẩm và phí vận chuyển
+  const totalProductPrice = cartItems.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
+  function calculateShippingFee(
+    orderTotal,
+    isNewCustomer = false,
+    isVIP = false
+  ) {
+    if (isVIP) {
+      return 0; // Thành viên VIP miễn phí vận chuyển
+    }
+    if (isNewCustomer) {
+      return 50000 * 0.5; // Khách hàng mới giảm 50% phí vận chuyển
+    }
+    if (orderTotal >= 600000) {
+      return 0; // Miễn phí vận chuyển
+    }
+    if (orderTotal >= 400000) {
+      return 15000;
+    }
+    if (orderTotal >= 200000) {
+      return 30000;
+    }
+    return 50000; // Mặc định phí vận chuyển
+  }
+
+  const shippingFee = calculateShippingFee(totalProductPrice);
+  const totalPrice = totalProductPrice + shippingFee;
+
+  // Thông tin tài khoản ngân hàng
+  const accountNumber = "868629052003"; // Thay số tài khoản của bạn
+  const bankCode = "MBB"; // Mã ngân hàng theo chuẩn VietQR (VD: BIDV, VCB, MBB)
+  const receiverName = "HUYNH HOANG PHUC"; // Tên người nhận
+  const message = "Thanh toan don hang"; // Nội dung chuyển khoản
+
+  // Tạo URL VietQR
+  const vietqrUrl = `VietQR://2.0/PAYLOAD?ac=${accountNumber}&b=${bankCode}&am=${totalPrice}&n=${receiverName}&m=${message}`;
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-[10%] mt-28">
@@ -46,6 +133,7 @@ const OrderPage = () => {
         <div className="w-1/2 pr-4">
           <Form
             {...layout}
+            form={form}
             name="nest-messages"
             onFinish={onFinish}
             style={{
@@ -150,22 +238,25 @@ const OrderPage = () => {
         {/* Cột bên phải: Thông tin đơn hàng */}
         <div className="w-1/2 pl-4 border-[#82AE46] border-4 sticky top-28 self-start p-4">
           <h3 className="text-xl font-bold mb-4">Đơn hàng của bạn</h3>
-          <div className="grid grid-cols-3">
+          <div className="grid grid-cols-3 gap-4">
             <p className="text-sm">Sản phẩm</p>
-            <p className="text-sm">Số lượng</p>
-            <p className="text-sm">Tạm tính</p>
+            <p className="text-sm text-center">Số lượng</p>
+            <p className="text-sm text-right">Tạm tính</p>
           </div>
           <Divider style={{ borderColor: "#7cb305" }} />
-          <div className="grid grid-cols-3 mb-2">
-            <p>Product 1</p>
-            <p>1</p>
-            <p>100,000 VND</p>
-          </div>
-          <div className="grid grid-cols-3 mb-2">
-            <p>Product 1</p>
-            <p>1</p>
-            <p>100,000 VND</p>
-          </div>
+          {cartItems.length > 0 ? (
+            cartItems.map((item, index) => (
+              <div key={index} className="grid grid-cols-3 gap-4 mb-2">
+                <p>{item.name}</p>
+                <p className="text-center">{item.quantity}</p>
+                <p className="text-right">
+                  {(item.price * item.quantity).toLocaleString()} VND
+                </p>
+              </div>
+            ))
+          ) : (
+            <p>Giỏ hàng của bạn đang trống.</p>
+          )}
           <Divider style={{ borderColor: "#7cb305" }} />
           <Form.Item
             name="discountCode"
@@ -185,11 +276,11 @@ const OrderPage = () => {
             options={[
               {
                 value: 1,
-                label: "Chuyển khoản ngân hàng",
+                label: "Trả tiền mặt khi nhận hàng",
               },
               {
                 value: 2,
-                label: "Trả tiền mặt khi nhận hàng",
+                label: "Chuyển khoản ngân hàng",
               },
               {
                 value: 3,
@@ -197,21 +288,38 @@ const OrderPage = () => {
               },
             ]}
           />
+          {showQR && (
+            <div className="mt-4 relative">
+              <div className="absolute inset-0 bg-white opacity-50 blur"></div>
+              <img
+                src="https://i.imgur.com/1Q2xj9s.png"
+                value={vietqrUrl}
+                size={128}
+                className="w-32 h-32 mx-auto relative"
+              />
+            </div>
+          )}
           <Divider style={{ borderColor: "#7cb305" }} />
-          <div className="grid grid-cols-3 mb-2">
+          <div className="grid grid-cols-3 gap-4 mb-2">
             <p className="font-bold">Tổng tiền sản phẩm</p>
             <p></p>
-            <p className="font-bold">200,000 VND</p>
+            <p className="font-bold text-right">
+              {totalProductPrice.toLocaleString()} VND
+            </p>
           </div>
-          <div className="grid grid-cols-3 mb-2">
+          <div className="grid grid-cols-3 gap-4 mb-2">
             <p className="font-bold">Phí vận chuyển</p>
             <p></p>
-            <p className="font-bold">50,000 VND</p>
+            <p className="font-bold text-right">
+              {shippingFee.toLocaleString()} VND
+            </p>
           </div>
-          <div className="grid grid-cols-3 mb-2">
+          <div className="grid grid-cols-3 gap-4 mb-2">
             <p className="font-bold">Tổng tiền</p>
             <p></p>
-            <p className="font-bold">250,000 VND</p>
+            <p className="font-bold text-right">
+              {totalPrice.toLocaleString()} VND
+            </p>
           </div>
           <Divider style={{ borderColor: "#7cb305" }} />
           <div className="flex justify-end m-4">

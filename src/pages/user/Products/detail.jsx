@@ -2,7 +2,11 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Breadcrumb, Divider, InputNumber, Pagination, Rate } from "antd";
 import Favourite from "../layouts/favourite";
-import { getProductById, getUserInfo, saveShoppingCarts } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
+import {
+  getProductById,
+  getUserInfo,
+  saveShoppingCarts,
+} from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 
 const Detail = () => {
   const location = useLocation();
@@ -137,22 +141,55 @@ const Detail = () => {
   };
 
   const addToWishlist = async () => {
+    const userID = localStorage.getItem("userID"); // Lấy userID từ localStorage
+    const imageUrl = Array.isArray(product.imageUrl)
+      ? product.imageUrl[0]
+      : product.imageUrl; // Lấy hình ảnh đầu tiên nếu imageUrl là mảng
     const newWishlistItem = {
-      productID: product._id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      quantity: quantity,
-      imageUrl: product.imageUrl,
+      userID: userID,
+      items: [
+        {
+          productID: product.productID, // Đảm bảo sử dụng đúng thuộc tính productID
+          name: product.name, // Thêm tên sản phẩm
+          quantity: quantity,
+          price: product.price,
+          imageUrl: imageUrl,
+        },
+      ],
+      totalPrice: product.price * quantity,
     };
     try {
+      console.log("New Wishlist Item:", newWishlistItem); // In ra dữ liệu gửi đi
       await saveShoppingCarts(newWishlistItem); // Gọi API để lưu thông tin sản phẩm vào order
+
+      // Lưu sản phẩm vào localStorage
+      const currentWishlist =
+        JSON.parse(localStorage.getItem("wishlist")) || [];
+      const existingItemIndex = currentWishlist.findIndex(
+        (item) => item.productID === product.productID // Đảm bảo sử dụng đúng thuộc tính productID
+      );
+
+      if (existingItemIndex !== -1) {
+        // Sản phẩm đã tồn tại, tăng số lượng
+        currentWishlist[existingItemIndex].quantity += quantity;
+      } else {
+        // Sản phẩm chưa tồn tại, thêm sản phẩm mới
+        currentWishlist.push(newWishlistItem.items[0]);
+      }
+
+      localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
+
+      // Phát ra sự kiện cập nhật giỏ hàng
+      const event = new CustomEvent("wishlistUpdated", {
+        detail: currentWishlist.length,
+      });
+      window.dispatchEvent(event);
+
       navigate("/wishlist");
     } catch (error) {
       console.error("Failed to save order:", error);
     }
   };
-
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN", {
       style: "currency",
@@ -231,15 +268,13 @@ const Detail = () => {
               <div className="mt-4">
                 <p
                   ref={descriptionRef}
-                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}
-                >
+                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
                   {product.description}
                 </p>
                 {showSeeMore && !isExpanded && (
                   <button
                     className="text-blue-500 underline mt-2"
-                    onClick={() => setIsExpanded(true)}
-                  >
+                    onClick={() => setIsExpanded(true)}>
                     Xem thêm
                   </button>
                 )}
@@ -264,8 +299,7 @@ const Detail = () => {
               <p className="mt-4 flex items-center text-center">
                 <button
                   className="px-2 py-1 border rounded-l bg-gray-200"
-                  onClick={decrementQuantity}
-                >
+                  onClick={decrementQuantity}>
                   -
                 </button>
                 <InputNumber
@@ -276,8 +310,7 @@ const Detail = () => {
                 />
                 <button
                   className="px-2 py-1 border rounded-r bg-gray-200"
-                  onClick={incrementQuantity}
-                >
+                  onClick={incrementQuantity}>
                   +
                 </button>
                 <button
@@ -285,8 +318,7 @@ const Detail = () => {
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
                rounded-lg p-3 shadow-lg 
                hover:scale-105 transition duration-300 ease-in-out ml-2"
-                  onClick={addToWishlist}
-                >
+                  onClick={addToWishlist}>
                   THÊM VÀO GIỎ
                 </button>
               </p>
@@ -316,8 +348,7 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("description");
               toggleDescription();
-            }}
-          >
+            }}>
             MÔ TẢ
           </button>
           <button
@@ -337,8 +368,7 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("informations");
               toggleInformations();
-            }}
-          >
+            }}>
             THÔNG TIN LIÊN QUAN
           </button>
 
@@ -359,8 +389,7 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("reviews");
               toggleReviews();
-            }}
-          >
+            }}>
             ĐÁNH GIÁ
           </button>
         </div>
@@ -378,8 +407,7 @@ const Detail = () => {
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
                 gap: "10px",
-              }}
-            >
+              }}>
               <p>Danh mục: {product.category.name}</p>
               <p>Nguồn gốc: {product.origin}</p>
               <p>Đơn vị tính: {product.unit}</p>
