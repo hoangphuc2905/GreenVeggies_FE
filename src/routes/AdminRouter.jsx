@@ -1,15 +1,16 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { App, Layout, theme } from "antd";
 import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
-import Revenue from "../pages/Admin/revenue/Index";
+import Revenue from "../pages/Admin/revenue/Revenue";
 import Detail from "../pages/Admin/product/detail/detail";
 import ListUser from "../pages/admin/user/ListUser";
 import AdminHeader from "../pages/Admin/layout/AdminHeader";
-import AdminSidebar from "../pages/Admin/layout/AdminSidebar";
 
-import Page from "../pages/Admin/product/page";
 import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
 import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct";
+import Order from "../pages/admin/order/Order";
+import Page from "../pages/admin/product/Page";
+import AdminSidebar from "../pages/admin/layout/AdminSidebar";
 
 const AdminRouter = () => {
   const {
@@ -48,6 +49,7 @@ const AdminRouter = () => {
                   element={<UpdateProduct />}
                 />
                 <Route path="/dashboard/revenue" element={<Revenue />} />
+                <Route path="/dashboard/orders" element={<Order />} />
               </Routes>
             </Layout>
           </Layout>
