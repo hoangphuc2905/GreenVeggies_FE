@@ -6,6 +6,7 @@ import {
   ProductOutlined,
   AppstoreAddOutlined,
   DollarOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
@@ -31,7 +32,12 @@ const AdminSidebar = ({ colorBgContainer }) => {
           icon: <DollarOutlined />,
           onClick: () => navigate("/admin/dashboard/revenue"),
         },
-        { key: "/admin/dashboard-orders", label: "Thống kê đơn hàng" },
+        {
+          key: "/admin/dashboard/orders",
+          label: "Thống kê đơn hàng",
+          icon: <ShoppingCartOutlined />,
+          onClick: () => navigate("/admin/dashboard/orders"),
+        },
       ],
     },
     {
