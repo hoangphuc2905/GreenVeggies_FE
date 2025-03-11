@@ -129,8 +129,8 @@ const InsertProduct = () => {
   };
 
   return (
-    <Layout className="h-fit">
-      <div className="w-full bg-white rounded-md px-[3%] py-[1%] shadow-md">
+    <Layout className="h-full">
+      <div className="w-full bg-white rounded-md px-[2%] py-[1%] shadow-md">
         <Flex gap="middle" vertical>
           <Form
             form={form}
@@ -144,8 +144,8 @@ const InsertProduct = () => {
             validateMessages={validateMessages}
             initialValues={{ status: "available", quantity: 0 }}
           >
-            <Flex className="mb-[10vh]" justify="space-between" align="center">
-              <div className="text-2xl text-[#82AE46] font-bold">
+            <Flex className="mb-[5vh]" justify="space-between" align="center">
+              <div className="text-xl text-primary font-bold">
                 Thêm thông tin sản phẩm mới
               </div>
               <ConfigProvider
@@ -161,7 +161,6 @@ const InsertProduct = () => {
                       defaultActiveBg: "#5A7E30",
                       defaultActiveColor: "#ffffff",
                       defaultActiveBorderColor: "#5A7E30",
-                      // contentFontSize: "10px",
                     },
                   },
                 }}
@@ -171,23 +170,19 @@ const InsertProduct = () => {
                     size="small"
                     type="default"
                     htmlType="submit"
-                    className="py-4 px-10 w-defaultWidth"
+                    className="py-4 px-10 size-3"
                     loading={loading}
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
 
-                  <Button
-                    size="small"
-                    type="default"
-                    className="py-4 px-10 w-defaultWidth"
-                  >
+                  <Button size="small" type="default" className="py-4 px-10 size-3">
                     Nhập Excel
                   </Button>
                 </div>
               </ConfigProvider>
             </Flex>
-            <Row gutter={24}>
+            <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   label="Tên sản phẩm"
@@ -213,9 +208,9 @@ const InsertProduct = () => {
                     <button
                       onClick={openInsertCategory}
                       type="button"
-                      className="text-[#82AE46] bg-none  w-12 h-12 flex items-center justify-center  hover:text-[#34C759]"
+                      className="text-[#82AE46] bg-none w-8 h-8 flex items-center justify-center hover:text-[#34C759]"
                     >
-                      <PlusOutlined className="text-4xl font-extrabold" />
+                      <PlusOutlined />
                     </button>
                   </div>
                 </Form.Item>
@@ -228,7 +223,7 @@ const InsertProduct = () => {
                   <Input />
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">
-                  <TextArea rows={8} />
+                  <TextArea rows={6} />
                 </Form.Item>
                 <Form.Item
                   label="Hình minh họa"

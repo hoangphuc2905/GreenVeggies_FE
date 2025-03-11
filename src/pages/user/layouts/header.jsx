@@ -98,7 +98,14 @@ const Header = () => {
       setShowLoginForm(false);
       localStorage.setItem("token", userData.token);
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
+
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
+
+      if (userInfo.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       console.error("Failed to fetch user info:", error);
     }
@@ -243,7 +250,8 @@ const Header = () => {
           ) : (
             <button
               className="text-white text-l font-bold px-4  rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}>
+              onClick={() => setShowLoginForm(true)}
+            >
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>
@@ -316,7 +324,8 @@ const Header = () => {
                     isContactActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to="/contact"
                     className="font-bold"

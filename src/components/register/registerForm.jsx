@@ -64,7 +64,7 @@ const SignupForm = ({ switchToLogin, email }) => {
     };
 
     try {
-      const response = await fetch("http://localhost:8019/api/auth/register", {
+      const response = await fetch("http://localhost:8001/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ const SignupForm = ({ switchToLogin, email }) => {
         onClick={switchToLogin}
         className="absolute top-4 left-4 flex items-center text-green-700 hover:text-green-900 transition">
         <ArrowLeft size={24} className="mr-2" />
-        Back
+        Quay lại
       </button>
 
       <div className="w-1/2 hidden md:flex justify-center items-center">
@@ -112,7 +112,7 @@ const SignupForm = ({ switchToLogin, email }) => {
           GREENVEGGIES
         </h2>
         <h3 className="text-xl font-bold mb-4 text-black text-center">
-          Create Account
+          Tạo tài khoản
         </h3>
 
         {error && <div className="text-red-500 text-center mb-3">{error}</div>}
@@ -134,7 +134,7 @@ const SignupForm = ({ switchToLogin, email }) => {
             name="username"
             value={formData.username}
             onChange={handleChange}
-            placeholder="Username"
+            placeholder="Tên người dùng"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
             required
           />
@@ -143,7 +143,7 @@ const SignupForm = ({ switchToLogin, email }) => {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="Phone"
+            placeholder="Số điện thoại"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
             required
           />
@@ -160,7 +160,7 @@ const SignupForm = ({ switchToLogin, email }) => {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Password"
+            placeholder="Mật khẩu"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
             required
           />
@@ -175,7 +175,7 @@ const SignupForm = ({ switchToLogin, email }) => {
             name="address"
             value={formData.address}
             onChange={handleChange}
-            placeholder="Address"
+            placeholder="Địa chỉ"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
           />
 
@@ -183,7 +183,7 @@ const SignupForm = ({ switchToLogin, email }) => {
             type="submit"
             className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
             disabled={loading}>
-            {loading ? "Đang đăng ký..." : "Sign up"}
+            {loading ? "Đang đăng ký..." : "Đăng ký"}
           </button>
         </form>
       </div>

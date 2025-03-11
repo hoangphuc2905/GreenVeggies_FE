@@ -21,8 +21,6 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
             const data = await response.json();
 
             if (response.ok) {
-                // alert(data.message);
-
                 closeForgotPasswordForm(); // Đóng form quên mật khẩu
                 openOtpFormqmk(emailqmk); // Truyền email vào form OTP
             } else {
@@ -54,9 +52,9 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
 
             <div className="w-full md:w-1/2 p-6">
                 <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
-                <h3 className="text-xl font-bold mb-4 text-black text-center">Forgot password?</h3>
+                <h3 className="text-xl font-bold mb-4 text-black text-center">Quên mật khẩu?</h3>
                 <p className="text-center text-gray-500 mb-3">
-                    Fill in the Gmail account corresponding to the account to receive the password reset link.
+                    Nhập địa chỉ email của bạn để nhận liên kết đặt lại mật khẩu.
                 </p>
 
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
@@ -77,7 +75,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                         className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={loading}
                     >
-                        {loading ? "Đang gửi OTP..." : "Continue"}
+                        {loading ? "Đang gửi OTP..." : "Tiếp tục"}
                     </button>
 
                     <div className="text-center text-sm text-gray-500 mt-2">
@@ -86,7 +84,7 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                             onClick={openLoginForm}
                             className="text-green-500 hover:underline"
                         >
-                            Back to login
+                            Quay lại trang đăng nhập
                         </button>
                     </div>
                 </form>

@@ -10,6 +10,7 @@ import {
   Image,
   ConfigProvider,
   message,
+  Modal,
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
@@ -145,22 +146,32 @@ const Page = () => {
         setWarningMessage("Sản phẩm này đã ngưng bán");
         return;
       }
-      if (!window.confirm("Bạn có chắc chắn muốn ngừng bán sản phẩm này?"))
-        return;
 
-      const response = await updateProduct(value.productID, {
-        status: "unavailable",
-        name: value.name,
-        origin: value.origin,
-        description: value.description,
+      Modal.confirm({
+        title: "Xác nhận ngừng bán sản phẩm",
+        content: "Bạn có chắc chắn muốn ngừng bán sản phẩm này?",
+        okText: "Đồng ý",
+        cancelText: "Hủy",
+        onOk: async () => {
+          try {
+            const response = await updateProduct(value.productID, {
+              status: "unavailable",
+              name: value.name,
+              origin: value.origin,
+              description: value.description,
+            });
+
+            if (response) {
+              setSuccessMessage("Đã ngừng bán sản phẩm thành công!");
+              await reloadProducts(); // ✅ Cập nhật lại danh sách sản phẩm
+            }
+          } catch (error) {
+            setWarningMessage("Có lỗi xảy ra khi ngừng bán sản phẩm");
+          }
+        },
       });
-
-      if (response) {
-        setSuccessMessage("Đã ngừng bán sản phẩm thành công!");
-        await reloadProducts(); // ✅ Cập nhật lại danh sách sản phẩm
-      }
     } catch (error) {
-      console.error("Lỗi khi cập nhật sản phẩm:", error);
+      setWarningMessage("Có lỗi xảy ra khi ngừng bán sản phẩm");
     }
   };
 
@@ -187,7 +198,7 @@ const Page = () => {
   }, [warningMessage, successMessgae]);
 
   return (
-    <Layout className="h-fit">
+    <Layout className="over">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
         <Flex gap="middle" vertical>
           <div className="text-2xl text-primary font-bold mt-3">

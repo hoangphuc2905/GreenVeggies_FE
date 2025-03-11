@@ -64,6 +64,8 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
 
             if (response.ok) {
                 alert("OTP đã được xác nhận!");
+                localStorage.setItem("verifiedOtp", otpValue); // Lưu OTP vào localStorage
+                localStorage.setItem("verifiedEmail", emailqmk); // Lưu email vào localStorage
                 closeOtpForm(); // Đóng form OTP
                 openResetPasswordForm(emailqmk, otpValue); // Mở form Reset Password và truyền email cùng OTP
             } else {
@@ -134,7 +136,7 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
                         className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={loading}
                     >
-                        {loading ? "Đang xác thực..." : "Continue"}
+                        {loading ? "Đang xác thực..." : "Tiếp tục"}
                     </button>
                 </form>
             </div>

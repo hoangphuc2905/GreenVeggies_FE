@@ -78,7 +78,6 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
         }
     };
 
-
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
             {/* Nút quay lại ở góc trên bên trái */}
@@ -136,7 +135,7 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
                         className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={loading}
                     >
-                        {loading ? "Đang xác nhận..." : "Continue"}
+                        {loading ? "Đang xác nhận..." : "Tiếp tục"}
                     </button>
                 </form>
 
