@@ -76,9 +76,13 @@ const UserFooter = () => {
             </Link>
             <p className="text-gray-700 mt-4 hover:text-green-600">Về</p>
             <p className="text-gray-700 mt-4 hover:text-green-600">Bài viết</p>
-            <p className="text-gray-700 mt-4 hover:text-green-600">
+
+            <Link
+              to="/contact"
+              className="text-gray-700 mt-4 block hover:text-green-600"
+              onClick={scrollToTop}>
               Liên hệ với chúng tôi
-            </p>
+            </Link>
           </div>
           <div className="p-4  ">
             <h3 className="text-xl font-semibold">Hỗ trợ</h3>

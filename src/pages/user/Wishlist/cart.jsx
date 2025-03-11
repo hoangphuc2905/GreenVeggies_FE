@@ -1,13 +1,19 @@
-import PropTypes from "prop-types";
 import { Divider, InputNumber } from "antd";
 import bgImage from "../../../assets/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const Wishlist = ({ wishlist, setWishlist }) => {
+const Wishlist = () => {
   const navigate = useNavigate();
+  const [wishlist, setWishlist] = useState([]);
+
+  useEffect(() => {
+    // Lấy giỏ hàng từ localStorage khi trang được tải
+    const storedWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+    setWishlist(storedWishlist);
+  }, []);
 
   // Gộp các sản phẩm trùng lặp dựa trên productID
   const mergedWishlist = useMemo(() => {
@@ -31,7 +37,15 @@ const Wishlist = ({ wishlist, setWishlist }) => {
 
   const removeFromWishlist = (id) => {
     console.log("Removing item with id:", id);
-    setWishlist(wishlist.filter((item) => item._id !== id));
+    const updatedWishlist = wishlist.filter((item) => item.productID !== id);
+    setWishlist(updatedWishlist);
+    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+
+    // Cập nhật số lượng sản phẩm trong giỏ hàng ở Header
+    const event = new CustomEvent("wishlistUpdated", {
+      detail: updatedWishlist.length,
+    });
+    window.dispatchEvent(event);
   };
 
   const handleProductClick = (product) => {
@@ -42,11 +56,11 @@ const Wishlist = ({ wishlist, setWishlist }) => {
 
   const handleQuantityChange = (id, value) => {
     if (value < 1) return;
-    setWishlist((prevWishlist) =>
-      prevWishlist.map((item) =>
-        item._id === id ? { ...item, quantity: value } : item
-      )
+    const updatedWishlist = wishlist.map((item) =>
+      item.productID === id ? { ...item, quantity: value } : item
     );
+    setWishlist(updatedWishlist);
+    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
   };
 
   const handleCheckout = () => {
@@ -84,7 +98,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
           {mergedWishlist.map((item, index) => {
             console.log("Item:", item); // Thêm dòng này để kiểm tra giá trị của item
             return (
-              <div key={item._id}>
+              <div key={item.productID}>
                 <div className="grid grid-cols-6 items-center p-4 font-semibold cursor-pointer">
                   <div className="col-span-1 flex justify-center">
                     <FontAwesomeIcon
@@ -92,7 +106,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
                       className="text-lg cursor-pointer border"
                       onClick={(e) => {
                         e.stopPropagation(); // Ngăn chặn sự kiện onClick của sản phẩm
-                        removeFromWishlist(item._id);
+                        removeFromWishlist(item.productID);
                       }}
                     />
                   </div>
@@ -101,7 +115,11 @@ const Wishlist = ({ wishlist, setWishlist }) => {
                     className="col-span-2 flex items-center gap-4 "
                     onClick={() => handleProductClick(item)}>
                     <img
-                      src={item.imageUrl}
+                      src={
+                        Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+                          ? item.imageUrl[0]
+                          : item.imageUrl
+                      }
                       alt={item.name}
                       className="w-[80px] h-auto"
                     />
@@ -116,7 +134,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
                       min={1}
                       value={item.quantity}
                       onChange={(value) =>
-                        handleQuantityChange(item._id, value)
+                        handleQuantityChange(item.productID, value)
                       }
                     />
                   </div>
@@ -133,7 +151,7 @@ const Wishlist = ({ wishlist, setWishlist }) => {
             );
           })}
         </div>
-        
+
         <Divider style={{ borderColor: "#7cb305" }} />
         <div className="container mx-auto mt-4">
           <div className="grid grid-cols-6 bg-white p-4">
@@ -164,24 +182,6 @@ const Wishlist = ({ wishlist, setWishlist }) => {
       </div>
     </div>
   );
-};
-
-Wishlist.propTypes = {
-  wishlist: PropTypes.arrayOf(
-    PropTypes.shape({
-      _id: PropTypes.string.isRequired,
-      productID: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      description: PropTypes.string.isRequired,
-      price: PropTypes.number.isRequired,
-      quantity: PropTypes.number.isRequired,
-      imageUrl: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.arrayOf(PropTypes.string),
-      ]).isRequired,
-    })
-  ).isRequired,
-  setWishlist: PropTypes.func.isRequired,
 };
 
 export default Wishlist;

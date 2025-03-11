@@ -59,9 +59,15 @@ const orderAPI = axios.create({
 // 🟢 Lưu thông tin sản phẩm vào order
 export const saveShoppingCarts = async (orderData) => {
   try {
+    console.log("Order Data:", orderData); // In ra dữ liệu gửi đi
     const response = await orderAPI.post("/shopping-carts", orderData);
+    console.log("API response:", response.data); // In ra dữ liệu trả về từ API
     return response.data;
   } catch (error) {
+    if (error.response) {
+      // In ra phản hồi từ máy chủ nếu có
+      console.error("API response error:", error.response.data);
+    }
     console.error("Lỗi khi lưu thông tin sản phẩm vào order:", error);
     return null;
   }
