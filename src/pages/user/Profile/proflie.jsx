@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchUser } from "../../../redux/userSlice"; 
 import { updateUserInfo } from "../../../api/api";
+import { Upload, message } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -33,13 +35,29 @@ const Profile = () => {
   }, [user]);
 
   // Handle avatar change
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
+  const handlerChange = (info) => {
+    if (info.file.status === 'done') {
+      // Success, set preview
+      const imageUrl = info.file.response.secure_url;  // Cloudinary provides the uploaded image URL
       setAvatarPreview(imageUrl);
-      setEditedUser({ ...editedUser, avatar: file });
+      setEditedUser({ ...editedUser, avatar: imageUrl }); // Update editedUser with avatar URL
+      message.success(`${info.file.name} file uploaded successfully`);
+    } else if (info.file.status === 'error') {
+      message.error(`${info.file.name} file upload failed.`);
     }
+  };
+
+  // Prevent automatic upload, this is a hook to modify the file before upload
+  const handlerBeforeUpload = (file) => {
+    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+    if (!isJpgOrPng) {
+      message.error('You can only upload JPG/PNG file!');
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;  // Limit the file size to 2MB
+    if (!isLt2M) {
+      message.error('Image must smaller than 2MB!');
+    }
+    return isJpgOrPng && isLt2M;
   };
 
   // Age validation function
@@ -90,8 +108,8 @@ const Profile = () => {
     formData.append("email", editedUser.email);  // Email is not editable but should be sent as part of formData
     formData.append("dateOfBirth", editedUser.dateOfBirth);
 
-    if (editedUser.avatar instanceof File) {
-      formData.append("avatar", editedUser.avatar); // If avatar is a file, append it as form data
+    if (editedUser.avatar && editedUser.avatar.startsWith("http")) {
+      formData.append("avatar", editedUser.avatar); // If avatar is a URL, append it as is
     }
 
     // Call the updateUserInfo function with FormData
@@ -153,25 +171,26 @@ const Profile = () => {
 
       {/* Avatar + Chọn ảnh */}
       <div className="flex flex-col items-center mb-4">
-        <label htmlFor="avatarInput" className="relative cursor-pointer">
+        {isEditing ? (
+          <Upload
+            multiple={false}
+            action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
+            listType="picture-card"
+            accept="image/*"
+            data={() => ({ upload_preset: "ml_default" })}
+            beforeUpload={handlerBeforeUpload}
+            onChange={handlerChange}
+          >
+            <button style={{ border: 0, background: "none" }} type="button">
+              <PlusOutlined />
+              <div style={{ marginTop: 8 }}>Upload</div>
+            </button>
+          </Upload>
+        ) : (
           <img
             src={avatarPreview}
             alt="Avatar"
             className="w-24 h-24 rounded-full border border-gray-300 shadow-md object-cover"
-          />
-          {isEditing && (
-            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center rounded-full">
-              <span className="text-white text-sm">Chọn ảnh</span>
-            </div>
-          )}
-        </label>
-        {isEditing && (
-          <input
-            type="file"
-            id="avatarInput"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarChange}
           />
         )}
       </div>
@@ -243,7 +262,7 @@ const Profile = () => {
           </>
         ) : (
           <button
-            className="w-full py-2 rounded-md text-white font-semibold bg-blue-500 hover:bg-blue-600 transition"
+            className="w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition"
             onClick={() => setIsEditing(true)}
           >
             Sửa thông tin
@@ -259,5 +278,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
-

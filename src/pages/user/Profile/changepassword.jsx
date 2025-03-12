@@ -24,8 +24,23 @@ const ChangePassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Kiểm tra mật khẩu mới không giống mật khẩu cũ
+    if (newPassword === oldPassword) {
+      setErrorMessage("Mật khẩu mới không được giống mật khẩu cũ.");
+      setSuccessMessage("");
+      return;
+    }
+
+    // Kiểm tra mật khẩu mới có ít nhất 6 ký tự
+    if (newPassword.length < 6) {
+      setErrorMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      setSuccessMessage("");
+      return;
+    }
+
+    // Kiểm tra mật khẩu mới và nhập lại mật khẩu mới có khớp không
     if (newPassword !== confirmNewPassword) {
-      setErrorMessage("⚠ Mật khẩu mới và nhập lại không khớp.");
+      setErrorMessage("Mật khẩu mới và nhập lại không khớp.");
       setSuccessMessage("");
       return;
     }
@@ -50,19 +65,19 @@ const ChangePassword = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccessMessage("✅ Đổi mật khẩu thành công!");
+        setSuccessMessage("Đổi mật khẩu thành công!");
         setOldPassword("");
         setNewPassword("");
         setConfirmNewPassword("");
       } else {
         if (data.message.includes("Mật khẩu cũ không đúng")) {
-          setErrorMessage("❌ Mật khẩu cũ không đúng.");
+          setErrorMessage("Mật khẩu cũ không đúng.");
         } else {
-          setErrorMessage(data.message || "❌ Đổi mật khẩu thất bại. Vui lòng thử lại.");
+          setErrorMessage(data.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
         }
       }
     } catch (error) {
-      setErrorMessage("❌ Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.");
+      setErrorMessage("Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -70,11 +85,12 @@ const ChangePassword = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-center mb-6">🔒 Đặt lại mật khẩu</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">Đặt lại mật khẩu</h2>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      {/* Form fields */}
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <label className="block text-gray-700 mb-1">📧 Email:</label>
+          <label className="block text-gray-700 mb-1 font-bold">Email:</label>
           <input
             type="text"
             value={email}
@@ -84,7 +100,7 @@ const ChangePassword = () => {
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-1">🔑 Mật khẩu cũ:</label>
+          <label className="block text-gray-700 mb-1 font-bold">Mật khẩu cũ:</label>
           <input
             type="password"
             value={oldPassword}
@@ -93,11 +109,9 @@ const ChangePassword = () => {
             required
           />
         </div>
-      </div>
 
-      <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <label className="block text-gray-700 mb-1">🔐 Mật khẩu mới:</label>
+          <label className="block text-gray-700 mb-1 font-bold">Mật khẩu mới:</label>
           <input
             type="password"
             value={newPassword}
@@ -108,7 +122,7 @@ const ChangePassword = () => {
         </div>
 
         <div>
-          <label className="block text-gray-700 mb-1">🔁 Nhập lại mật khẩu mới:</label>
+          <label className="block text-gray-700 mb-1 font-bold">Nhập lại mật khẩu mới:</label>
           <input
             type="password"
             value={confirmNewPassword}
@@ -120,10 +134,10 @@ const ChangePassword = () => {
 
         <button
           type="submit"
-          className="mt-4 w-full py-3 rounded-md text-white font-semibold bg-blue-500 hover:bg-blue-600 transition"
+          className="mt-4 w-full py-3 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition"
           disabled={isLoading}
         >
-          {isLoading ? "⏳ Đang xử lý..." : "✅ Đặt lại mật khẩu"}
+          {isLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
         </button>
       </form>
 
