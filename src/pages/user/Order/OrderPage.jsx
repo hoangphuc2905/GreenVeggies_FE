@@ -1,6 +1,10 @@
 import { Divider, Button, Form, Input, Radio } from "antd";
 import { useState, useEffect } from "react";
-import { getUserInfo } from "../../../api/api"; // Giả sử bạn có API để lấy thông tin người dùng
+import {
+  getUserInfo,
+  getShoppingCartByUserId,
+  getProductById,
+} from "../../../api/api"; // Import hàm API để lấy giỏ hàng và sản phẩm
 
 const style = {
   display: "flex",
@@ -39,10 +43,28 @@ const OrderPage = () => {
   const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
 
   useEffect(() => {
-    // Lấy danh sách sản phẩm từ localStorage hoặc state quản lý toàn cục
-    const storedCartItems = JSON.parse(localStorage.getItem("wishlist")) || [];
-    console.log("Stored Cart Items:", storedCartItems); // Thêm dòng này để kiểm tra dữ liệu giỏ hàng
-    setCartItems(storedCartItems);
+    const fetchCartItems = async (userID) => {
+      try {
+        const shoppingCart = await getShoppingCartByUserId(userID);
+        const detailedCartItems = await Promise.all(
+          shoppingCart.shoppingCartDetails.map(async (item) => {
+            const product = await getProductById(item.productID);
+            return {
+              ...item,
+              name: product.name,
+              price: product.price,
+            };
+          })
+        );
+        setCartItems(detailedCartItems);
+      } catch (error) {
+        console.error(
+          "Failed to fetch shopping cart or product details:",
+          error
+        );
+        message.error("Không thể lấy giỏ hàng hoặc chi tiết sản phẩm");
+      }
+    };
 
     // Lấy userID từ localStorage hoặc state quản lý toàn cục
     const userID = localStorage.getItem("userID"); // Giả sử userID được lưu trong localStorage
@@ -66,6 +88,9 @@ const OrderPage = () => {
               email: userInfo.email,
             },
           });
+
+          // Gọi hàm để lấy danh sách sản phẩm trong giỏ hàng
+          fetchCartItems(userID);
         })
         .catch((error) => {
           console.error("Failed to fetch user info:", error);

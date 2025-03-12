@@ -3,49 +3,93 @@ import bgImage from "../../../assets/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  getShoppingCartByUserId,
+  getProductById,
+  deleteShoppingCartDetailById,
+  saveShoppingCarts,
+} from "../../../api/api"; // Import the API functions
+import debounce from "lodash.debounce"; // Import debounce function
 
 const Wishlist = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
 
   useEffect(() => {
-    // Lấy giỏ hàng từ localStorage khi trang được tải
-    const storedWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setWishlist(storedWishlist);
+    const fetchWishlist = async () => {
+      const userID = localStorage.getItem("userID");
+      console.log("UserID:", userID); // Debugging statement
+      if (userID) {
+        try {
+          const fetchedWishlist = await getShoppingCartByUserId(userID);
+          console.log("Fetched wishlist:", fetchedWishlist); // Debugging statement
+          if (
+            fetchedWishlist &&
+            Array.isArray(fetchedWishlist.shoppingCartDetails)
+          ) {
+            const detailedWishlist = await Promise.all(
+              fetchedWishlist.shoppingCartDetails.map(async (item) => {
+                const productDetails = await getProductById(item.productID);
+                return {
+                  ...item,
+                  ...productDetails,
+                  quantity: item.quantity || 1, // Ensure quantity is set
+                  totalAmount:
+                    (item.quantity || 1) * (productDetails.price || 0), // Calculate totalAmount
+                };
+              })
+            );
+            setWishlist(detailedWishlist);
+          } else {
+            console.error("Fetched wishlist is not an array:", fetchedWishlist);
+          }
+        } catch (error) {
+          console.error("Failed to fetch wishlist:", error);
+        }
+      }
+    };
+
+    fetchWishlist();
   }, []);
 
   // Gộp các sản phẩm trùng lặp dựa trên productID
   const mergedWishlist = useMemo(() => {
     const productMap = new Map();
     wishlist.forEach((item) => {
-      if (productMap.has(item.productID)) {
-        const existingItem = productMap.get(item.productID);
-        existingItem.quantity += item.quantity;
-      } else {
-        productMap.set(item.productID, { ...item });
-      }
+      productMap.set(item.productID, { ...item });
     });
     return Array.from(productMap.values());
   }, [wishlist]);
 
   // Tính tổng giá tạm tính
   const subtotal = mergedWishlist.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + (item.totalAmount || 0),
     0
   );
 
-  const removeFromWishlist = (id) => {
-    console.log("Removing item with id:", id);
-    const updatedWishlist = wishlist.filter((item) => item.productID !== id);
-    setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+  const removeFromWishlist = async (shoppingCartDetailID) => {
+    console.log(
+      "Removing item with shoppingCartDetailID:",
+      shoppingCartDetailID
+    );
 
-    // Cập nhật số lượng sản phẩm trong giỏ hàng ở Header
-    const event = new CustomEvent("wishlistUpdated", {
-      detail: updatedWishlist.length,
-    });
-    window.dispatchEvent(event);
+    // Call the API to delete the item from the wishlist
+    const result = await deleteShoppingCartDetailById(shoppingCartDetailID);
+    if (result) {
+      const updatedWishlist = wishlist.filter(
+        (item) => item.shoppingCartDetailID !== shoppingCartDetailID
+      );
+      setWishlist(updatedWishlist);
+
+      // Cập nhật số lượng sản phẩm trong giỏ hàng ở Header
+      const event = new CustomEvent("wishlistUpdated", {
+        detail: updatedWishlist.length,
+      });
+      window.dispatchEvent(event);
+    } else {
+      console.error("Failed to remove item from wishlist");
+    }
   };
 
   const handleProductClick = (product) => {
@@ -54,15 +98,89 @@ const Wishlist = () => {
     });
   };
 
-  const handleQuantityChange = (id, value) => {
-    if (value < 1) return;
-    const updatedWishlist = wishlist.map((item) =>
-      item.productID === id ? { ...item, quantity: value } : item
-    );
-    setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-  };
+  const updateQuantityInDatabase = useCallback(
+    debounce(async (id, value) => {
+      const userID = localStorage.getItem("userID");
+      const itemToUpdate = wishlist.find((item) => item.productID === id);
 
+      if (itemToUpdate) {
+        try {
+          const productDetails = await getProductById(itemToUpdate.productID);
+          const newWishlistItem = {
+            userID: userID,
+            items: [
+              {
+                productID: itemToUpdate.productID,
+                name: productDetails.name,
+                quantity: value,
+                description: productDetails.description,
+                price: productDetails.price,
+                imageUrl: productDetails.imageUrl,
+              },
+            ],
+            totalPrice: productDetails.price * value,
+          };
+
+          console.log("New Wishlist Item:", newWishlistItem); // Debugging statement
+          await saveShoppingCarts(newWishlistItem); // Call the API to save the updated quantity
+
+          // Update the local storage and dispatch the event
+          const currentWishlist =
+            JSON.parse(localStorage.getItem("wishlist")) || [];
+          const existingItemIndex = currentWishlist.findIndex(
+            (item) => item.productID === itemToUpdate.productID
+          );
+
+          if (existingItemIndex !== -1) {
+            currentWishlist[existingItemIndex].quantity = value;
+          } else {
+            currentWishlist.push(newWishlistItem.items[0]);
+          }
+
+          localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
+
+          const event = new CustomEvent("wishlistUpdated", {
+            detail: currentWishlist.length,
+          });
+          window.dispatchEvent(event);
+        } catch (error) {
+          console.error(
+            "Failed to update item quantity in the database:",
+            error
+          );
+        }
+      }
+    }, 200),
+    [wishlist]
+  );
+
+  const handleQuantityChange = async (id, value) => {
+    if (value < 1) return;
+
+    try {
+      const productDetails = await getProductById(id);
+      setWishlist((prevWishlist) => {
+        const updatedWishlist = prevWishlist.map((item) =>
+          item.productID === id
+            ? {
+                ...item,
+                quantity: value, // Ghi đè số lượng mới
+                totalAmount: value * (productDetails.price || 0), // Tính lại tổng giá
+              }
+            : item
+        );
+
+        localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+
+        // Cập nhật vào database
+        updateQuantityInDatabase(id, value);
+
+        return updatedWishlist;
+      });
+    } catch (error) {
+      console.error("Failed to fetch product details:", error);
+    }
+  };
   const handleCheckout = () => {
     navigate("/order");
   };
@@ -106,7 +224,7 @@ const Wishlist = () => {
                       className="text-lg cursor-pointer border"
                       onClick={(e) => {
                         e.stopPropagation(); // Ngăn chặn sự kiện onClick của sản phẩm
-                        removeFromWishlist(item.productID);
+                        removeFromWishlist(item.shoppingCartDetailID); // Pass shoppingCartDetailID here
                       }}
                     />
                   </div>
@@ -123,23 +241,31 @@ const Wishlist = () => {
                       alt={item.name}
                       className="w-[80px] h-auto"
                     />
-                    <p className="max-w-[300px] break-words">{item.name}</p>
+                    <p className="max-w-[300px] break-words">
+                      {item.name || "No name available"}
+                    </p>
                   </div>
 
                   <div className="col-span-1 text-center">
-                    {item.price.toLocaleString()} VND
+                    {(item.price || 0).toLocaleString()} VND
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber
                       min={1}
                       value={item.quantity}
-                      onChange={(value) =>
-                        handleQuantityChange(item.productID, value)
-                      }
+                      onChange={(value) => {
+                        console.log(
+                          "Changing quantity for:",
+                          item.productID,
+                          "New value:",
+                          value
+                        ); // Debugging statement
+                        handleQuantityChange(item.productID, value);
+                      }}
                     />
                   </div>
                   <div className="col-span-1 text-center">
-                    {(item.price * item.quantity).toLocaleString()} VND
+                    {((item.price || 0) * item.quantity).toLocaleString()} VND
                   </div>
                 </div>
 

@@ -116,6 +116,33 @@ export const getUserById = async (userID) => {
   }
 };
 
+// 🟢 Lấy giỏ hàng theo userID
+export const getShoppingCartByUserId = async (userID) => {
+  try {
+    const response = await orderAPI.get(`/shopping-carts/user/${userID}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy giỏ hàng theo userID:", error);
+    return null;
+  }
+};
+
+// 🟢 Xóa chi tiết giỏ hàng theo shoppingCartDetailID
+export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
+  try {
+    const response = await orderAPI.delete(
+      `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Lỗi khi xóa chi tiết giỏ hàng theo shoppingCartDetailID:",
+      error
+    );
+    return null;
+  }
+};
+
 // 🟢 Lấy danh sách sản phẩm theo khóa
 export const getListProducts = async (key) => {
   try {
