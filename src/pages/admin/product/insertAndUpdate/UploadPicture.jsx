@@ -1,4 +1,6 @@
 import { message } from "antd";
+import { deleteImage } from "../../../../api/api";
+
 
 export const handlerBeforeUpload = (file) => {
   const isImage = file.type.startsWith("image/");
@@ -37,5 +39,45 @@ export const handlerChange = (info) => {
   } else if (info.file.status === "error") {
     message.error(`Tải lên thất bại: ${info.file.name}`);
     console.error("Lỗi upload:", info.file.response);
+  }
+};
+
+export const handlePreview = async (
+  file,
+  setPreviewImage,
+  setPreviewOpen,
+  setPreviewTitle
+) => {
+  setPreviewImage(file.url || file.thumbUrl);
+  setPreviewOpen(true);
+  setPreviewTitle(
+    file.name || file.url.substring(file.url.lastIndexOf("/") + 1)
+  );
+};
+export const handleRemove = async (file) => {
+  const imageUrl = file.url || file.response?.secure_url;
+  if (!imageUrl) {
+    message.error("Không tìm thấy URL ảnh để xóa");
+    return;
+  }
+
+  const publicId = imageUrl
+    .substring(imageUrl.lastIndexOf("/") + 1)
+    .split(".")[0];
+  console.log("publicId:", publicId);
+
+  try {
+    const data = await deleteImage(publicId);
+    if (data?.message === "Xóa ảnh thành công!") {
+      message.success("Xóa ảnh thành công!");
+      console.log("Delete image:", data);
+    } else {
+      message.error(data?.message || "Xóa ảnh thất bại!");
+      console.error("Error:", data);
+    }
+  } catch (error) {
+    message.error("Lỗi khi xóa ảnh!");
+    console.error("Error:", error);
+    console.log("Response:", error.response?.data || error.message);
   }
 };

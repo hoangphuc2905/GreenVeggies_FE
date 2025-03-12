@@ -11,14 +11,19 @@ import {
   Col,
   ConfigProvider,
   App,
+  Modal,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
-import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
+import {
+  handlerBeforeUpload,
+  handlerChange,
+  handlePreview,
+  handleRemove,
+} from "./UploadPicture";
 
 const { TextArea } = Input;
 
@@ -44,7 +49,6 @@ const STATUS_OPTIONS = [
     dot: "bg-red-500",
   },
 ];
-
 // Message hiển thị khi validate form
 const validateMessages = {
   required: "${label} không được để trống!",
@@ -58,6 +62,9 @@ const InsertProduct = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
 
   // Lấy danh sách danh mục khi load trang
   useEffect(() => {
@@ -176,7 +183,11 @@ const InsertProduct = () => {
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
 
-                  <Button size="small" type="default" className="py-4 px-10 size-3">
+                  <Button
+                    size="small"
+                    type="default"
+                    className="py-4 px-10 size-3"
+                  >
                     Nhập Excel
                   </Button>
                 </div>
@@ -239,13 +250,22 @@ const InsertProduct = () => {
                     data={() => ({ upload_preset: "ml_default" })}
                     beforeUpload={handlerBeforeUpload}
                     onChange={handlerChange}
+                    onPreview={(file) =>
+                      handlePreview(
+                        file,
+                        setPreviewImage,
+                        setPreviewOpen,
+                        setPreviewTitle
+                      )
+                    }
+                    onRemove={handleRemove} // 🛠️ Gọi hàm xóa ảnh
                   >
                     <button
                       style={{ border: 0, background: "none" }}
                       type="button"
                     >
                       <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Upload</div>
+                      <div style={{ marginTop: 8 }}>Tải hình lên</div>
                     </button>
                   </Upload>
                 </Form.Item>
@@ -342,6 +362,15 @@ const InsertProduct = () => {
           />
         </Flex>
       </div>
+
+      <Modal
+        visible={previewOpen}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewOpen(false)}
+      >
+        <img alt="example" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
     </Layout>
   );
 };
