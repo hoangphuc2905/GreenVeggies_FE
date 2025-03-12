@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +9,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useState } from "react";
 import { Line, Bar } from "react-chartjs-2";
 
 ChartJS.register(
