@@ -1,4 +1,4 @@
-import Footer from "../layouts/UserFooter";
+
 
 const Lienhe = () => {
   return (
@@ -84,7 +84,7 @@ const Lienhe = () => {
       </div>
 
       {/* Footer */}
-      <Footer />
+     
     </div>
   );
 };

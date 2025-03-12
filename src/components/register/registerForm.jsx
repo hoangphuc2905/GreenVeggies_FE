@@ -9,7 +9,6 @@ const SignupForm = ({ switchToLogin, email }) => {
     dateOfBirth: "",
     password: "",
     image: null,
-    address: "",
     role: "user",
   });
 
@@ -53,14 +52,16 @@ const SignupForm = ({ switchToLogin, email }) => {
       return;
     }
 
+    // Kiểm tra ảnh, nếu không có thì sử dụng ảnh mặc định
+    const avatar = formData.image ? formData.image.name : "https://res.cloudinary.com/dze57n4oa/image/upload/v1741758315/e693481de2901eaee3e8746472c2a552_nle9hj.jpg";
+
     const requestBody = {
       email: formData.email,
       username: formData.username,
       phone: formData.phone,
       dateOfBirth: formData.dateOfBirth,
       password: formData.password,
-      address: formData.address,
-      avatar: formData.image ? formData.image.name : null,
+      avatar: avatar, // Gửi avatar là ảnh mặc định nếu không có ảnh người dùng
     };
 
     try {
@@ -168,14 +169,6 @@ const SignupForm = ({ switchToLogin, email }) => {
             type="file"
             name="image"
             onChange={handleFileChange}
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-          />
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="Địa chỉ"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
           />
 

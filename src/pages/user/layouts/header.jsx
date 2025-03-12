@@ -213,7 +213,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
+    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-2 fixed top-0 z-50 left-0  px-[10%]">
       <div className="container mx-auto flex w-full justify-between items-center  ">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
@@ -228,35 +228,43 @@ const Header = () => {
             khoinhokboddy@gmail.com
           </div>
         </div>
-        <div className="flex items-center space-x-4 hover:cursor-pointer">
-          {user ? (
-            <div className="text-white text-l font-bold ">
-              Xin chào, {user.username}
-              <Dropdown
-                menu={{
-                  items,
-                }}
-                className="ml-2">
-                <a onClick={(e) => e.preventDefault()}>
-                  <Space>
-                    <FontAwesomeIcon
-                      icon={faUser}
-                      className="text-white text-l "
-                    />
-                  </Space>
-                </a>
-              </Dropdown>
-            </div>
-          ) : (
-            <button
-              className="text-white text-l font-bold px-4  rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}
-            >
-              <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
-              Đăng nhập/ Đăng ký
-            </button>
-          )}
-        </div>
+        <div className="flex items-center space-x-4 cursor-pointer">
+  {user ? (
+    <div className="text-white text-l font-bold flex items-center space-x-2">
+      <span className="text-white">Xin chào, {user.username}</span>
+      <Dropdown
+        menu={{
+          items,
+        }}
+        className="ml-2">
+        <a onClick={(e) => e.preventDefault()}>
+          <Space>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="Avatar"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <FontAwesomeIcon
+                icon={faUser}
+                className="text-white text-l"
+              />
+            )}
+          </Space>
+        </a>
+      </Dropdown>
+    </div>
+  ) : (
+    <button
+      className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
+      onClick={() => setShowLoginForm(true)}
+    >
+      <FontAwesomeIcon icon={faUser} className="text-white text-l" /> Đăng nhập/ Đăng ký
+    </button>
+  )}
+</div>
+
 
         <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10 px-[10%]">
           <div className="container flex justify-between items-center center mx-auto">

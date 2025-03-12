@@ -14,6 +14,10 @@ const AddressForm = () => {
     isDefault: false,
   });
 
+  // Thông tin phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const addressesPerPage = 3;
+
   // Gọi API khi userID hợp lệ
   useEffect(() => {
     if (userID) {
@@ -46,12 +50,29 @@ const AddressForm = () => {
     }));
   };
 
+  // Kiểm tra xem địa chỉ mới có trùng với địa chỉ đã có không
+  const isDuplicateAddress = (newAddress) => {
+    return addresses.some(
+      (addr) =>
+        addr.city === newAddress.city &&
+        addr.district === newAddress.district &&
+        addr.ward === newAddress.ward &&
+        addr.street === newAddress.street
+    );
+  };
+
   // Gửi API POST để thêm địa chỉ mới
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!address.city || !address.district || !address.ward || !address.street) {
       alert("⚠ Vui lòng điền đầy đủ thông tin địa chỉ!");
+      return;
+    }
+
+    // Kiểm tra trùng địa chỉ
+    if (isDuplicateAddress(address)) {
+      alert("❌ Địa chỉ này đã tồn tại trong danh sách của bạn!");
       return;
     }
 
@@ -77,7 +98,6 @@ const AddressForm = () => {
         // Cập nhật danh sách địa chỉ
         setAddresses((prevAddresses) => {
           if (address.isDefault) {
-            // Nếu là địa chỉ mặc định, làm mặc định cho địa chỉ vừa thêm
             return [newAddress, ...prevAddresses];
           }
           return [...prevAddresses, newAddress];
@@ -93,14 +113,22 @@ const AddressForm = () => {
     }
   };
 
+  // Tính chỉ số bắt đầu và kết thúc để phân trang
+  const indexOfLastAddress = currentPage * addressesPerPage;
+  const indexOfFirstAddress = indexOfLastAddress - addressesPerPage;
+  const currentAddresses = addresses.slice(indexOfFirstAddress, indexOfLastAddress);
+
+  // Chuyển trang
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Địa chỉ của bạn</h2>
 
       {/* Hiển thị địa chỉ hiện có */}
-      {!showForm && addresses.length > 0 && (
+      {!showForm && currentAddresses.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
-          {addresses.map((addr, index) => (
+          {currentAddresses.map((addr, index) => (
             <div
               key={index}
               className={`p-4 rounded-lg shadow-md border ${
@@ -112,7 +140,7 @@ const AddressForm = () => {
               <p className="text-gray-700"><strong>Phường/Xã:</strong> {addr.ward}</p>
               <p className="text-gray-700"><strong>Địa chỉ cụ thể:</strong> {addr.street}</p>
 
-              {addr.isDefault && (
+              {addr.default && (
                 <span className="mt-2 inline-block bg-green-500 text-white px-3 py-1 text-sm font-semibold rounded-full">
                   ✅ Mặc định
                 </span>
@@ -122,6 +150,7 @@ const AddressForm = () => {
         </div>
       )}
 
+      {/* Nút thêm địa chỉ */}
       {!showForm ? (
         <button
           onClick={() => setShowForm(true)}
@@ -200,6 +229,24 @@ const AddressForm = () => {
           </button>
         </form>
       )}
+
+      {/* Phân trang */}
+      <div className="flex justify-center gap-2 mt-4">
+        <button
+          onClick={() => paginate(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
+        >
+          Trang trước
+        </button>
+        <button
+          onClick={() => paginate(currentPage + 1)}
+          disabled={currentPage * addressesPerPage >= addresses.length}
+          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
+        >
+          Trang tiếp
+        </button>
+      </div>
     </div>
   );
 };
