@@ -10,6 +10,7 @@ import {
   Col,
   ConfigProvider,
   App,
+  Modal,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
@@ -17,7 +18,12 @@ import { useEffect, useState } from "react";
 import { getListProducts, updateProduct } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
-import { handlerBeforeUpload, handlerChange } from "./UploadPicture";
+import {
+  handlePreview,
+  handlerBeforeUpload,
+  handlerChange,
+  handleRemove,
+} from "./UploadPicture";
 import InsertStockEntry from "../../stockEntry/InsertStockEntry";
 
 const { TextArea } = Input;
@@ -51,6 +57,9 @@ const validateMessages = {
 };
 
 const UpdateProduct = () => {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
   const [product, setProduct] = useState(null);
@@ -292,6 +301,15 @@ const UpdateProduct = () => {
                     data={() => ({ upload_preset: "ml_default" })}
                     beforeUpload={handlerBeforeUpload}
                     onChange={handlerChange}
+                    onPreview={(file) =>
+                      handlePreview(
+                        file,
+                        setPreviewImage,
+                        setPreviewOpen,
+                        setPreviewTitle
+                      )
+                    }
+                    onRemove={handleRemove} // 🛠️ Gọi hàm xóa ảnh
                   >
                     <button
                       style={{ border: 0, background: "none" }}
@@ -321,6 +339,14 @@ const UpdateProduct = () => {
           ></InsertStockEntry>
         </Flex>
       </div>
+      <Modal
+        visible={previewOpen}
+        title={previewTitle}
+        footer={null}
+        onCancel={() => setPreviewOpen(false)}
+      >
+        <img alt="example" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
     </Layout>
   );
 };

@@ -152,6 +152,7 @@ const Detail = () => {
           productID: product.productID, // Đảm bảo sử dụng đúng thuộc tính productID
           name: product.name, // Thêm tên sản phẩm
           quantity: quantity,
+          description :product.description,
           price: product.price,
           imageUrl: imageUrl,
         },
@@ -190,6 +191,8 @@ const Detail = () => {
       console.error("Failed to save order:", error);
     }
   };
+
+
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN", {
       style: "currency",

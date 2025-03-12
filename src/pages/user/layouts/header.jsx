@@ -18,6 +18,7 @@ import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
 import logoImage from "../../../assets/Green.png";
+import { getShoppingCartByUserId } from "../../../api/api"; // Import the API function
 
 import {
   SettingOutlined,
@@ -95,11 +96,14 @@ const Header = () => {
       const userInfo = await getUserInfo(userData.user.userID, userData.token); // Gọi API lấy thông tin người dùng
       console.log("User info:", userInfo); // Kiểm tra dữ liệu API trả về
       setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
-      setShowLoginForm(false);
       localStorage.setItem("token", userData.token);
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
-
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
+
+      // Lấy giỏ hàng từ API và cập nhật trạng thái cartItemCount
+      const shoppingCart = await getShoppingCartByUserId(userData.user.userID);
+      console.log("Shopping cart:", shoppingCart); // Debugging statement
+      setCartItemCount(shoppingCart.length);
 
       if (userInfo.role === "admin") {
         navigate("/admin");
@@ -118,9 +122,14 @@ const Header = () => {
     console.log("userID:", userID);
     if (token && userID) {
       getUserInfo(userID, token)
-        .then((userInfo) => {
+        .then(async (userInfo) => {
           console.log("Fetched user:", userInfo); // Kiểm tra user lấy từ API
           setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
+
+          // Lấy giỏ hàng từ API và cập nhật trạng thái cartItemCount
+          const shoppingCart = await getShoppingCartByUserId(userID);
+          console.log("Shopping cart on mount:", shoppingCart); // Debugging statement
+          setCartItemCount(shoppingCart.length);
         })
         .catch((error) => {
           console.error("Error fetching user:", error);
@@ -193,16 +202,39 @@ const Header = () => {
       setSearchQuery(""); // Reset thanh tìm kiếm về giá trị rỗng
     }
   };
+
   const [cartItemCount, setCartItemCount] = useState(0);
 
-  useEffect(() => {
-    // Lấy giỏ hàng từ localStorage khi trang được tải
-    const storedWishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-    setCartItemCount(storedWishlist.length);
+  const isLoggedIn = () => {
+    const loggedIn = Boolean(localStorage.getItem("token"));
+    console.log("Is logged in:", loggedIn);
+    return loggedIn;
+  };
 
-    // Lắng nghe sự kiện cập nhật giỏ hàng
+  const fetchCartItemCount = async () => {
+    const userID = localStorage.getItem("userID");
+    if (userID) {
+      try {
+        const shoppingCart = await getShoppingCartByUserId(userID);
+        console.log("Fetched shopping cart:", shoppingCart); // Debugging statement
+        const itemCount = shoppingCart.shoppingCartDetails.length;
+        setCartItemCount(itemCount);
+      } catch (error) {
+        console.error("Failed to fetch shopping cart:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isLoggedIn()) {
+      fetchCartItemCount();
+    }
+
+    // Listen for the custom event to update the cart item count
     const handleWishlistUpdated = (event) => {
-      setCartItemCount(event.detail);
+      const itemCount = event.detail;
+      setCartItemCount(itemCount);
+      console.log("Updated cart item count:", itemCount);
     };
 
     window.addEventListener("wishlistUpdated", handleWishlistUpdated);
@@ -212,6 +244,18 @@ const Header = () => {
     };
   }, []);
 
+  const handleCartClick = (e) => {
+    if (!isLoggedIn()) {
+      e.preventDefault(); // Prevent navigation
+      displayLoginForm(); // Show login form
+    } else {
+      scrollToTop(); // Scroll to top if logged in
+    }
+  };
+
+  const displayLoginForm = () => {
+    alert("Bạn cần đăng nhập để xem giỏ hàng!");
+  };
   return (
     <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-2 fixed top-0 z-50 left-0  px-[10%]">
       <div className="container mx-auto flex w-full justify-between items-center  ">
@@ -264,8 +308,6 @@ const Header = () => {
     </button>
   )}
 </div>
-
-
         <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10 px-[10%]">
           <div className="container flex justify-between items-center center mx-auto">
             <Link
@@ -332,8 +374,7 @@ const Header = () => {
                     isContactActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
+                  }`}>
                   <Link
                     to="/contact"
                     className="font-bold"
@@ -348,11 +389,11 @@ const Header = () => {
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
                   }`}>
                   <Link
-                    to="/wishlist"
+                    to={isLoggedIn() ? "/wishlist" : "#"}
                     className="font-bold"
-                    onClick={scrollToTop}>
+                    onClick={handleCartClick}>
                     <Space size="middle">
-                      <Badge count={cartItemCount} showZero>
+                      <Badge count={isLoggedIn() ? cartItemCount : 0} showZero>
                         <FontAwesomeIcon
                           icon={faCartShopping}
                           className={`text-xl ${

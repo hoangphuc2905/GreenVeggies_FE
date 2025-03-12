@@ -5,7 +5,9 @@ const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
-const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL; // Thêm URL cho API order
+const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
+const CLOUND_API = import.meta.env.VITE_APP_CLOUDINARY_API_KEY;
+const CLOUND_SECRET = import.meta.env.VITE_APP_CLOUDINARY_API_SECRET;
 
 const api = axios.create({
   baseURL: API_PRODUCT_URL,
@@ -56,6 +58,14 @@ const orderAPI = axios.create({
   },
 });
 
+// Xóa hình ảnh trên cloundary
+export const deleteImage = async (publicId) => {
+  const response = await productAPI.post("/products/delete-image", {
+    publicId,
+  });
+  return response.data;
+};
+
 // 🟢 Lưu thông tin sản phẩm vào order
 export const saveShoppingCarts = async (orderData) => {
   try {
@@ -102,6 +112,33 @@ export const getUserById = async (userID) => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy thông tin người dùng:", error);
+    return null;
+  }
+};
+
+// 🟢 Lấy giỏ hàng theo userID
+export const getShoppingCartByUserId = async (userID) => {
+  try {
+    const response = await orderAPI.get(`/shopping-carts/user/${userID}`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy giỏ hàng theo userID:", error);
+    return null;
+  }
+};
+
+// 🟢 Xóa chi tiết giỏ hàng theo shoppingCartDetailID
+export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
+  try {
+    const response = await orderAPI.delete(
+      `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Lỗi khi xóa chi tiết giỏ hàng theo shoppingCartDetailID:",
+      error
+    );
     return null;
   }
 };
@@ -162,7 +199,6 @@ export const getUserInfo = async (userID) => {
     return null;
   }
 };
-
 
 // 🟢 Cập nhật thông tin người dùng
 export const updateUserInfo = async (userID, token, updatedData) => {

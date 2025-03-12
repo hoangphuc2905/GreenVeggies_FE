@@ -2,9 +2,31 @@ import { Avatar, Badge } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faBell } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../assets/Green.png";
-
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { fetchUser } from "../../../redux/userSlice";
+import { getUserInfo } from "../../../api/api";
 
 const AdminHeader = () => {
+  const [userInfo, setUserInfo] = useState({});
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    if (token && userID) {
+      dispatch(fetchUser({ userID, token }));
+      getUserInfo(userID, token).then((userInfo) => {
+        // console.log("fetch user", res);
+        setUserInfo(userInfo);
+      });
+    } else {
+      navigate("/login");
+    }
+  }, [dispatch]);
+
   return (
     <div className="flex justify-between items-center px-[1%] h-[65px] bg-primary fixed z-[1000] w-full shadow-md">
       <div className="flex w-full justify-between">
@@ -16,7 +38,8 @@ const AdminHeader = () => {
         </a>
         <div>
           <div className="text-[#ffffff] font-bold text-l">
-            Chào mừng quay trở lại, Admin
+            Chào mừng quay trở lại
+            {userInfo && userInfo.username ? `, ${userInfo.username}` : ""}
           </div>
           <div>
             <span className="text-[#ffffff] text-base">
@@ -50,14 +73,16 @@ const AdminHeader = () => {
               />
             </Avatar>
           </Badge>
-          <div className="flex items-center gap-2 pl-6">
+          <div className="flex items-center gap-2 px-6">
             <div>
-              <span className="text-[#ffffff] font-bold text-lg">Admin</span>
+              <span className="text-[#ffffff] font-semibold text-base">
+                {userInfo && userInfo.username ? `${userInfo.username}` : ""}
+              </span>
             </div>
             <Avatar
               className="hover:cursor-pointer"
-              size="large"
-              src="https://i.pinimg.com/736x/8f/1c/a2/8f1ca2029e2efceebd22fa05cca423d7.jpg"
+              size="default"
+              src={userInfo.avatar}
             />
           </div>
         </div>

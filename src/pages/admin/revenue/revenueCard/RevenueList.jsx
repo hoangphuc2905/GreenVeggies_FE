@@ -1,6 +1,4 @@
-import React from "react";
 import RevenueCard from "./RevenueCard";
-import { color } from "framer-motion";
 
 const revenueData = [
   {
@@ -39,7 +37,7 @@ const revenueData = [
 
 const RevenueList = () => {
   return (
-    <div className="grid grid-cols-4 gap-0">
+    <div className="grid grid-cols-4 gap-4">
       {revenueData.map((item, index) => (
         <RevenueCard key={index} {...item} />
       ))}

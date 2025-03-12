@@ -91,9 +91,9 @@ const AdminSidebar = ({ colorBgContainer }) => {
     <Sider
       className="fixed max-h-screen h-fit z-50 pt-[2vh] mt-[3vh]"
       style={{ background: colorBgContainer }}
-      width={250}
+      width={220}
     >
-      <div className="text-[#7A8699] size-5 font-thin mx-6 my-5">Menu</div>
+      <div className="text-[#7A8699] text-sm font-thin mx-6 my-5">Menu</div>
       <ConfigProvider
         theme={{
           components: {
@@ -111,7 +111,7 @@ const AdminSidebar = ({ colorBgContainer }) => {
         }}
       >
         <Menu
-          className="admin-menu h-screen"
+          className="admin-menu h-screen text-xs"
           mode="inline"
           selectedKeys={[
             location.pathname.startsWith("/admin/products/")
