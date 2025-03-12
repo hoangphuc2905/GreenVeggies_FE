@@ -7,6 +7,10 @@ const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
 
+export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
+export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
+export const cloundinaryName = import.meta.env.VITE_CLOUDINARY_NAME;
+
 const api = axios.create({
   baseURL: API_PRODUCT_URL,
   headers: {
