@@ -6,28 +6,19 @@ import {
   InputNumber,
   Layout,
   Select,
-  Upload,
   Row,
   Col,
   ConfigProvider,
   App,
-  Modal,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
-import {
-  handlerBeforeUpload,
-  handlerChange,
-  handlePreview,
-  handleRemove,
-} from "./UploadPicture";
+import UploadPicture from "../../../../components/uploadPicture/UploadPicture";
 
 const { TextArea } = Input;
-
-const normFile = (e) => (Array.isArray(e) ? e : e?.fileList ?? []);
 
 const STATUS_OPTIONS = [
   {
@@ -62,9 +53,6 @@ const InsertProduct = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState("");
-  const [previewTitle, setPreviewTitle] = useState("");
 
   // Lấy danh sách danh mục khi load trang
   useEffect(() => {
@@ -239,35 +227,15 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Hình minh họa"
                   valuePropName="fileList"
-                  getValueFromEvent={normFile}
+                  getValueFromEvent={(e) => e.fileList}
                   name="imageUrl"
                 >
-                  <Upload
-                    multiple={true}
-                    action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
-                    listType="picture-card"
-                    accept="image/*"
-                    data={() => ({ upload_preset: "ml_default" })}
-                    beforeUpload={handlerBeforeUpload}
-                    onChange={handlerChange}
-                    onPreview={(file) =>
-                      handlePreview(
-                        file,
-                        setPreviewImage,
-                        setPreviewOpen,
-                        setPreviewTitle
-                      )
+                  <UploadPicture
+                    fileList={form.getFieldValue("imageUrl")}
+                    onFileListChange={(newFileList) =>
+                      form.setFieldsValue({ imageUrl: newFileList })
                     }
-                    onRemove={handleRemove} // 🛠️ Gọi hàm xóa ảnh
-                  >
-                    <button
-                      style={{ border: 0, background: "none" }}
-                      type="button"
-                    >
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Tải hình lên</div>
-                    </button>
-                  </Upload>
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -362,15 +330,6 @@ const InsertProduct = () => {
           />
         </Flex>
       </div>
-
-      <Modal
-        visible={previewOpen}
-        title={previewTitle}
-        footer={null}
-        onCancel={() => setPreviewOpen(false)}
-      >
-        <img alt="example" style={{ width: "100%" }} src={previewImage} />
-      </Modal>
     </Layout>
   );
 };

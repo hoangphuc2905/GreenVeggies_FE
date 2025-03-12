@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchUser } from "../../../redux/userSlice"; 
+import { fetchUser } from "../../../redux/userSlice";
 import { updateUserInfo } from "../../../api/api";
 import { Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
@@ -14,14 +14,16 @@ const Profile = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({});
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "https://i.imgur.com/TdZ9vVu.png");
+  const [avatarPreview, setAvatarPreview] = useState(
+    user?.avatar || "https://i.imgur.com/TdZ9vVu.png"
+  );
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!user && userID && token) {
-      dispatch(fetchUser({ userID, token })).catch(error => {
+      dispatch(fetchUser({ userID, token })).catch((error) => {
         console.error("Failed to fetch user:", error);
       });
     }
@@ -36,26 +38,26 @@ const Profile = () => {
 
   // Handle avatar change
   const handlerChange = (info) => {
-    if (info.file.status === 'done') {
+    if (info.file.status === "done") {
       // Success, set preview
-      const imageUrl = info.file.response.secure_url;  // Cloudinary provides the uploaded image URL
+      const imageUrl = info.file.response.secure_url; // Cloudinary provides the uploaded image URL
       setAvatarPreview(imageUrl);
       setEditedUser({ ...editedUser, avatar: imageUrl }); // Update editedUser with avatar URL
       message.success(`${info.file.name} file uploaded successfully`);
-    } else if (info.file.status === 'error') {
+    } else if (info.file.status === "error") {
       message.error(`${info.file.name} file upload failed.`);
     }
   };
 
   // Prevent automatic upload, this is a hook to modify the file before upload
   const handlerBeforeUpload = (file) => {
-    const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+    const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
     if (!isJpgOrPng) {
-      message.error('You can only upload JPG/PNG file!');
+      message.error("You can only upload JPG/PNG file!");
     }
-    const isLt2M = file.size / 1024 / 1024 < 2;  // Limit the file size to 2MB
+    const isLt2M = file.size / 1024 / 1024 < 2; // Limit the file size to 2MB
     if (!isLt2M) {
-      message.error('Image must smaller than 2MB!');
+      message.error("Image must smaller than 2MB!");
     }
     return isJpgOrPng && isLt2M;
   };
@@ -75,7 +77,7 @@ const Profile = () => {
 
   // Phone number validation function
   const isValidPhoneNumber = (phone) => {
-    const phoneRegex = /^0\d{9}$/;  // Must start with 0 and be followed by exactly 9 digits
+    const phoneRegex = /^0\d{9}$/; // Must start with 0 and be followed by exactly 9 digits
     return phoneRegex.test(phone);
   };
 
@@ -105,7 +107,7 @@ const Profile = () => {
     // Append fields to FormData (exclude email for editing)
     formData.append("username", editedUser.username);
     formData.append("phone", editedUser.phone);
-    formData.append("email", editedUser.email);  // Email is not editable but should be sent as part of formData
+    formData.append("email", editedUser.email); // Email is not editable but should be sent as part of formData
     formData.append("dateOfBirth", editedUser.dateOfBirth);
 
     if (editedUser.avatar && editedUser.avatar.startsWith("http")) {
@@ -199,44 +201,56 @@ const Profile = () => {
       <div className="border border-gray-300 rounded-lg overflow-hidden">
         {user ? (
           <>
-            {["username", "phone", "email", "dateOfBirth"].map((field, index) => (
-              <div key={index} className="grid grid-cols-2 border-b">
-                <div className="p-3 font-semibold border-r">
-                  {field === "username" && "Họ và tên:"}
-                  {field === "phone" && "Số điện thoại:"}
-                  {field === "email" && "Email:"}
-                  {field === "dateOfBirth" && "Ngày sinh:"}
+            {["username", "phone", "email", "dateOfBirth"].map(
+              (field, index) => (
+                <div key={index} className="grid grid-cols-2 border-b">
+                  <div className="p-3 font-semibold border-r">
+                    {field === "username" && "Họ và tên:"}
+                    {field === "phone" && "Số điện thoại:"}
+                    {field === "email" && "Email:"}
+                    {field === "dateOfBirth" && "Ngày sinh:"}
+                  </div>
+                  <div className="p-3">
+                    {field === "email" ? (
+                      // Email is not editable
+                      <span>{editedUser.email}</span>
+                    ) : isEditing ? (
+                      <input
+                        type={field === "dateOfBirth" ? "date" : "text"}
+                        name={field}
+                        value={
+                          field === "dateOfBirth"
+                            ? editedUser.dateOfBirth
+                              ? new Date(editedUser.dateOfBirth)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""
+                            : editedUser[field]
+                        }
+                        onChange={handleInputChange}
+                        className={`w-full border px-2 py-1 rounded-md focus:ring-2 focus:ring-green-300 ${
+                          errors[field] ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                    ) : field === "dateOfBirth" ? (
+                      editedUser.dateOfBirth ? (
+                        new Date(editedUser.dateOfBirth).toLocaleDateString()
+                      ) : (
+                        "Không có dữ liệu"
+                      )
+                    ) : (
+                      editedUser[field]
+                    )}
+                    {/* Display error messages */}
+                    {errors[field] && (
+                      <p className="text-red-500 text-sm mt-2">
+                        {errors[field]}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="p-3">
-                  {field === "email" ? (
-                    // Email is not editable
-                    <span>{editedUser.email}</span>
-                  ) : isEditing ? (
-                    <input
-                      type={field === "dateOfBirth" ? "date" : "text"}
-                      name={field}
-                      value={
-                        field === "dateOfBirth"
-                          ? editedUser.dateOfBirth
-                            ? new Date(editedUser.dateOfBirth).toISOString().split("T")[0]
-                            : ""
-                          : editedUser[field]
-                      }
-                      onChange={handleInputChange}
-                      className={`w-full border px-2 py-1 rounded-md focus:ring-2 focus:ring-green-300 ${errors[field] ? 'border-red-500' : 'border-gray-300'}`}
-                    />
-                  ) : (
-                    field === "dateOfBirth"
-                      ? editedUser.dateOfBirth
-                        ? new Date(editedUser.dateOfBirth).toLocaleDateString()
-                        : "Không có dữ liệu"
-                      : editedUser[field]
-                  )}
-                  {/* Display error messages */}
-                  {errors[field] && <p className="text-red-500 text-sm mt-2">{errors[field]}</p>}
-                </div>
-              </div>
-            ))}
+              )
+            )}
           </>
         ) : (
           <p className="text-center text-gray-500">Đang tải thông tin...</p>
@@ -271,8 +285,12 @@ const Profile = () => {
       </div>
 
       {/* Display success or error message */}
-      {successMessage && <p className="text-green-500 text-center mt-4">{successMessage}</p>}
-      {errorMessage && <p className="text-red-500 text-center mt-4">{errorMessage}</p>}
+      {successMessage && (
+        <p className="text-green-500 text-center mt-4">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="text-red-500 text-center mt-4">{errorMessage}</p>
+      )}
     </>
   );
 };
