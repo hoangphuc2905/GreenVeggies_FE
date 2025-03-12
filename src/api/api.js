@@ -6,8 +6,6 @@ const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
-const CLOUND_API = import.meta.env.VITE_APP_CLOUDINARY_API_KEY;
-const CLOUND_SECRET = import.meta.env.VITE_APP_CLOUDINARY_API_SECRET;
 
 const api = axios.create({
   baseURL: API_PRODUCT_URL,

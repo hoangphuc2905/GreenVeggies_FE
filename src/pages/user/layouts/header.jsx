@@ -100,7 +100,6 @@ const Header = () => {
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
 
-      // Lấy giỏ hàng từ API và cập nhật trạng thái cartItemCount
       const shoppingCart = await getShoppingCartByUserId(userData.user.userID);
       console.log("Shopping cart:", shoppingCart); // Debugging statement
       setCartItemCount(shoppingCart.length);
@@ -257,7 +256,7 @@ const Header = () => {
     alert("Bạn cần đăng nhập để xem giỏ hàng!");
   };
   return (
-    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-2 fixed top-0 z-50 left-0  px-[10%]">
+    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
       <div className="container mx-auto flex w-full justify-between items-center  ">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
@@ -273,46 +272,49 @@ const Header = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4 cursor-pointer">
-  {user ? (
-    <div className="text-white text-l font-bold flex items-center space-x-2">
-      <span className="text-white">Xin chào, {user.username}</span>
-      <Dropdown
-        menu={{
-          items,
-        }}
-        className="ml-2">
-        <a onClick={(e) => e.preventDefault()}>
-          <Space>
-            {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt="Avatar"
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <FontAwesomeIcon
-                icon={faUser}
-                className="text-white text-l"
-              />
-            )}
-          </Space>
-        </a>
-      </Dropdown>
-    </div>
-  ) : (
-    <button
-      className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
-      onClick={() => setShowLoginForm(true)}
-    >
-      <FontAwesomeIcon icon={faUser} className="text-white text-l" /> Đăng nhập/ Đăng ký
-    </button>
-  )}
-</div>
+          {user ? (
+            <div className="text-white text-l font-bold flex items-center space-x-2">
+              <span className="text-white">Xin chào, {user.username}</span>
+              <Dropdown
+                menu={{
+                  items,
+                }}
+                className="ml-2"
+              >
+                <a onClick={(e) => e.preventDefault()}>
+                  <Space>
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full object-cover absolute top-2"
+                      />
+                    ) : (
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        className="text-white text-l"
+                      />
+                    )}
+                  </Space>
+                </a>
+              </Dropdown>
+            </div>
+          ) : (
+            <button
+              className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
+              onClick={() => setShowLoginForm(true)}
+            >
+              <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
+              Đăng nhập/ Đăng ký
+            </button>
+          )}
+        </div>
         <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10 px-[10%]">
           <div className="container flex justify-between items-center center mx-auto">
             <Link
               to="/"
-              className="flex items-center gap-2 text-3xl py-2 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer">
+              className="flex items-center gap-2 text-2xl py-4 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer"
+            >
               <img
                 src={logoImage}
                 alt="Mô tả hình ảnh"
@@ -329,7 +331,8 @@ const Header = () => {
                     isHomeActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link to="/" className="font-bold" onClick={scrollToTop}>
                     TRANG CHỦ
                   </Link>
@@ -341,11 +344,13 @@ const Header = () => {
                     isProductActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to="/product"
                     className="font-bold"
-                    onClick={scrollToTop}>
+                    onClick={scrollToTop}
+                  >
                     CỬA HÀNG
                   </Link>
                 </li>
@@ -354,7 +359,8 @@ const Header = () => {
                     isNewsActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link to="/news" className="font-bold" onClick={scrollToTop}>
                     TIN TỨC
                   </Link>
@@ -364,7 +370,8 @@ const Header = () => {
                     isBlogActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link to="/posts" className="font-bold" onClick={scrollToTop}>
                     BÀI VIẾT
                   </Link>
@@ -374,11 +381,13 @@ const Header = () => {
                     isContactActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to="/contact"
                     className="font-bold"
-                    onClick={scrollToTop}>
+                    onClick={scrollToTop}
+                  >
                     LIÊN HỆ
                   </Link>
                 </li>
@@ -387,11 +396,13 @@ const Header = () => {
                     isCartActive
                       ? "text-[#82AE46] underline font-bold"
                       : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}>
+                  }`}
+                >
                   <Link
                     to={isLoggedIn() ? "/wishlist" : "#"}
                     className="font-bold"
-                    onClick={handleCartClick}>
+                    onClick={handleCartClick}
+                  >
                     <Space size="middle">
                       <Badge count={isLoggedIn() ? cartItemCount : 0} showZero>
                         <FontAwesomeIcon
