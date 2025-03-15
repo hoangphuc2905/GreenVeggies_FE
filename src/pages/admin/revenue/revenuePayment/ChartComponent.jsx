@@ -111,7 +111,7 @@ const ChartComponent = () => {
       </div>
       <div className="w-full flex justify-center">
         {loading ? (
-          <Spin size="small" />
+          <Spin />
         ) : chartType === "bar" ? (
           <Bar data={data} options={options} />
         ) : chartType === "line" ? (

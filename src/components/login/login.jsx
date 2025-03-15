@@ -1,22 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { fetchUser } from "../../redux/userSlice";
+import { getUserInfo } from "../../api/api";
 
 const LoginForm = ({
   closeLoginForm,
   openForgotPasswordForm,
   switchToRegister,
-  onLoginSuccess, // Thêm hàm onLoginSuccess vào props
+  onLoginSuccess,
 }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [userRole, setUserRole] = useState(""); // Store the user's role (admin or user)
+  const [userRole, setUserRole] = useState("");
+  const [userInfo, setUserInfo] = useState({});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    if (token && userID) {
+      dispatch(fetchUser({ userID, token }));
+      getUserInfo(userID, token).then((userInfo) => {
+        setUserInfo(userInfo);
+        if (userInfo.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
+      });
+    } else {
+      navigate("/");
+    }
+  }, [dispatch, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,31 +50,30 @@ const LoginForm = ({
     setError("");
 
     try {
-      // Gửi email và password trong body, thay vì gửi dưới dạng query string
       const response = await fetch(`http://localhost:8001/api/auth/login`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // Đảm bảo gửi body dưới dạng JSON
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: formData.username, // email từ form
-          password: formData.password, // password từ form
+          email: formData.username,
+          password: formData.password,
         }),
       });
 
       const data = await response.json();
 
-      console.log("user data", data);
+      console.log("user data", data.user);
 
-      if (response.ok) {
-        // Set user role based on API response
-        const role = data.user.role; // 'admin' or 'guest' (user)
+      if (response.ok && data.user) {
+        const role = data.user.role;
         setUserRole(role);
-
-        // Gọi hàm onLoginSuccess với dữ liệu người dùng
         onLoginSuccess(data);
 
-        // Display login success message
+        // Store user information in localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userID", data.user.id);
+        localStorage.setItem("role", role);
         alert("Đăng nhập thành công!");
         closeLoginForm();
       } else {
@@ -65,7 +90,8 @@ const LoginForm = ({
     <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
       <button
         onClick={closeLoginForm}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl">
+        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+      >
         &times;
       </button>
 
@@ -111,7 +137,8 @@ const LoginForm = ({
             <button
               type="button"
               onClick={openForgotPasswordForm}
-              className="hover:underline">
+              className="hover:underline"
+            >
               Quên mật khẩu?
             </button>
           </div>
@@ -119,7 +146,8 @@ const LoginForm = ({
           <button
             type="submit"
             className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
-            disabled={loading}>
+            disabled={loading}
+          >
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
 
@@ -128,13 +156,13 @@ const LoginForm = ({
             <button
               type="button"
               onClick={switchToRegister}
-              className="text-green-500 hover:underline">
+              className="text-green-500 hover:underline"
+            >
               Đăng ký
             </button>
           </div>
         </form>
 
-        {/* Hiển thị vai trò người dùng */}
         {userRole && (
           <div className="text-center mt-4">
             <p className="font-semibold">
@@ -148,4 +176,3 @@ const LoginForm = ({
 };
 
 export default LoginForm;
-
