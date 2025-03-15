@@ -167,9 +167,9 @@ const RevenueTrendChart = () => {
         </div>
         <div className="w-full flex-1 overflow-hidden">
           {loading ? (
-            <Spin size="large" />
+            <Spin size="small" />
           ) : chartType === "line" ? (
-            <Line data={chartData} options={options} />
+            <Line data={chartData} options={options} size="small" />
           ) : (
             <Table
               columns={columns}

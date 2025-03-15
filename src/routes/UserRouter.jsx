@@ -1,6 +1,5 @@
-import { Routes, Route } from "react-router-dom";
-import { Provider } from "react-redux";
-import { store } from "../redux/store"; // Import Redux Store
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import Home from "../pages/user/Home";
 import Product from "../pages/user/Products/page";
 import Detail from "../pages/user/Products/detail";
@@ -12,17 +11,47 @@ import Address from "../pages/user/Profile/address"; // Import Address
 import Contact from "../pages/user/Contact/Contact";
 import OrderPage from "../pages/user/Order/OrderPage"; // Import OrderPage
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CategoryPage from "../pages/user/Category/CategoryPage";
 import Header from "../pages/user/layouts/header";
 import UserFooter from "../pages/user/layouts/UserFooter";
+import { App } from "antd";
+import { fetchUser } from "../redux/userSlice";
+import { getUserInfo } from "../api/api";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
+  const [userInfo, setUserInfo] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    if (token && userID) {
+      dispatch(fetchUser({ userID, token }));
+      getUserInfo(userID, token).then((userInfo) => {
+        setUserInfo(userInfo);
+        if (userInfo.role === "admin") {
+          navigate("/not-authorized");
+        } else {
+          setIsAdmin(false);
+        }
+      });
+    } else {
+      navigate("/");
+    }
+  }, [dispatch, navigate]);
+
+  if (isAdmin) {
+    return null; // or a loading spinner
+  }
 
   return (
-    <Provider store={store}>
-      <Header></Header>
+    <App>
+      <Header />
 
       <Routes>
         {/* Các route chính của user */}
@@ -48,8 +77,8 @@ const UserRouter = () => {
           {/* Thêm route cho Address */}
         </Route>
       </Routes>
-      <UserFooter></UserFooter>
-    </Provider>
+      <UserFooter />
+    </App>
   );
 };
 
