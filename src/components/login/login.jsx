@@ -1,8 +1,8 @@
-import { notification } from 'antd'; // Import notification từ Ant Design
+import { notification } from "antd"; // Import notification từ Ant Design
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from "../../redux/userSlice";
+import { fetchUser } from "../../redux/UserSlice";
 import { getUserInfo } from "../../api/api";
 
 const LoginForm = ({
@@ -78,9 +78,9 @@ const LoginForm = ({
 
         // Hiển thị thông báo đăng nhập thành công
         notification.success({
-          message: 'Đăng nhập thành công',
-          description: 'Chào mừng bạn đã quay lại!',
-          placement: 'topRight', // Vị trí thông báo
+          message: "Đăng nhập thành công",
+          description: "Chào mừng bạn đã quay lại!",
+          placement: "topRight", // Vị trí thông báo
           duration: 3, // Thời gian hiển thị thông báo
         });
 

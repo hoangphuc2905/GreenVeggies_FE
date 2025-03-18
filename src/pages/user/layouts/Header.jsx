@@ -1,11 +1,11 @@
 import {
-  faCartShopping, 
+  faCartShopping,
   faMagnifyingGlass,
   faPaperPlane,
   faPhone,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { Modal, notification } from 'antd';
+import { Modal, notification } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
@@ -18,7 +18,7 @@ import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
-import Navbar from "../layouts/Navbar";
+import Navbar from "./Navbar";
 import { getShoppingCartByUserId } from "../../../api/api";
 import {
   SettingOutlined,
@@ -147,17 +147,17 @@ const Header = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("userID");
         setUser(null); // Cập nhật trạng thái user về null
-  
+
         // Hiển thị thông báo đăng xuất thành công
         notification.success({
-          message: 'Đăng xuất thành công',
-          description: 'Bạn đã đăng xuất khỏi hệ thống.',
-          placement: 'topRight',
+          message: "Đăng xuất thành công",
+          description: "Bạn đã đăng xuất khỏi hệ thống.",
+          placement: "topRight",
           duration: 3,
         });
-  
+
         // Chuyển hướng về trang Home
-        navigate("/"); 
+        navigate("/");
       },
       onCancel() {
         console.log("Đăng xuất đã bị hủy");
@@ -224,7 +224,8 @@ const Header = () => {
                 menu={{
                   items,
                 }}
-                className="ml-2">
+                className="ml-2"
+              >
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
                     {user?.avatar ? (
@@ -246,7 +247,8 @@ const Header = () => {
           ) : (
             <button
               className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}>
+              onClick={() => setShowLoginForm(true)}
+            >
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>

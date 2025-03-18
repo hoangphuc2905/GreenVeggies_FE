@@ -221,7 +221,8 @@ const Cart = () => {
 
                   <div
                     className="col-span-2 flex items-center gap-4 "
-                    onClick={() => handleProductClick(item)}>
+                    onClick={() => handleProductClick(item)}
+                  >
                     <img
                       src={
                         Array.isArray(item.imageUrl) && item.imageUrl.length > 0
@@ -289,7 +290,8 @@ const Cart = () => {
             <div className="col-span-2 col-start-5 flex justify-end mt-4">
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
-                onClick={handleCheckout}>
+                onClick={handleCheckout}
+              >
                 Tiến hành thanh toán
               </button>
             </div>

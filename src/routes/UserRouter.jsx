@@ -1,26 +1,26 @@
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Home from "../pages/user/Home";
-import Product from "../pages/user/Products/page";
-import Detail from "../pages/user/Products/detail";
-import Wishlist from "../pages/user/Wishlist/cart";
-import ProfilePage from "../pages/user/Profile/page";
-import Profile from "../pages/user/Profile/proflie";
-import ChangePassword from "../pages/user/Profile/changepassword";
-import Address from "../pages/user/Profile/address"; // Import Address
+import Product from "../pages/user/product/Page";
+import Detail from "../pages/user/product/Detail";
+import Wishlist from "../pages/user/Wishlist/Cart/";
+import ProfilePage from "../pages/user/Profile/ProfilePage";
+import Profile from "../pages/user/Profile/Profile";
+import ChangePassword from "../pages/user/Profile/ChangePassword";
+import Address from "../pages/user/Profile/AddressForm"; // Import Address
 import Order from "../pages/user/Profile/OrderProFile"; // Import Order
 import Contact from "../pages/user/Contact/Contact";
-import OrderPage from "../pages/user/Order/OrderPage"; // Import OrderPage
 import News from "../pages/user/news/News"; // Import News
 import NewsDetail from "../pages/user/news/NewsDetail"; // Import NewsDetail
 
 import { useEffect, useState } from "react";
 import CategoryPage from "../pages/user/Category/CategoryPage";
-import Header from "../pages/user/layouts/header";
+import Header from "../pages/user/layouts/Header";
 import UserFooter from "../pages/user/layouts/UserFooter";
 import { App } from "antd";
-import { fetchUser } from "../redux/userSlice";
+import { fetchUser } from "../redux/UserSlice";
 import { getUserInfo } from "../api/api";
+import OrderPage from "../pages/user/order/OrderPage";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
@@ -70,14 +70,17 @@ const UserRouter = () => {
         />
         <Route path="/contact" element={<Contact />} />
         <Route path="/news" element={<News />} /> {/* Thêm route cho News */}
-        <Route path="/news/:id" element={<NewsDetail />} /> {/* Thêm route cho NewsDetail */}
+        <Route path="/news/:id" element={<NewsDetail />} />{" "}
+        {/* Thêm route cho NewsDetail */}
         <Route path="/category/:id" element={<CategoryPage />} />
-        <Route path="/order" element={<OrderPage />} /> {/* Thêm route cho OrderPage */}
+        <Route path="/order" element={<OrderPage />} />{" "}
+        {/* Thêm route cho OrderPage */}
         {/* Nhóm route có Sidebar của User */}
         <Route path="/user" element={<ProfilePage />}>
           <Route path="profile" element={<Profile />} />
           <Route path="change-password" element={<ChangePassword />} />
-          <Route path="address" element={<Address />} /> {/* Thêm route cho Address */}
+          <Route path="address" element={<Address />} />{" "}
+          {/* Thêm route cho Address */}
           <Route path="orders" element={<Order />} />
         </Route>
       </Routes>

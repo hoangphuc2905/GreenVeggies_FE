@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AdminRouter from "./routes/AdminRouter";
 import UserRouter from "./routes/UserRouter";
 import { Provider } from "react-redux";
-import { store } from "./redux/store"; // Import store
+import { store } from "./redux/Store"; // Import store
 import ErrorRouter from "./routes/ErrorRouter";
 
 const App = () => {
