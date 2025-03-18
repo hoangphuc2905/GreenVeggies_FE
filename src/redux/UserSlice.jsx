@@ -18,7 +18,7 @@ export const fetchUser = createAsyncThunk("user/fetchUser", async ({ userID, tok
 });
 
 
-const userSlice = createSlice({
+const UserSlice = createSlice({
   name: "user",
   initialState: {
     user: null,
@@ -43,4 +43,4 @@ const userSlice = createSlice({
   },
 });
 
-export default userSlice.reducer;
+export default UserSlice.reducer;

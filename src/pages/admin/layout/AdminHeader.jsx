@@ -5,16 +5,16 @@ import logo from "../../../assets/Green.png";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { fetchUser } from "../../../redux/userSlice";
+import { fetchUser } from "../../../redux/UserSlice";
 import { getUserInfo } from "../../../api/api";
 import {
   LogoutOutlined,
   SettingOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import Profile from "../../user/Profile/proflie";
-import ChangePassword from "../../user/Profile/changepassword";
+import Profile from "../../user/Profile/Profile";
 import Notification from "../notification/Notification";
+import ChangePassword from "../../user/profile/ChangePassword";
 
 const AdminHeader = () => {
   const [userInfo, setUserInfo] = useState({});

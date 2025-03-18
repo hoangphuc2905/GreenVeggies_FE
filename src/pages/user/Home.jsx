@@ -22,7 +22,7 @@ import bg3Image from "../../../src/assets/bg_3_1.png";
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
-import Favourite from "./layouts/favourite";
+import Favourite from "./layouts/Favourite";
 
 const images = [
   {

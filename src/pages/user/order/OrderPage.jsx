@@ -1,5 +1,6 @@
-import { Divider, Button, Form, Input, Radio } from "antd";
+import { Divider, Button, Form, Input, Radio, message } from "antd";
 import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 import {
   getUserInfo,
   getShoppingCartByUserId,
@@ -40,6 +41,7 @@ const OrderPage = () => {
   const [value, setValue] = useState(1);
   const [cartItems, setCartItems] = useState([]);
   const [showQR, setShowQR] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
 
   useEffect(() => {
@@ -99,12 +101,21 @@ const OrderPage = () => {
     }
   }, [form]);
 
-  const onChange = (e) => {
+  const onChange = async (e) => {
     setValue(e.target.value);
     if (e.target.value === 2 || e.target.value === 3) {
       setShowQR(true);
+      const qrCode = await generatePaymentQR(
+        "MBB", // Mã ngân hàng (VD: VCB = Vietcombank, ACB = Á Châu)
+        "120826121111",
+        "PHAN HOANG TAN",
+        totalPrice,
+        "Thanh toan don hang #123"
+      );
+      setQrCodeUrl(qrCode);
     } else {
       setShowQR(false);
+      setQrCodeUrl("");
     }
   };
 
@@ -140,14 +151,28 @@ const OrderPage = () => {
   const shippingFee = calculateShippingFee(totalProductPrice);
   const totalPrice = totalProductPrice + shippingFee;
 
-  // Thông tin tài khoản ngân hàng
-  const accountNumber = "868629052003"; // Thay số tài khoản của bạn
-  const bankCode = "MBB"; // Mã ngân hàng theo chuẩn VietQR (VD: BIDV, VCB, MBB)
-  const receiverName = "HUYNH HOANG PHUC"; // Tên người nhận
-  const message = "Thanh toan don hang"; // Nội dung chuyển khoản
+  const generatePaymentQR = async (
+    bankCode,
+    accountNumber,
+    accountName,
+    amount,
+    content
+  ) => {
+    // Tạo URL VietQR chính xác
+    const qrData = `https://vietqr.net/${bankCode}/${accountNumber}?amount=${amount}&addInfo=${encodeURIComponent(
+      content
+    )}`;
 
-  // Tạo URL VietQR
-  const vietqrUrl = `VietQR://2.0/PAYLOAD?ac=${accountNumber}&b=${bankCode}&am=${totalPrice}&n=${receiverName}&m=${message}`;
+    try {
+      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+        errorCorrectionLevel: "H",
+      });
+      return qrCodeDataUrl;
+    } catch (err) {
+      console.error("Lỗi khi tạo QR:", err);
+      return null;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-[10%] mt-28">
@@ -165,35 +190,24 @@ const OrderPage = () => {
               maxWidth: 600,
               width: "100%",
             }}
-            validateMessages={validateMessages}>
+            validateMessages={validateMessages}
+          >
             <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
               Thông tin thanh toán
             </label>
             <div className="flex">
               <Form.Item
                 name={["user", "firstName"]}
-                label="Họ"
+                label="Họ và tên"
                 rules={[
                   {
                     required: true,
                   },
                 ]}
-                className="w-1/2 pr-2"
+                className="w-full"
                 labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}>
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name={["user", "lastName"]}
-                label="Tên"
-                rules={[
-                  {
-                    required: true,
-                  },
-                ]}
-                className="w-1/2 pl-2"
-                labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}>
+                wrapperCol={{ span: 24 }}
+              >
                 <Input />
               </Form.Item>
             </div>
@@ -206,7 +220,8 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}>
+              wrapperCol={{ span: 24 }}
+            >
               <Input />
             </Form.Item>
             <Form.Item
@@ -218,7 +233,8 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}>
+              wrapperCol={{ span: 24 }}
+            >
               <Input />
             </Form.Item>
             <Form.Item
@@ -232,7 +248,8 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}>
+              wrapperCol={{ span: 24 }}
+            >
               <Input />
             </Form.Item>
             <Form.Item
@@ -245,7 +262,8 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}>
+              wrapperCol={{ span: 24 }}
+            >
               <Input />
             </Form.Item>
             <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
@@ -255,7 +273,8 @@ const OrderPage = () => {
               name={["user", "introduction"]}
               label="Ghi chú đơn hàng"
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}>
+              wrapperCol={{ span: 24 }}
+            >
               <Input.TextArea />
             </Form.Item>
           </Form>
@@ -288,7 +307,8 @@ const OrderPage = () => {
             label="Mã giảm giá"
             labelCol={{ span: 24 }}
             wrapperCol={{ span: 24 }}
-            className="mt-4">
+            className="mt-4"
+          >
             <Input placeholder="Nhập mã giảm giá" />
           </Form.Item>
           <label className="block text-sm font-bold mb-2 uppercase">
@@ -313,15 +333,9 @@ const OrderPage = () => {
               },
             ]}
           />
-          {showQR && (
+          {showQR && qrCodeUrl && (
             <div className="mt-4 relative">
-              <div className="absolute inset-0 bg-white opacity-50 blur"></div>
-              <img
-                src="https://i.imgur.com/1Q2xj9s.png"
-                value={vietqrUrl}
-                size={128}
-                className="w-32 h-32 mx-auto relative"
-              />
+              <img src={qrCodeUrl} alt="QR Code" />
             </div>
           )}
           <Divider style={{ borderColor: "#7cb305" }} />
@@ -359,7 +373,8 @@ const OrderPage = () => {
                 transition: "all 0.2s ease-in-out",
                 width: "100%",
               }}
-              className="hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg">
+              className="hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg"
+            >
               Đặt hàng
             </Button>
           </div>
