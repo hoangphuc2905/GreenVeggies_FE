@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom"; // Sử dụng Link để điều hướng
+import { Link } from "react-router-dom";
 import { newsData } from "./NewsData"; // Lấy dữ liệu tin tức
+import { useState } from "react";
 
 const News = () => {
   const [currentPage, setCurrentPage] = useState(1);
