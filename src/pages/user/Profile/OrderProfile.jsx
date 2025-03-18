@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const Order = () => {
+const OrderProfile = () => {
   const [orders, setOrders] = useState([]);
   const userID = localStorage.getItem("userID");
 
@@ -32,6 +32,18 @@ const Order = () => {
 
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
+      {/* Menu ngang */}
+      <div className="mb-4">
+        <div className="flex justify-around">
+          <button className="text-sm font-semibold text-gray-700 hover:text-green-500">Tất cả</button>
+          <button className="text-sm font-semibold text-gray-700 hover:text-green-500">Chờ thanh toán</button>
+          <button className="text-sm font-semibold text-gray-700 hover:text-green-500">Vận chuyển</button>
+          <button className="text-sm font-semibold text-gray-700 hover:text-green-500">Hoàn thành</button>
+          <button className="text-sm font-semibold text-gray-700 hover:text-green-500">Đã hủy</button>
+        </div>
+        <hr className="my-4" />
+      </div>
+
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Đơn hàng của bạn</h2>
       {orders.length > 0 ? (
         <div className="space-y-4">
@@ -78,4 +90,4 @@ const Order = () => {
   );
 };
 
-export default Order;
+export default OrderProfile;
