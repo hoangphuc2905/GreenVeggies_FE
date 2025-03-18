@@ -80,7 +80,7 @@ export const saveShoppingCarts = async (orderData) => {
       // In ra phản hồi từ máy chủ nếu có
       console.error("API response error:", error.response.data);
     }
-    console.error("Lỗi khi lưu thông tin sản phẩm vào order:", error);
+    console.error("Lỗi khi lưu thông tin sản phẩm vào giỏ hàng:", error);
     return null;
   }
 };
@@ -296,7 +296,20 @@ export const insertProduct = async (data) => {
     return null;
   }
 };
-
+// 🟢 Thêm đơn đặt hàng mới
+export const addOrder = async (orderData) => {
+  try {
+    const response = await orderAPI.post("/orders", orderData);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      // In ra phản hồi từ máy chủ nếu có
+      console.error("API response error:", error.response.data);
+    }
+    console.error("Lỗi khi thêm đơn đặt hàng:", error);
+    return null;
+  }
+};
 export const insertStockEntry = async (data) => {
   try {
     if (!data.productID || data.entryPrice <= 0 || data.entryQuantity <= 0) {

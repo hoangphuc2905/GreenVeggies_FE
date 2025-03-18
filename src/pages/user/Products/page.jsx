@@ -2,15 +2,14 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 
-
 import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/bg_1.png";
 
-import Favourite from "../layouts/favourite";
-import ListProduct from "../layouts/listProduct";
+import Favourite from "../layouts/Favourite";
+import ListProduct from "../layouts/ListProduct";
 import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
 
-const Product = () => {
+const Page = () => {
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(Number.MAX_VALUE);
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,9 +85,8 @@ const Product = () => {
           </div>
         </div>
       </div>
-      
     </div>
   );
 };
 
-export default Product;
+export default Page;

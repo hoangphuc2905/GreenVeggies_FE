@@ -12,7 +12,7 @@ import {
 } from "../../../api/api"; // Import the API functions
 import debounce from "lodash.debounce"; // Import debounce function
 
-const Wishlist = () => {
+const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
 
@@ -97,61 +97,50 @@ const Wishlist = () => {
       state: { productID: product.productID },
     });
   };
-
   const updateQuantityInDatabase = useCallback(
     debounce(async (id, value) => {
-      const userID = localStorage.getItem("userID");
-      const itemToUpdate = wishlist.find((item) => item.productID === id);
+      try {
+        const userID = localStorage.getItem("userID");
+        const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+        const itemToUpdate = wishlist.find((item) => item.productID === id);
 
-      if (itemToUpdate) {
-        try {
-          const productDetails = await getProductById(itemToUpdate.productID);
-          const newWishlistItem = {
-            userID: userID,
-            items: [
-              {
-                productID: itemToUpdate.productID,
-                name: productDetails.name,
-                quantity: value,
-                description: productDetails.description,
-                price: productDetails.price,
-                imageUrl: productDetails.imageUrl,
-              },
-            ],
-            totalPrice: productDetails.price * value,
-          };
+        if (!itemToUpdate) return;
 
-          console.log("New Wishlist Item:", newWishlistItem); // Debugging statement
-          await saveShoppingCarts(newWishlistItem); // Call the API to save the updated quantity
+        const productDetails = await getProductById(id);
+        const updatedItem = {
+          productID: id,
+          name: productDetails.name,
+          quantity: value, // Ghi đè số lượng mới
+          description: productDetails.description,
+          price: productDetails.price,
+          imageUrl: productDetails.imageUrl,
+        };
 
-          // Update the local storage and dispatch the event
-          const currentWishlist =
-            JSON.parse(localStorage.getItem("wishlist")) || [];
-          const existingItemIndex = currentWishlist.findIndex(
-            (item) => item.productID === itemToUpdate.productID
-          );
+        const newWishlist = wishlist.map((item) =>
+          item.productID === id ? updatedItem : item
+        );
 
-          if (existingItemIndex !== -1) {
-            currentWishlist[existingItemIndex].quantity = value;
-          } else {
-            currentWishlist.push(newWishlistItem.items[0]);
-          }
+        // Cập nhật localStorage
+        localStorage.setItem("wishlist", JSON.stringify(newWishlist));
 
-          localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
+        // Gửi dữ liệu mới lên database
+        await saveShoppingCarts({
+          userID,
+          items: [updatedItem],
+          totalPrice: productDetails.price * value,
+        });
 
-          const event = new CustomEvent("wishlistUpdated", {
-            detail: currentWishlist.length,
-          });
-          window.dispatchEvent(event);
-        } catch (error) {
-          console.error(
-            "Failed to update item quantity in the database:",
-            error
-          );
-        }
+        // Gửi sự kiện để cập nhật giao diện
+        window.dispatchEvent(
+          new CustomEvent("wishlistUpdated", { detail: newWishlist.length })
+        );
+
+        console.log("Wishlist updated:", newWishlist);
+      } catch (error) {
+        console.error("Failed to update item quantity:", error);
       }
     }, 200),
-    [wishlist]
+    []
   );
 
   const handleQuantityChange = async (id, value) => {
@@ -172,7 +161,7 @@ const Wishlist = () => {
 
         localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
 
-        // Cập nhật vào database
+        // Cập nhật vào database ngay lập tức
         updateQuantityInDatabase(id, value);
 
         return updatedWishlist;
@@ -181,6 +170,7 @@ const Wishlist = () => {
       console.error("Failed to fetch product details:", error);
     }
   };
+
   const handleCheckout = () => {
     navigate("/order");
   };
@@ -310,4 +300,4 @@ const Wishlist = () => {
   );
 };
 
-export default Wishlist;
+export default Cart;
