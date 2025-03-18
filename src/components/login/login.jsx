@@ -1,3 +1,4 @@
+import { notification } from 'antd'; // Import notification từ Ant Design
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -74,7 +75,15 @@ const LoginForm = ({
         localStorage.setItem("token", data.token);
         localStorage.setItem("userID", data.user.id);
         localStorage.setItem("role", role);
-        alert("Đăng nhập thành công!");
+
+        // Hiển thị thông báo đăng nhập thành công
+        notification.success({
+          message: 'Đăng nhập thành công',
+          description: 'Chào mừng bạn đã quay lại!',
+          placement: 'topRight', // Vị trí thông báo
+          duration: 3, // Thời gian hiển thị thông báo
+        });
+
         closeLoginForm();
       } else {
         setError(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
