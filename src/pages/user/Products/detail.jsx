@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Breadcrumb, Divider, InputNumber, Pagination, Rate } from "antd";
-import Favourite from "../layouts/favourite";
+import Favourite from "../layouts/Favourite";
 import {
   getProductById,
   getUserInfo,
@@ -152,7 +152,7 @@ const Detail = () => {
           productID: product.productID, // Đảm bảo sử dụng đúng thuộc tính productID
           name: product.name, // Thêm tên sản phẩm
           quantity: quantity,
-          description :product.description,
+          description: product.description,
           price: product.price,
           imageUrl: imageUrl,
         },
@@ -191,7 +191,6 @@ const Detail = () => {
       console.error("Failed to save order:", error);
     }
   };
-
 
   const formatPrice = (price) => {
     return price.toLocaleString("vi-VN", {

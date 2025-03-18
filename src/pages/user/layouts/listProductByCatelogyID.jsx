@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Pagination } from "antd";
 import PropTypes from "prop-types";
 
-const ProductList = ({
+const ListProductByCatelogyID = ({
   allProducts,
   categoryId,
   minPrice,
@@ -126,7 +126,7 @@ const ProductList = ({
   );
 };
 
-ProductList.propTypes = {
+ListProductByCatelogyID.propTypes = {
   allProducts: PropTypes.array.isRequired,
   categoryId: PropTypes.string.isRequired,
   minPrice: PropTypes.number.isRequired,
@@ -136,4 +136,4 @@ ProductList.propTypes = {
   pageSize: PropTypes.number.isRequired,
 };
 
-export default ProductList;
+export default ListProductByCatelogyID;

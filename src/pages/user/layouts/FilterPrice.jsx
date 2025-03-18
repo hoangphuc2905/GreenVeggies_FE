@@ -12,9 +12,8 @@ const FilterPrice = ({
   setTempMinPrice,
   tempMaxPrice,
   setTempMaxPrice,
-  setSearchParams,
 }) => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -63,6 +62,7 @@ const FilterPrice = ({
         const params = new URLSearchParams(prev);
         params.delete("minPrice");
         params.delete("maxPrice");
+        params.delete("search"); // Xóa từ khóa tìm kiếm khi chọn radio
         return params;
       });
     } else {
@@ -99,6 +99,7 @@ const FilterPrice = ({
         const params = new URLSearchParams(prev);
         params.set("minPrice", newMin);
         params.set("maxPrice", newMax);
+        params.delete("search"); // Xóa từ khóa tìm kiếm khi chọn radio
         return params;
       });
     }
@@ -191,7 +192,6 @@ FilterPrice.propTypes = {
   setTempMinPrice: PropTypes.func.isRequired,
   tempMaxPrice: PropTypes.string.isRequired,
   setTempMaxPrice: PropTypes.func.isRequired,
-  setSearchParams: PropTypes.func.isRequired,
 };
 
 export default FilterPrice;
