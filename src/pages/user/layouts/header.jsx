@@ -1,10 +1,12 @@
 import {
   faCartShopping,
+  
   faMagnifyingGlass,
   faPaperPlane,
   faPhone,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { Modal, notification } from 'antd';
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link, useLocation } from "react-router-dom";
@@ -22,6 +24,7 @@ import { getShoppingCartByUserId } from "../../../api/api"; // Import the API fu
 
 import {
   SettingOutlined,
+  ShoppingOutlined,
   UserOutlined,
   LogoutOutlined,
   GlobalOutlined,
@@ -147,14 +150,29 @@ const Header = () => {
     setShowOtpFormqmk(true);
   };
   const handleLogout = () => {
-    if (window.confirm("Bạn có chắc chắn muốn đăng xuất?")) {
-      // Xóa thông tin người dùng và token khỏi localStorage
-      localStorage.removeItem("token");
-      localStorage.removeItem("userID");
-      setUser(null); // Cập nhật trạng thái user về null
-      alert("Bạn đã đăng xuất!");
-      navigate("/"); // Chuyển hướng về trang Home
-    }
+    Modal.confirm({
+      title: "Bạn có chắc chắn muốn đăng xuất?",
+      onOk() {
+        // Xóa thông tin người dùng và token khỏi localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("userID");
+        setUser(null); // Cập nhật trạng thái user về null
+  
+        // Hiển thị thông báo đăng xuất thành công
+        notification.success({
+          message: 'Đăng xuất thành công',
+          description: 'Bạn đã đăng xuất khỏi hệ thống.',
+          placement: 'topRight',
+          duration: 3,
+        });
+  
+        // Chuyển hướng về trang Home
+        navigate("/"); 
+      },
+      onCancel() {
+        console.log("Đăng xuất đã bị hủy");
+      },
+    });
   };
 
   const items = [
@@ -182,6 +200,11 @@ const Header = () => {
     },
     {
       key: "5",
+      label: <Link to="/user/address">Đơn hàng đã đặt</Link>,
+      icon: <ShoppingOutlined />,
+    },
+    {
+      key: "6",
       label: <div onClick={handleLogout}>Đăng xuất</div>,
       icon: <LogoutOutlined />,
     },
