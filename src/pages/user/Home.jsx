@@ -378,20 +378,30 @@ const Home = () => {
           </h3>
 
           <Carousel autoplay dots={true} className="mt-10">
-            {reviews.map((review, index) => (
-              <div key={index} className="p-4 text-center">
-                <div className="mx-auto relative h-[200px] w-[200px]">
-                  <img
-                    src={review.imageUrl}
-                    alt={`Ảnh của ${review.name}`}
-                    className="w-full h-full object-contain rounded-full"
-                  />
-                </div>
-                <p className="mt-4">{review.userID}</p>
-                <h3 className="text-xl font-semibold mt-4">{review.comment}</h3>
-                <p className="text-sm">{review.rating}</p>
-              </div>
-            ))}
+            {reviews
+              .filter((review) => review.rating === 5)
+              .map((review, index) => {
+                return (
+                  <div key={index} className="p-4 text-center">
+                    <div className="mx-auto relative h-[200px] w-[200px]">
+                      <img
+                        src={
+                          Array.isArray(review.imageUrl)
+                            ? review.imageUrl[0]
+                            : review.imageUrl
+                        }
+                        alt={`Ảnh của ${review.name}`}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    </div>
+                    <p className="mt-4">{review.userID}</p>
+                    <h3 className="text-xl font-semibold mt-4">
+                      {review.comment}
+                    </h3>
+                    <p className="text-sm">Đánh giá : {review.rating}</p>
+                  </div>
+                );
+              })}
           </Carousel>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import {
-  faCartShopping,
-  
+  faCartShopping, 
   faMagnifyingGlass,
   faPaperPlane,
   faPhone,
@@ -9,8 +8,8 @@ import {
 import { Modal, notification } from 'antd';
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link, useLocation } from "react-router-dom";
-import { Badge, Space } from "antd";
+import { Link } from "react-router-dom";
+import { Space } from "antd";
 import { useState, useEffect } from "react";
 import RegisterForm from "../../../components/register/register";
 import LoginForm from "../../../components/login/login";
@@ -19,9 +18,8 @@ import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
-import logoImage from "../../../assets/Green.png";
-import { getShoppingCartByUserId } from "../../../api/api"; // Import the API function
-
+import Navbar from "../layouts/Navbar";
+import { getShoppingCartByUserId } from "../../../api/api";
 import {
   SettingOutlined,
   ShoppingOutlined,
@@ -49,8 +47,6 @@ const Header = () => {
 
   const [emailqmk, setEmailqmk] = useState("");
   const [otpqmk, setOtpqmk] = useState("");
-
-  const [searchQuery, setSearchQuery] = useState(""); // Thêm trạng thái cho từ khóa tìm kiếm
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
@@ -105,7 +101,6 @@ const Header = () => {
 
       const shoppingCart = await getShoppingCartByUserId(userData.user.userID);
       console.log("Shopping cart:", shoppingCart); // Debugging statement
-      setCartItemCount(shoppingCart.length);
 
       if (userInfo.role === "admin") {
         navigate("/admin");
@@ -131,17 +126,12 @@ const Header = () => {
           // Lấy giỏ hàng từ API và cập nhật trạng thái cartItemCount
           const shoppingCart = await getShoppingCartByUserId(userID);
           console.log("Shopping cart on mount:", shoppingCart); // Debugging statement
-          setCartItemCount(shoppingCart.length);
         })
         .catch((error) => {
           console.error("Error fetching user:", error);
         });
     }
   }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo(0, 0);
-  };
 
   // Mở OTP form qmk với email
   const openOtpFormqmk = (emailqmk) => {
@@ -210,74 +200,6 @@ const Header = () => {
     },
   ];
 
-  const location = useLocation();
-  const isHomeActive = location.pathname === "/";
-  const isProductActive = location.pathname.startsWith("/product");
-  const isNewsActive = location.pathname.startsWith("/news");
-  const isCartActive = location.pathname.startsWith("/wishlist");
-  const isContactActive = location.pathname.startsWith("/contact");
-  const isBlogActive = location.pathname.startsWith("/posts");
-
-  const handleSearch = (e) => {
-    if (e.key === "Enter" && searchQuery.trim() !== "") {
-      navigate(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(""); // Reset thanh tìm kiếm về giá trị rỗng
-    }
-  };
-
-  const [cartItemCount, setCartItemCount] = useState(0);
-
-  const isLoggedIn = () => {
-    const loggedIn = Boolean(localStorage.getItem("token"));
-    console.log("Is logged in:", loggedIn);
-    return loggedIn;
-  };
-
-  const fetchCartItemCount = async () => {
-    const userID = localStorage.getItem("userID");
-    if (userID) {
-      try {
-        const shoppingCart = await getShoppingCartByUserId(userID);
-        console.log("Fetched shopping cart:", shoppingCart); // Debugging statement
-        const itemCount = shoppingCart.shoppingCartDetails.length;
-        setCartItemCount(itemCount);
-      } catch (error) {
-        console.error("Failed to fetch shopping cart:", error);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (isLoggedIn()) {
-      fetchCartItemCount();
-    }
-
-    // Listen for the custom event to update the cart item count
-    const handleWishlistUpdated = (event) => {
-      const itemCount = event.detail;
-      setCartItemCount(itemCount);
-      console.log("Updated cart item count:", itemCount);
-    };
-
-    window.addEventListener("wishlistUpdated", handleWishlistUpdated);
-
-    return () => {
-      window.removeEventListener("wishlistUpdated", handleWishlistUpdated);
-    };
-  }, []);
-
-  const handleCartClick = (e) => {
-    if (!isLoggedIn()) {
-      e.preventDefault(); // Prevent navigation
-      displayLoginForm(); // Show login form
-    } else {
-      scrollToTop(); // Scroll to top if logged in
-    }
-  };
-
-  const displayLoginForm = () => {
-    alert("Bạn cần đăng nhập để xem giỏ hàng!");
-  };
   return (
     <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
       <div className="container mx-auto flex w-full justify-between items-center  ">
@@ -302,8 +224,7 @@ const Header = () => {
                 menu={{
                   items,
                 }}
-                className="ml-2"
-              >
+                className="ml-2">
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
                     {user?.avatar ? (
@@ -325,137 +246,13 @@ const Header = () => {
           ) : (
             <button
               className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}
-            >
+              onClick={() => setShowLoginForm(true)}>
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>
           )}
         </div>
-        <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10 px-[10%]">
-          <div className="container flex justify-between items-center center mx-auto">
-            <Link
-              to="/"
-              className="flex items-center gap-2 text-2xl py-4 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer"
-            >
-              <img
-                src={logoImage}
-                alt="Mô tả hình ảnh"
-                className="w-[40px] h-[40px]"
-              />
-              GreenVeggies
-            </Link>
-
-            <nav>
-              <ul className="flex">
-                {/* Trang chủ */}
-                <li
-                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                    isHomeActive
-                      ? "text-[#82AE46] underline font-bold"
-                      : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
-                  <Link to="/" className="font-bold" onClick={scrollToTop}>
-                    TRANG CHỦ
-                  </Link>
-                </li>
-
-                {/* Cửa hàng */}
-                <li
-                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                    isProductActive
-                      ? "text-[#82AE46] underline font-bold"
-                      : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
-                  <Link
-                    to="/product"
-                    className="font-bold"
-                    onClick={scrollToTop}
-                  >
-                    CỬA HÀNG
-                  </Link>
-                </li>
-                <li
-                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                    isNewsActive
-                      ? "text-[#82AE46] underline font-bold"
-                      : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
-                  <Link to="/news" className="font-bold" onClick={scrollToTop}>
-                    TIN TỨC
-                  </Link>
-                </li>
-                <li
-                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                    isBlogActive
-                      ? "text-[#82AE46] underline font-bold"
-                      : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
-                  <Link to="/posts" className="font-bold" onClick={scrollToTop}>
-                    BÀI VIẾT
-                  </Link>
-                </li>
-                <li
-                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                    isContactActive
-                      ? "text-[#82AE46] underline font-bold"
-                      : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
-                  <Link
-                    to="/contact"
-                    className="font-bold"
-                    onClick={scrollToTop}
-                  >
-                    LIÊN HỆ
-                  </Link>
-                </li>
-                <li
-                  className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                    isCartActive
-                      ? "text-[#82AE46] underline font-bold"
-                      : "hover:text-[#82AE46] hover:underline active:scale-95"
-                  }`}
-                >
-                  <Link
-                    to={isLoggedIn() ? "/wishlist" : "#"}
-                    className="font-bold"
-                    onClick={handleCartClick}
-                  >
-                    <Space size="middle">
-                      <Badge count={isLoggedIn() ? cartItemCount : 0} showZero>
-                        <FontAwesomeIcon
-                          icon={faCartShopping}
-                          className={`text-xl ${
-                            isCartActive ? "text-[#82AE46]" : ""
-                          }`}
-                        />
-                      </Badge>
-                    </Space>
-                  </Link>
-                </li>
-                <li className="mx-4 relative hover:text-[#82AE46] hover:underline active:scale-95 transition-all duration-200">
-                  <input
-                    type="text"
-                    placeholder="Tìm kiếm"
-                    className="px-3 py-2 pl-10 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 w-[300px] bg-[#D9D9D9]"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={handleSearch}
-                  />
-                  <FontAwesomeIcon
-                    icon={faMagnifyingGlass}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xl text-black-500"
-                  />
-                </li>
-              </ul>
-            </nav>
-          </div>
-        </div>
+        <Navbar />
       </div>
 
       {/* Overlay mờ khi modal xuất hiện */}

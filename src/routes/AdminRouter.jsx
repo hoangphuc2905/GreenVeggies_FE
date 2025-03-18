@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { App, Layout, theme } from "antd";
 import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
 import Revenue from "../pages/Admin/revenue/Revenue";
-import Detail from "../pages/Admin/product/detail/detail";
+import Detail from "../pages/admin/product/detail/Detail";
 import ListUser from "../pages/admin/user/ListUser";
 import AdminHeader from "../pages/Admin/layout/AdminHeader";
 
@@ -11,9 +11,8 @@ import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct"
 import Order from "../pages/admin/order/Order";
 import Page from "../pages/admin/product/Page";
 import AdminSidebar from "../pages/admin/layout/AdminSidebar";
-import { Provider, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 
-import { store } from "../redux/store";
 import { useEffect, useState } from "react";
 import { fetchUser } from "../redux/userSlice";
 import { getUserInfo } from "../api/api";

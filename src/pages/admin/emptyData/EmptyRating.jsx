@@ -1,5 +1,4 @@
 import emptyRating from "../../../assets/emptyRating.png";
-import React from "react";
 
 const EmptyRating = () => {
   return (

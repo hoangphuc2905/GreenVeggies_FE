@@ -78,7 +78,7 @@ const SuccessOrdersChart = () => {
 
   return (
     <div className="bg-white mt-6 p-4 rounded-lg shadow-md w-full max-w-full">
-      <h2 className="font-semibold text-lg mb-2 text-center">
+      <h2 className="font-semibold text-lg mb-4">
         Thống kê đơn hàng
       </h2>
       <div className="flex justify-between items-center mb-3">

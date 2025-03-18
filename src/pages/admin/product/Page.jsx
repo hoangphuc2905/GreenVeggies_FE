@@ -23,9 +23,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getListProducts, updateProduct } from "../../../api/api";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
-import InsertStockEntry from "../stockEntry/InsertStockEntry";
+// import InsertStockEntry from "../stockEntry/InsertStockEntry";
 import UserRender from "../userRender/UserRender";
 import FilterButton from "../../../components/filter/FilterButton";
+import InsertStockEntry from "../stockEntry/InsertStockEntry";
 
 const { Search } = Input;
 
@@ -45,7 +46,7 @@ const Page = () => {
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [statuses, setStatuses] = useState([
+  const [statuses] = useState([
     { value: "available", label: "Còn hàng" },
     { value: "unavailable", label: "Ngừng bán" },
     { value: "out_of_stock", label: "Hết hàng" },
@@ -57,7 +58,7 @@ const Page = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [warningMessage, setWarningMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [filters, setFilters] = useState({});
+  const [filters] = useState({});
   const [columnsVisibility, setColumnsVisibility] = useState({
     productID: true,
     name: true,

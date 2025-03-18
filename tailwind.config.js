@@ -15,6 +15,8 @@ export default {
           100: "#E2E2D5",
           200: "#888883",
         },
+        editColor: "#27A743",
+        deleteColor: "#F5222D",
       },
     },
   },

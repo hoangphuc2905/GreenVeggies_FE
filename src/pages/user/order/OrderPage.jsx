@@ -1,6 +1,5 @@
-import { Divider, Button, Form, Input, Radio, message } from "antd";
+import { Divider, Button, Form, Input, Radio } from "antd";
 import { useState, useEffect } from "react";
-import QRCode from "qrcode";
 import {
   getUserInfo,
   getShoppingCartByUserId,
@@ -41,7 +40,6 @@ const OrderPage = () => {
   const [value, setValue] = useState(1);
   const [cartItems, setCartItems] = useState([]);
   const [showQR, setShowQR] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
 
   useEffect(() => {
@@ -101,21 +99,12 @@ const OrderPage = () => {
     }
   }, [form]);
 
-  const onChange = async (e) => {
+  const onChange = (e) => {
     setValue(e.target.value);
     if (e.target.value === 2 || e.target.value === 3) {
       setShowQR(true);
-      const qrCode = await generatePaymentQR(
-        "MBB", // Mã ngân hàng (VD: VCB = Vietcombank, ACB = Á Châu)
-        "120826121111",
-        "PHAN HOANG TAN",
-        totalPrice,
-        "Thanh toan don hang #123"
-      );
-      setQrCodeUrl(qrCode);
     } else {
       setShowQR(false);
-      setQrCodeUrl("");
     }
   };
 
@@ -151,28 +140,14 @@ const OrderPage = () => {
   const shippingFee = calculateShippingFee(totalProductPrice);
   const totalPrice = totalProductPrice + shippingFee;
 
-  const generatePaymentQR = async (
-    bankCode,
-    accountNumber,
-    accountName,
-    amount,
-    content
-  ) => {
-    // Tạo URL VietQR chính xác
-    const qrData = `https://vietqr.net/${bankCode}/${accountNumber}?amount=${amount}&addInfo=${encodeURIComponent(
-      content
-    )}`;
+  // Thông tin tài khoản ngân hàng
+  const accountNumber = "868629052003"; // Thay số tài khoản của bạn
+  const bankCode = "MBB"; // Mã ngân hàng theo chuẩn VietQR (VD: BIDV, VCB, MBB)
+  const receiverName = "HUYNH HOANG PHUC"; // Tên người nhận
+  const message = "Thanh toan don hang"; // Nội dung chuyển khoản
 
-    try {
-      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: "H",
-      });
-      return qrCodeDataUrl;
-    } catch (err) {
-      console.error("Lỗi khi tạo QR:", err);
-      return null;
-    }
-  };
+  // Tạo URL VietQR
+  const vietqrUrl = `VietQR://2.0/PAYLOAD?ac=${accountNumber}&b=${bankCode}&am=${totalPrice}&n=${receiverName}&m=${message}`;
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-[10%] mt-28">
@@ -197,13 +172,26 @@ const OrderPage = () => {
             <div className="flex">
               <Form.Item
                 name={["user", "firstName"]}
-                label="Họ và tên"
+                label="Họ"
                 rules={[
                   {
                     required: true,
                   },
                 ]}
-                className="w-full"
+                className="w-1/2 pr-2"
+                labelCol={{ span: 24 }}
+                wrapperCol={{ span: 24 }}>
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name={["user", "lastName"]}
+                label="Tên"
+                rules={[
+                  {
+                    required: true,
+                  },
+                ]}
+                className="w-1/2 pl-2"
                 labelCol={{ span: 24 }}
                 wrapperCol={{ span: 24 }}>
                 <Input />
@@ -325,9 +313,15 @@ const OrderPage = () => {
               },
             ]}
           />
-          {showQR && qrCodeUrl && (
+          {showQR && (
             <div className="mt-4 relative">
-              <img src={qrCodeUrl} alt="QR Code" />
+              <div className="absolute inset-0 bg-white opacity-50 blur"></div>
+              <img
+                src="https://i.imgur.com/1Q2xj9s.png"
+                value={vietqrUrl}
+                size={128}
+                className="w-32 h-32 mx-auto relative"
+              />
             </div>
           )}
           <Divider style={{ borderColor: "#7cb305" }} />

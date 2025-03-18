@@ -207,7 +207,7 @@ const InsertProduct = () => {
                     <button
                       onClick={openInsertCategory}
                       type="button"
-                      className="text-[#82AE46] bg-none w-8 h-8 flex items-center justify-center hover:text-[#34C759]"
+                      className="text-primary bg-none w-8 h-8 flex items-center justify-center hover:text-[#34C759]"
                     >
                       <PlusOutlined />
                     </button>
