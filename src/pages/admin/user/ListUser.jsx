@@ -8,7 +8,7 @@ import {
   EditFilled,
   PlusCircleOutlined,
 } from "@ant-design/icons";
-import UserDetailModal from "./profileDetail";
+import UserDetailModal from "./UserDetailModal";
 import { getListUsers } from "../../../api/api";
 
 const { Search } = Input;

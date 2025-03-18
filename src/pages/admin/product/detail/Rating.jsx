@@ -2,7 +2,7 @@ import { Avatar, Card, ConfigProvider, Rate, Button, Divider } from "antd";
 import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { getUserInfo } from "../../../../api/api";
-import EmptyRating from "../../emptyData/emptyRating";
+import EmptyRating from "../../emptyData/EmptyRating";
 const { Meta } = Card;
 
 const Rating = ({ product }) => {

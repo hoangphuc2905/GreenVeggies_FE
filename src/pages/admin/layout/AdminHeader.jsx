@@ -1,6 +1,6 @@
 import { Avatar, Badge, Dropdown, message, Modal, Popover } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope, faBell } from "@fortawesome/free-solid-svg-icons";
+import { faBell } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../assets/Green.png";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -103,18 +103,6 @@ const AdminHeader = () => {
         </div>
 
         <div className="flex items-center gap-6">
-          <Badge size="small" count={100} className="hover:cursor-pointer">
-            <Avatar
-              className="hover:cursor-pointer bg-transparent"
-              shape="square"
-              size="default"
-            >
-              <FontAwesomeIcon
-                className="h-full w-full text-[#ffffff]"
-                icon={faEnvelope}
-              />
-            </Avatar>
-          </Badge>
           <Popover
             content={<Notification />}
             trigger="hover"
