@@ -6,7 +6,6 @@ import Detail from "../pages/user/product/Detail";
 import Wishlist from "../pages/user/Wishlist/Cart/";
 import ProfilePage from "../pages/user/Profile/ProfilePage";
 import Profile from "../pages/user/Profile/Profile";
-import ChangePassword from "../pages/user/Profile/ChangePassword";
 import Address from "../pages/user/Profile/AddressForm"; // Import Address
 import Order from "../pages/user/Profile/OrderProFile"; // Import Order
 import Contact from "../pages/user/Contact/Contact";
@@ -18,9 +17,10 @@ import CategoryPage from "../pages/user/Category/CategoryPage";
 import Header from "../pages/user/layouts/Header";
 import UserFooter from "../pages/user/layouts/UserFooter";
 import { App } from "antd";
-import { fetchUser } from "../redux/UserSlice";
+import { fetchUser } from "../redux/userSlice";
 import { getUserInfo } from "../api/api";
 import OrderPage from "../pages/user/order/OrderPage";
+import ChangePassword from "../pages/user/profile/ChangePassword";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);

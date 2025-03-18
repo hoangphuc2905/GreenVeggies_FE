@@ -1,10 +1,10 @@
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { App, Layout, theme } from "antd";
-import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
-import Revenue from "../pages/Admin/revenue/Revenue";
+import BreadcrumbNav from "../pages/admin/layout/BreadcrumbNav";
+import Revenue from "../pages/admin/revenue/Revenue";
 import Detail from "../pages/admin/product/detail/Detail";
 import ListUser from "../pages/admin/user/ListUser";
-import AdminHeader from "../pages/Admin/layout/AdminHeader";
+import AdminHeader from "../pages/admin/layout/AdminHeader";
 
 import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
 import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct";

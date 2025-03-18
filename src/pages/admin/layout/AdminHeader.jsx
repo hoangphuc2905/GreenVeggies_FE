@@ -5,7 +5,7 @@ import logo from "../../../assets/Green.png";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { fetchUser } from "../../../redux/UserSlice";
+import { fetchUser } from "../../../redux/userSlice";
 import { getUserInfo } from "../../../api/api";
 import {
   LogoutOutlined,

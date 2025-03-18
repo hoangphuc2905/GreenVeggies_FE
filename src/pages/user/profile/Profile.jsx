@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchUser } from "../../../redux/UserSlice";
+import { fetchUser } from "../../../redux/userSlice";
 import { updateUserInfo } from "../../../api/api";
 import { Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";

@@ -1,6 +1,4 @@
 import {
-  faCartShopping,
-  faMagnifyingGlass,
   faPaperPlane,
   faPhone,
   faUser,

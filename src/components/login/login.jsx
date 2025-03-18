@@ -2,7 +2,7 @@ import { notification } from "antd"; // Import notification từ Ant Design
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from "../../redux/UserSlice";
+import { fetchUser } from "../../redux/userSlice";
 import { getUserInfo } from "../../api/api";
 
 const LoginForm = ({
