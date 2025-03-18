@@ -10,6 +10,7 @@ import ChangePassword from "../pages/user/Profile/changepassword";
 import Address from "../pages/user/Profile/address"; // Import Address
 import Contact from "../pages/user/Contact/Contact";
 import OrderPage from "../pages/user/Order/OrderPage"; // Import OrderPage
+import News from "../pages/user/news/News"; // Import News
 
 import { useEffect, useState } from "react";
 import CategoryPage from "../pages/user/Category/CategoryPage";
@@ -66,6 +67,8 @@ const UserRouter = () => {
           element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />}
         />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/news" element={<News />} />{" "}
+        {/* Thêm route cho News */}
         <Route path="/category/:id" element={<CategoryPage />} />
         <Route path="/order" element={<OrderPage />} />{" "}
         {/* Thêm route cho OrderPage */}
