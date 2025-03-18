@@ -3,13 +3,12 @@ import { Layout, Spin, Button, Menu, ConfigProvider, Image } from "antd";
 import { PlusCircleFilled, TagOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
 import { getProductDetail } from "../../../../api/api";
-import Description from "./description";
+import Description from "./Description";
 import Rating from "./Rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";
 import { useLocation } from "react-router-dom";
 import History from "../../stockEntry/history";
 import InsertStockEntry from "../../stockEntry/InsertStockEntry";
-
 const Detail = () => {
   const location = useLocation();
   const id = location.state?.productID;

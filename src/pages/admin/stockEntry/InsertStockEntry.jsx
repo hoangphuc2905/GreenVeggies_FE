@@ -27,7 +27,7 @@ const InsertStockEntry = ({
   onStockUpdated,
 }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  const [ setLoading] = useState(false);
 
   const hanndlerSubmit = async (values) => {
     console.log(values);

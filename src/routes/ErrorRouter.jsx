@@ -1,5 +1,4 @@
 import { App } from "antd";
-import React from "react";
 import { Route, Routes } from "react-router-dom";
 import UnfoundPage from "../components/error/UnfoundPage";
 
@@ -7,7 +6,7 @@ const ErrorRouter = () => {
   return (
     <App>
       <Routes>
-        <Route path="/not-authorized" element={<UnfoundPage />} />
+        <Route path="" element={<UnfoundPage />} />
       </Routes>
     </App>
   );

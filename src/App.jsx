@@ -1,9 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AdminRouter from "./routes/AdminRouter";
 import UserRouter from "./routes/UserRouter";
 import { Provider } from "react-redux";
@@ -20,7 +15,7 @@ const App = () => {
           <Route path="/admin/*" element={<AdminRouter />} />
           <Route path="/*" element={<UserRouter />} />
           {/* <Route path="/auth/*" element={<AuthRouter />} /> */}
-          <Route path="*" element={<ErrorRouter />} />
+          <Route path="/not-authorized/*" element={<ErrorRouter />} />
         </Routes>
       </Router>
     </Provider>
