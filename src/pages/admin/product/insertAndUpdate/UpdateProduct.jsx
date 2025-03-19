@@ -214,7 +214,7 @@ const UpdateProduct = () => {
                 <Form.Item label="Loại danh mục" name="category">
                   <div className="flex items-center gap-2">
                     <Select
-                      defaultValue={product?.category?._id}
+                      value={form.getFieldValue("category")} // Lấy giá trị từ form
                       placeholder="Chọn danh mục"
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
@@ -304,6 +304,7 @@ const UpdateProduct = () => {
             onClose={() => setIsStockEntryOpen(false)}
             productID={product?.productID}
             productName={product?.name}
+            entryPrice={product?.price}
           ></InsertStockEntry>
         </Flex>
       </div>

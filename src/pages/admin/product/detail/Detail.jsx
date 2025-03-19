@@ -160,6 +160,7 @@ const Detail = () => {
         productID={product?.productID}
         productName={product?.name}
         onStockUpdated={reloadProduct}
+        entryPrice={product?.price}
       ></InsertStockEntry>
     </Layout>
   );
