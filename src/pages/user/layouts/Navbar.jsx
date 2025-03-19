@@ -38,12 +38,11 @@ const Navbar = () => {
     console.log("Is logged in:", loggedIn);
     return loggedIn;
   };
-  const fetchCartItemCount = async () => {
+  const fetchAndUpdateCartCount = async () => {
     const userID = localStorage.getItem("userID");
     if (userID) {
       try {
         const shoppingCart = await getShoppingCartByUserId(userID);
-        console.log("Fetched shopping cart:", shoppingCart); // Debugging statement
         const itemCount = shoppingCart.shoppingCartDetails.length;
         setCartItemCount(itemCount);
       } catch (error) {
@@ -52,9 +51,11 @@ const Navbar = () => {
     }
   };
 
+  window.addEventListener("wishlistUpdated", fetchAndUpdateCartCount);
+
   useEffect(() => {
     if (isLoggedIn()) {
-      fetchCartItemCount();
+      fetchAndUpdateCartCount();
     }
 
     // Listen for the custom event to update the cart item count

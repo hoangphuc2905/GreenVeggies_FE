@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Breadcrumb, Divider, InputNumber, Pagination, Rate } from "antd";
+import {
+  Breadcrumb,
+  Carousel,
+  Divider,
+  InputNumber,
+  Pagination,
+  Rate,
+} from "antd";
+import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
 import {
   getProductById,
@@ -15,7 +23,11 @@ const Detail = () => {
   const [product, setProduct] = useState(null);
   const [userData, setUserData] = useState({});
   const [quantity, setQuantity] = useState(1);
+  const [isZoomed, setIsZoomed] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const zoomCarouselRef = useRef(null);
+
+  const carouselRef = useRef(null); // thêm dòng này
   const navigate = useNavigate();
   const [showDescription, setShowDescription] = useState(false);
   const [showReviews, setShowReviews] = useState(false);
@@ -199,6 +211,12 @@ const Detail = () => {
     });
   };
 
+  const handleZoom = () => {
+    setIsZoomed((prev) => !prev); // Toggle zoom
+  };
+  const calculateSellingPrice = (price) => {
+    return price * 1.5;
+  };
   if (!product) {
     return <div>Loading...</div>;
   }
@@ -209,54 +227,132 @@ const Detail = () => {
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
       </div>
       <div className="container mx-auto">
-        <Breadcrumb>
-          <Breadcrumb.Item>
-            <Link to="/">Home</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <Link to="/product">Products</Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <Link to={`/category/${product.category._id}`}>
-              {product.category.name}
-            </Link>
-          </Breadcrumb.Item>
-        </Breadcrumb>
+        <Breadcrumb
+          items={[
+            { title: <Link to="/">Home</Link> },
+            { title: <Link to="/product">Products</Link> },
+            {
+              title: (
+                <Link to={`/category/${product.category._id}`}>
+                  {product.category.name}
+                </Link>
+              ),
+            },
+          ]}
+        />
         <div className="flex flex-col items-center">
           <br></br>
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 ">
-              {/* Ảnh chính */}
-              <div className="mb-4 relative">
-                <img
-                  src={selectedImage}
-                  alt="Ảnh chính"
-                  className="w-full h-96 object-cover rounded-md cursor-pointer"
-                />
+            <div className="p-4">
+              <div className="mb-4 relative group">
+                {" "}
+                {/* group là lớp giúp xử lý hover */}
+                <Carousel
+                  ref={carouselRef}
+                  infinite={true}
+                  afterChange={(current) => {
+                    if (Array.isArray(product.imageUrl)) {
+                      setSelectedImage(product.imageUrl[current]);
+                    }
+                  }}>
+                  {Array.isArray(product.imageUrl) &&
+                    product.imageUrl.map((img, index) => (
+                      <div key={index}>
+                        <img
+                          src={img}
+                          alt={`Ảnh ${index + 1}`}
+                          className="w-full h-96 object-cover rounded-md cursor-pointer"
+                          style={{
+                            transition: "transform 0.3s ease-in-out",
+                            transformOrigin: "center center",
+                          }}
+                        />
+                      </div>
+                    ))}
+                </Carousel>
+                {/* Nút Zoom */}
+                <button
+                  onClick={handleZoom}
+                  className="absolute bottom-4 left-4 p-3 bg-transparent hover:bg-transparent transition-all">
+                  <ZoomInOutlined className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125" />
+                </button>
+                {/* Nút điều hướng bên trái và phải khi hover */}
+                <div className="absolute top-1/2 left-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                  <button
+                    onClick={() => carouselRef.current.prev()}
+                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                    <LeftOutlined />
+                  </button>
+                </div>
+                <div className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
+                  <button
+                    onClick={() => carouselRef.current.next()}
+                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                    <RightOutlined />
+                  </button>
+                </div>
               </div>
-              {/* Ảnh dạng slider nếu có nhiều ảnh */}
+
               {Array.isArray(product.imageUrl) &&
                 product.imageUrl.length > 1 && (
-                  <>
-                    {/* Ảnh nhỏ bên dưới */}
-                    <div className="flex gap-2 mt-2 overflow-x-auto justify-center">
-                      {product.imageUrl.map((img, index) => (
-                        <img
-                          key={index}
-                          src={img}
-                          alt={`Thumb ${index + 1}`}
-                          className={`w-16 h-16 object-cover rounded-md cursor-pointer border ${
-                            selectedImage === img
-                              ? "border-blue-500 border-2"
-                              : "border-gray-300"
-                          }`}
-                          onClick={() => setSelectedImage(img)}
-                        />
-                      ))}
-                    </div>
-                  </>
+                  <div className="flex gap-2 mt-2 overflow-x-auto justify-center">
+                    {product.imageUrl.map((img, index) => (
+                      <img
+                        key={index}
+                        src={img}
+                        alt={`Thumb ${index + 1}`}
+                        className={`w-16 h-16 object-cover rounded-md cursor-pointer border ${
+                          selectedImage === img
+                            ? "border-blue-500 border-2 opacity-100"
+                            : "border-gray-300 opacity-50"
+                        }`}
+                        onClick={() => {
+                          setSelectedImage(img);
+                          carouselRef.current.goTo(index, false); // thêm dòng này
+                        }}
+                      />
+                    ))}
+                  </div>
                 )}
+
+              {isZoomed && (
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
+                  onClick={handleZoom} // Đóng khi click vào overlay
+                >
+                  <div
+                    className="relative w-full h-auto max-w-4xl max-h-screen"
+                    onClick={(e) => e.stopPropagation()} // Ngăn sự kiện click lan ra ngoài
+                  >
+                    <Carousel
+                      ref={zoomCarouselRef}
+                      arrows
+                      autoplay={false}
+                      infinite={true}
+                      afterChange={(current) => {
+                        if (Array.isArray(product.imageUrl)) {
+                          setSelectedImage(product.imageUrl[current]); // Cập nhật ảnh chính khi chuyển slide
+                        }
+                      }}
+                      initialSlide={product.imageUrl.indexOf(selectedImage)} // Đặt ảnh hiện tại làm ảnh đầu tiên
+                    >
+                      {Array.isArray(product.imageUrl) &&
+                        product.imageUrl.map((img, index) => (
+                          <div key={index}>
+                            <img
+                              src={img}
+                              alt={`Zoomed Image ${index + 1}`}
+                              className="w-full h-auto object-over"
+                              style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            />
+                          </div>
+                        ))}
+                    </Carousel>
+                  </div>
+                </div>
+              )}
             </div>
+
             <div className="p-4 w-full h-[416px] overflow-auto">
               <h1 className="text-3xl font-bold mt-4">{product.name}</h1>
               <div className="mt-4 flex items-center">
@@ -273,17 +369,17 @@ const Detail = () => {
                   className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
                   {product.description}
                 </p>
-                {showSeeMore && !isExpanded && (
+                {showSeeMore && (
                   <button
                     className="text-blue-500 underline mt-2"
-                    onClick={() => setIsExpanded(true)}>
-                    Xem thêm
+                    onClick={() => setIsExpanded(!isExpanded)}>
+                    {isExpanded ? "Rút gọn" : "Xem thêm"}
                   </button>
                 )}
               </div>
 
               <p className="text-xl mt-2 text-[#FEA837]">
-                {formatPrice(product.price)}{" "}
+                {formatPrice(calculateSellingPrice(product.price))}
               </p>
               {product.oldPrice && (
                 <p className="text-xl line-through">
@@ -298,29 +394,41 @@ const Detail = () => {
                 <b>Loại : {product.category.name}</b>
               </p>
 
-              <p className="mt-4 flex items-center text-center">
+              <p
+                className={`mt-4 flex items-center text-center ${
+                  product.quantity === 0 ? "opacity-50 cursor-not-allowed" : ""
+                }`}>
                 <button
                   className="px-2 py-1 border rounded-l bg-gray-200"
-                  onClick={decrementQuantity}>
+                  onClick={decrementQuantity}
+                  disabled={product.quantity === 0 || quantity <= 1}>
                   -
                 </button>
                 <InputNumber
                   min={1}
+                  max={product.quantity} // Giới hạn nhập số lượng không vượt quá số lượng trong kho
                   value={quantity}
                   onChange={handleQuantityChange}
                   className="w-16 text-center"
+                  disabled={product.quantity === 0} // Vô hiệu hóa InputNumber nếu số lượng bằng 0
                 />
                 <button
                   className="px-2 py-1 border rounded-r bg-gray-200"
-                  onClick={incrementQuantity}>
+                  onClick={incrementQuantity}
+                  disabled={
+                    product.quantity === 0 || quantity >= product.quantity
+                  } // Vô hiệu hóa nếu đã đạt số lượng tối đa
+                >
                   +
                 </button>
                 <button
-                  className="text-white text-xs font-bold tracking-wide text-center 
-               bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
-               rounded-lg p-3 shadow-lg 
-               hover:scale-105 transition duration-300 ease-in-out ml-2"
-                  onClick={addToWishlist}>
+                  className={`text-white text-xs font-bold tracking-wide text-center 
+      bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
+      rounded-lg p-3 shadow-lg 
+      hover:scale-105 transition duration-300 ease-in-out ml-2
+      ${product.quantity === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={addToWishlist}
+                  disabled={product.quantity === 0}>
                   THÊM VÀO GIỎ
                 </button>
               </p>
@@ -396,9 +504,16 @@ const Detail = () => {
           </button>
         </div>
         {showDescription && (
-          <div className="mt-4 p-4  rounded-lg bg-[#f0fdf4]">
+          <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
             <h2 className="text-2xl font-bold">Mô tả sản phẩm</h2>
-            <p>{product.description}</p>
+            <p>
+              {product.description.split("\n").map((line, index) => (
+                <span key={index}>
+                  {line}
+                  <br />
+                </span>
+              ))}
+            </p>
           </div>
         )}
         {showInformations && (
@@ -415,10 +530,12 @@ const Detail = () => {
               <p>Đơn vị tính: {product.unit}</p>
               <p>
                 Trạng thái:{" "}
-                {product.status === "available" ? (
+                {product.quantity === 0 ? (
+                  <span className="text-red-500">Hết hàng</span>
+                ) : product.status === "available" ? (
                   "Còn hàng"
                 ) : (
-                  <span className="text-red-500"> Hết hàng</span>
+                  <span className="text-red-500">Hết hàng</span>
                 )}
               </p>
             </div>
