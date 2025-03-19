@@ -183,21 +183,6 @@ export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
   }
 };
 
-// 🟢 Thêm đơn đặt hàng mới
-export const addOrder = async (orderData) => {
-  try {
-    const response = await orderAPI.post("/orders", orderData);
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      // In ra phản hồi từ máy chủ nếu có
-      console.error("API response error:", error.response.data);
-    }
-    console.error("Lỗi khi thêm đơn đặt hàng:", error);
-    return null;
-  }
-};
-
 // 🟢 Lấy danh sách sản phẩm theo khóa
 export const getListProducts = async (key) => {
   try {
@@ -281,8 +266,6 @@ export const getAddressByID = async (userID) => {
     return null;
   }
 };
-
-
 
 // 🟢 API thêm địa chỉ mới cho người dùng
 export const addNewAddress = async (addressData) => {
