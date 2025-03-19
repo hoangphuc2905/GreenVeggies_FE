@@ -6,6 +6,7 @@ const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
 const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
+const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
@@ -60,6 +61,13 @@ const orderAPI = axios.create({
   },
 });
 
+const shoppingCartAPI = axios.create({
+  baseURL: API_SHOPPING_CART_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 // Xóa hình ảnh trên cloundary
 export const deleteImage = async (publicId) => {
   const response = await productAPI.post("/products/delete-image", {
@@ -71,9 +79,7 @@ export const deleteImage = async (publicId) => {
 // 🟢 Lưu thông tin sản phẩm vào order
 export const saveShoppingCarts = async (orderData) => {
   try {
-    console.log("Order Data:", orderData); // In ra dữ liệu gửi đi
-    const response = await orderAPI.post("/shopping-carts", orderData);
-    console.log("API response:", response.data); // In ra dữ liệu trả về từ API
+    const response = await shoppingCartAPI.post("/shopping-carts", orderData);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -121,7 +127,9 @@ export const getUserById = async (userID) => {
 // 🟢 Lấy giỏ hàng theo userID
 export const getShoppingCartByUserId = async (userID) => {
   try {
-    const response = await orderAPI.get(`/shopping-carts/user/${userID}`);
+    const response = await shoppingCartAPI.get(
+      `/shopping-carts/user/${userID}`
+    );
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy giỏ hàng theo userID:", error);
@@ -129,10 +137,40 @@ export const getShoppingCartByUserId = async (userID) => {
   }
 };
 
+// 🟢 Cập nhật số lượng sản phẩm trong giỏ hàng
+export const updateCartQuantity = async (
+  shoppingCartID,
+  productID,
+  quantity
+) => {
+  try {
+    console.log(
+      "Request URL:",
+      shoppingCartAPI.defaults.baseURL + "/shopping-carts/update-quantity"
+    );
+    console.log("Payload:", { shoppingCartID, productID, quantity });
+
+    const response = await shoppingCartAPI.patch(
+      "/shopping-carts/update-quantity",
+      {
+        shoppingCartID,
+        productID,
+        quantity,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error("API Error Response:", error.response.data);
+    }
+    console.error("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng:", error);
+    return null;
+  }
+};
 // 🟢 Xóa chi tiết giỏ hàng theo shoppingCartDetailID
 export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
   try {
-    const response = await orderAPI.delete(
+    const response = await shoppingCartAPI.delete(
       `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`
     );
     return response.data;
@@ -141,6 +179,21 @@ export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
       "Lỗi khi xóa chi tiết giỏ hàng theo shoppingCartDetailID:",
       error
     );
+    return null;
+  }
+};
+
+// 🟢 Thêm đơn đặt hàng mới
+export const addOrder = async (orderData) => {
+  try {
+    const response = await orderAPI.post("/orders", orderData);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      // In ra phản hồi từ máy chủ nếu có
+      console.error("API response error:", error.response.data);
+    }
+    console.error("Lỗi khi thêm đơn đặt hàng:", error);
     return null;
   }
 };
@@ -228,6 +281,8 @@ export const getAddressByID = async (userID) => {
     return null;
   }
 };
+
+
 
 // 🟢 API thêm địa chỉ mới cho người dùng
 export const addNewAddress = async (addressData) => {

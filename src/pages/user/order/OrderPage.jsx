@@ -5,7 +5,10 @@ import {
   getUserInfo,
   getShoppingCartByUserId,
   getProductById,
-} from "../../../api/api"; // Import hàm API để lấy giỏ hàng và sản phẩm
+  deleteShoppingCartDetailById,
+  addOrder,
+} from "../../../api/api";
+import { useNavigate } from "react-router-dom";
 
 const style = {
   display: "flex",
@@ -33,58 +36,39 @@ const validateMessages = {
   },
 };
 
+const calculateSellingPrice = (price) => {
+  return price * 1.5;
+};
+
 const onFinish = (values) => {
   console.log(values);
 };
 
 const OrderPage = () => {
   const [value, setValue] = useState(1);
+  const navigate = useNavigate(); // Initialize navigate
   const [cartItems, setCartItems] = useState([]);
   const [showQR, setShowQR] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
 
   useEffect(() => {
-    const fetchCartItems = async (userID) => {
-      try {
-        const shoppingCart = await getShoppingCartByUserId(userID);
-        const detailedCartItems = await Promise.all(
-          shoppingCart.shoppingCartDetails.map(async (item) => {
-            const product = await getProductById(item.productID);
-            return {
-              ...item,
-              name: product.name,
-              price: product.price,
-            };
-          })
-        );
-        setCartItems(detailedCartItems);
-      } catch (error) {
-        console.error(
-          "Failed to fetch shopping cart or product details:",
-          error
-        );
-        message.error("Không thể lấy giỏ hàng hoặc chi tiết sản phẩm");
-      }
-    };
-
-    // Lấy userID từ localStorage hoặc state quản lý toàn cục
     const userID = localStorage.getItem("userID"); // Giả sử userID được lưu trong localStorage
     if (userID) {
-      // Gọi API để lấy thông tin người dùng
       getUserInfo(userID)
         .then((userInfo) => {
-          console.log("User Info:", userInfo); // In ra đối tượng userInfo để kiểm tra cấu trúc
+          console.log("User Info:", userInfo);
 
           // Lấy thông tin địa chỉ từ mảng address
           const address = userInfo.address[0];
+          const fullAddress = `${address.street}, ${address.ward}, ${address.district}`;
 
           // Điền thông tin người dùng vào form
           form.setFieldsValue({
             user: {
               firstName: userInfo.username,
               lastName: userInfo.username,
-              address: address.street,
+              address: fullAddress,
               city: address.city,
               phone: userInfo.phone,
               email: userInfo.email,
@@ -98,6 +82,8 @@ const OrderPage = () => {
           console.error("Failed to fetch user info:", error);
           message.error("Không thể lấy thông tin người dùng");
         });
+    } else {
+      message.error("User ID không tồn tại. Vui lòng đăng nhập lại.");
     }
   }, [form]);
 
@@ -106,7 +92,7 @@ const OrderPage = () => {
     if (e.target.value === 2 || e.target.value === 3) {
       setShowQR(true);
       const qrCode = await generatePaymentQR(
-        "MBB", // Mã ngân hàng (VD: VCB = Vietcombank, ACB = Á Châu)
+        "MBB",
         "120826121111",
         "PHAN HOANG TAN",
         totalPrice,
@@ -117,6 +103,73 @@ const OrderPage = () => {
       setShowQR(false);
       setQrCodeUrl("");
     }
+  };
+  const fetchCartItems = async (userID) => {
+    try {
+      const shoppingCart = await getShoppingCartByUserId(userID);
+      const detailedCartItems = await Promise.all(
+        shoppingCart.shoppingCartDetails.map(async (item) => {
+          const product = await getProductById(item.productID);
+          return {
+            ...item,
+            name: product.name,
+            price: calculateSellingPrice(product.price),
+          };
+        })
+      );
+      setCartItems(detailedCartItems);
+    } catch (error) {
+      console.error("Failed to fetch shopping cart or product details:", error);
+      message.error("Không thể lấy giỏ hàng hoặc chi tiết sản phẩm");
+    }
+  };
+  const handlePlaceOrder = async (
+    userID,
+    cartItems,
+    totalQuantity,
+    totalAmount,
+    paymentMethod
+  ) => {
+    try {
+      const orderData = {
+        userID,
+        orderDetails: cartItems.map((item) => ({
+          productID: item.productID,
+          quantity: item.quantity,
+        })),
+        totalQuantity,
+        totalAmount,
+        paymentMethod,
+      };
+
+      const orderResponse = await addOrder(orderData);
+
+      if (orderResponse) {
+        console.log("Order placed successfully:", orderResponse);
+
+        // Clear the cart
+        for (const item of cartItems) {
+          await deleteShoppingCartDetailById(item.shoppingCartDetailID);
+        }
+
+        alert("Đặt hàng thành công!");
+
+        // Cập nhật giỏ hàng sau khi đặt hàng thành công
+        await fetchCartItems(userID);
+
+        navigate("/");
+      } else {
+        alert("Đặt hàng thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert("Đã xảy ra lỗi khi đặt hàng.");
+    }
+    const updatedCartItemCount = cartItems.length; // Hoặc tính toán số lượng mới
+    const event = new CustomEvent("wishlistUpdated", {
+      detail: updatedCartItemCount,
+    });
+    window.dispatchEvent(event);
   };
 
   // Tính tổng tiền sản phẩm và phí vận chuyển
@@ -190,8 +243,7 @@ const OrderPage = () => {
               maxWidth: 600,
               width: "100%",
             }}
-            validateMessages={validateMessages}
-          >
+            validateMessages={validateMessages}>
             <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
               Thông tin thanh toán
             </label>
@@ -206,8 +258,7 @@ const OrderPage = () => {
                 ]}
                 className="w-full"
                 labelCol={{ span: 24 }}
-                wrapperCol={{ span: 24 }}
-              >
+                wrapperCol={{ span: 24 }}>
                 <Input />
               </Form.Item>
             </div>
@@ -217,12 +268,12 @@ const OrderPage = () => {
               rules={[
                 {
                   required: true,
+                  message: "Vui lòng nhập địa chỉ đầy đủ!",
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}
-            >
-              <Input />
+              wrapperCol={{ span: 24 }}>
+              <Input placeholder="Nhập địa chỉ (Đường, Phường/Xã, Quận/Huyện)" />
             </Form.Item>
             <Form.Item
               name={["user", "city"]}
@@ -233,8 +284,7 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}
-            >
+              wrapperCol={{ span: 24 }}>
               <Input />
             </Form.Item>
             <Form.Item
@@ -248,8 +298,7 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}
-            >
+              wrapperCol={{ span: 24 }}>
               <Input />
             </Form.Item>
             <Form.Item
@@ -262,8 +311,7 @@ const OrderPage = () => {
                 },
               ]}
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}
-            >
+              wrapperCol={{ span: 24 }}>
               <Input />
             </Form.Item>
             <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
@@ -273,8 +321,7 @@ const OrderPage = () => {
               name={["user", "introduction"]}
               label="Ghi chú đơn hàng"
               labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}
-            >
+              wrapperCol={{ span: 24 }}>
               <Input.TextArea />
             </Form.Item>
           </Form>
@@ -307,8 +354,7 @@ const OrderPage = () => {
             label="Mã giảm giá"
             labelCol={{ span: 24 }}
             wrapperCol={{ span: 24 }}
-            className="mt-4"
-          >
+            className="mt-4">
             <Input placeholder="Nhập mã giảm giá" />
           </Form.Item>
           <label className="block text-sm font-bold mb-2 uppercase">
@@ -374,7 +420,27 @@ const OrderPage = () => {
                 width: "100%",
               }}
               className="hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg"
-            >
+              onClick={() => {
+                const userID = localStorage.getItem("userID");
+                const totalQuantity = cartItems.reduce(
+                  (acc, item) => acc + item.quantity,
+                  0
+                );
+                const totalAmount = totalPrice;
+
+                if (!userID) {
+                  alert("User ID không tồn tại. Vui lòng đăng nhập lại.");
+                  return;
+                }
+
+                handlePlaceOrder(
+                  userID,
+                  cartItems,
+                  totalQuantity,
+                  totalAmount,
+                  "CASH"
+                );
+              }}>
               Đặt hàng
             </Button>
           </div>
