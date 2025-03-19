@@ -25,9 +25,10 @@ const InsertStockEntry = ({
   productID,
   productName,
   onStockUpdated,
+  entryPrice,
 }) => {
   const [form] = Form.useForm();
-  const [ setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const hanndlerSubmit = async (values) => {
     console.log(values);
@@ -105,6 +106,7 @@ const InsertStockEntry = ({
           initialValues={{
             productID: productID,
             productName: productName,
+            entryPrice: entryPrice,
           }}
         >
           {/* Hiển thị ID sản phẩm

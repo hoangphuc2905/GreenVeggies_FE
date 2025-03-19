@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   SearchOutlined,
   DownloadOutlined,
@@ -9,6 +9,8 @@ import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
 import FilterButton from "../../../../components/filter/FilterButton";
+import { getAllOrders, getUserInfo } from "../../../../api/api";
+import { render } from "react-dom";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -26,15 +28,47 @@ const useStyle = createStyles(({ css, token }) => {
   };
 });
 
+const fetchOrders = async () => {
+  try {
+    const orders = await getAllOrders();
+
+    // Lấy thông tin người dùng (số điện thoại) cho từng đơn hàng
+    const ordersWithPhone = await Promise.all(
+      orders.map(async (order) => {
+        const userInfo = await fetchUserInfo(order.userID);
+        return {
+          ...order,
+          phone: userInfo?.phone || "Không có số điện thoại", // Thêm số điện thoại vào đơn hàng
+        };
+      })
+    );
+
+    return ordersWithPhone;
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return []; // Trả về mảng rỗng nếu có lỗi
+  }
+};
+
+const fetchUserInfo = async (userID) => {
+  try {
+    const response = await getUserInfo(userID);
+    return response;
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+    return null; // Return null in case of error
+  }
+};
+
 const ListOrder = () => {
   const [visibleColumns, setVisibleColumns] = useState({
-    orderId: true,
-    customerId: true,
+    orderID: true,
+    userID: true,
     phone: true,
-    price: true,
+    totalAmount: true,
     address: true,
     status: true,
-    time: true,
+    createdAt: true,
     paymentMethod: true,
     actions: true,
   });
@@ -46,6 +80,19 @@ const ListOrder = () => {
   const { styles } = useStyle();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [orders, setOrders] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const data = await fetchOrders();
+      setOrders(data);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
@@ -64,13 +111,13 @@ const ListOrder = () => {
     setFilteredInfo({});
     setSortedInfo({});
     setVisibleColumns({
-      orderId: true,
-      customerId: true,
+      orderID: true,
+      userID: true,
       phone: true,
-      price: true,
+      totalAmount: true,
       address: true,
       status: true,
-      time: true,
+      createdAt: true,
       paymentMethod: true,
       actions: true,
     });
@@ -83,6 +130,27 @@ const ListOrder = () => {
 
   const handleColumnVisibilityChange = (key) => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const refreshOrders = async () => {
+    setLoading(true);
+    const data = await fetchOrders();
+    setOrders(data);
+    setLoading(false);
+  };
+
+  const formattedDate = (dateString) => {
+    const date = new Date(dateString);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+    const year = date.getFullYear();
+
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
   };
 
   const getColumnSearchProps = (dataIndex, sortable = false) => ({
@@ -150,30 +218,30 @@ const ListOrder = () => {
   const columns = [
     {
       title: "Mã đơn hàng",
-      dataIndex: "orderId",
-      key: "orderId",
+      dataIndex: "orderID",
+      key: "orderID",
       width: 100,
     },
     {
       title: "Mã khách hàng",
-      dataIndex: "customerId",
-      key: "customerId",
-      width: 150,
-      ...getColumnSearchProps("customerId", true),
+      dataIndex: "userID",
+      key: "userID",
+      width: 200,
+      ...getColumnSearchProps("userID", true),
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
-      width: 120,
+      width: 150,
       ...getColumnSearchProps("phone"),
     },
     {
       title: "Giá tiền",
-      dataIndex: "price",
-      key: "price",
+      dataIndex: "totalAmount",
+      key: "totalAmount",
       width: 120,
-      ...getColumnSearchProps("price", true),
+      ...getColumnSearchProps("totalAmount", true),
     },
     {
       title: "Địa chỉ",
@@ -190,22 +258,32 @@ const ListOrder = () => {
       ...getColumnSearchProps("status", true),
       render: (status) => {
         let color =
-          status === "Đang chờ duyệt"
+          status === "Pending"
             ? "gold"
-            : status === "Đã duyệt"
+            : status === "Delivered"
             ? "green"
-            : status === "Đã giao"
+            : status === "Shipped"
             ? "blue"
             : "red";
-        return <Tag color={color}>{status}</Tag>;
+        let statusText =
+          status === "Pending"
+            ? "Đang chờ duyệt"
+            : status === "Shipped"
+            ? "Đang giao hàng"
+            : status === "Delivered"
+            ? "Đã giao thành công"
+            : "Đã hủy";
+
+        return <Tag color={color}>{statusText}</Tag>;
       },
     },
     {
       title: "Thời gian",
-      dataIndex: "time",
-      key: "time",
+      dataIndex: "createdAt",
+      key: "createdAt",
       width: 200,
-      ...getColumnSearchProps("time", true),
+      ...getColumnSearchProps("createdAt", true),
+      render: (createdAt) => formattedDate(createdAt), // Sử dụng hàm formattedDate để định dạng
     },
     {
       title: "Phương thức thanh toán",
@@ -213,6 +291,13 @@ const ListOrder = () => {
       key: "paymentMethod",
       width: 150,
       ...getColumnSearchProps("paymentMethod", true),
+      render: (paymentMethod) => {
+        let paymentText =
+          paymentMethod === "COD" || paymentMethod === "CASH"
+            ? "Thanh toán khi nhận hàng"
+            : "Chuyển khoản";
+        return <Tag>{paymentText}</Tag>;
+      },
     },
     {
       title: "Tác vụ",
@@ -268,73 +353,6 @@ const ListOrder = () => {
     (column) => visibleColumns[column.key]
   );
 
-  const data = [
-    {
-      key: "1",
-      index: 1,
-      orderId: "001",
-      customerId: "001",
-      phone: "033319121",
-      price: "120000 đ",
-      address: "Gò Vấp",
-      status: "Đang chờ duyệt",
-      time: "2025-01-25 08:09:23",
-      paymentMethod: "Credit Card",
-      orderDetails: [
-        { item: "Rau cải", quantity: 2, price: "20000 đ" },
-        { item: "Cà chua", quantity: 1, price: "10000 đ" },
-      ],
-    },
-    {
-      key: "2",
-      index: 2,
-      orderId: "002",
-      customerId: "002",
-      phone: "093654214",
-      price: "150000 đ",
-      address: "Quận 9",
-      status: "Đã giao",
-      time: "2025-01-25 10:10:31",
-      paymentMethod: "Cash",
-      orderDetails: [
-        { item: "Rau muống", quantity: 3, price: "30000 đ" },
-        { item: "Bí đỏ", quantity: 2, price: "40000 đ" },
-      ],
-    },
-    {
-      key: "3",
-      index: 3,
-      orderId: "003",
-      customerId: "003",
-      phone: "037978941",
-      price: "90000 đ",
-      address: "Gò Vấp",
-      status: "Đã duyệt",
-      time: "2025-01-24 07:30:50",
-      paymentMethod: "Credit Card",
-      orderDetails: [
-        { item: "Rau cải", quantity: 1, price: "10000 đ" },
-        { item: "Cà rốt", quantity: 2, price: "20000 đ" },
-      ],
-    },
-    {
-      key: "4",
-      index: 4,
-      orderId: "004",
-      customerId: "003",
-      phone: "0123456789",
-      price: "180000 đ",
-      address: "Bình Thạnh",
-      status: "Đã hủy",
-      time: "2025-01-23 15:19:59",
-      paymentMethod: "Cash",
-      orderDetails: [
-        { item: "Rau cải", quantity: 4, price: "40000 đ" },
-        { item: "Cà chua", quantity: 3, price: "30000 đ" },
-      ],
-    },
-  ];
-
   return (
     <div className="bg-white mt-6 p-4 rounded-lg shadow-md">
       <div className="text-lg font-semibold mb-4 flex justify-between">
@@ -355,8 +373,9 @@ const ListOrder = () => {
         className={styles.customTable + " hover:cursor-pointer"}
         size="small"
         columns={filteredColumns}
-        dataSource={data}
+        dataSource={orders}
         pagination={{ pageSize: 5 }}
+        tableLayout="auto"
         scroll={{ x: "max-content" }}
         onChange={(pagination, filters, sorter) => {
           setFilteredInfo(filters);
@@ -372,6 +391,9 @@ const ListOrder = () => {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         order={selectedOrder}
+        userName={selectedOrder?.userID}
+        orderDetails={selectedOrder?.orderDetails}
+        refreshOrders={refreshOrders}
       />
     </div>
   );

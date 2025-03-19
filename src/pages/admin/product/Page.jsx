@@ -23,7 +23,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getListProducts, updateProduct } from "../../../api/api";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
-// import InsertStockEntry from "../stockEntry/InsertStockEntry";
 import UserRender from "../userRender/UserRender";
 import FilterButton from "../../../components/filter/FilterButton";
 import InsertStockEntry from "../stockEntry/InsertStockEntry";
@@ -33,7 +32,46 @@ const { Search } = Input;
 const fetchProducts = async (key) => {
   try {
     const response = await getListProducts(key);
-    return response;
+
+    // Cập nhật trạng thái sản phẩm nếu cần
+    const updatedProducts = await Promise.all(
+      response.map(async (product) => {
+        if (product.quantity === 0 && product.status !== "out_of_stock") {
+          try {
+            await updateProduct(product.productID, {
+              status: "out_of_stock",
+              name: product.name,
+              origin: product.origin,
+              description: product.description,
+            });
+            return { ...product, status: "out_of_stock" }; // Cập nhật trạng thái trong danh sách
+          } catch (error) {
+            console.error(
+              `Lỗi cập nhật trạng thái sản phẩm ${product.name}:`,
+              error
+            );
+          }
+        } else if (product.status === "out_of_stock" && product.quantity > 0) {
+          try {
+            await updateProduct(product.productID, {
+              status: "available",
+              name: product.name,
+              origin: product.origin,
+              description: product.description,
+            });
+            return { ...product, status: "available" }; // Cập nhật trạng thái trong danh sách
+          } catch (error) {
+            console.error(
+              `Lỗi cập nhật trạng thái sản phẩm ${product.name}:`,
+              error
+            );
+          }
+        }
+        return product;
+      })
+    );
+
+    return updatedProducts;
   } catch (error) {
     console.error(error);
     return [];
@@ -109,11 +147,12 @@ const Page = () => {
   };
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchAndSetProducts = async () => {
       const data = await fetchProducts("products");
-      setProducts(data);
-      setFilteredProducts(data);
+      setProducts(data); // Cập nhật danh sách sản phẩm
+      setFilteredProducts(data); // Cập nhật danh sách sản phẩm đã lọc
     };
+
     const fetchCategories = async () => {
       const data = await fetchProducts("categories");
       const formattedCategories = data.map((category) => ({
@@ -125,8 +164,9 @@ const Page = () => {
         ...formattedCategories,
       ]);
     };
+
     fetchCategories();
-    fetchUsers();
+    fetchAndSetProducts(); // Tải và cập nhật danh sách sản phẩm
   }, []);
 
   const handlerFilter = (value) => {
@@ -535,6 +575,7 @@ const Page = () => {
             productID={selectedProduct?.productID}
             productName={selectedProduct?.name}
             onStockUpdated={reloadProducts}
+            entryPrice={selectedProduct?.price}
           ></InsertStockEntry>
         </Flex>
       </div>

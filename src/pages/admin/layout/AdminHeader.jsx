@@ -75,14 +75,14 @@ const AdminHeader = () => {
     },
     {
       key: "4",
-      label: <div>Đăng xuất</div>,
-      icon: <LogoutOutlined />,
+      label: <div className="text-deleteColor">Đăng xuất</div>,
+      icon: <LogoutOutlined className="text-deleteColor"></LogoutOutlined>,
       onClick: handleLogout,
     },
   ];
 
   return (
-    <div className="flex justify-between items-center px-[1%] h-[65px] bg-primary fixed z-[1000] w-full shadow-md">
+    <div className="flex justify-between items-center px-[2%] h-[65px] bg-primary fixed z-[1000] w-full shadow-md">
       <div className="flex w-full justify-between">
         <a href="/" className="flex items-center">
           <img src={logo} alt="logo" className="h-10" />

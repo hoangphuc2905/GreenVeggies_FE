@@ -351,7 +351,41 @@ export const insertProduct = async (data) => {
     return null;
   }
 };
+// 🟢 Thêm đơn đặt hàng mới
+export const addOrder = async (orderData) => {
+  try {
+    const response = await orderAPI.post("/orders", orderData);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      // In ra phản hồi từ máy chủ nếu có
+      console.error("API response error:", error.response.data);
+    }
+    console.error("Lỗi khi thêm đơn đặt hàng:", error);
+    return null;
+  }
+};
+//Lấy danh sách tất cả đơn hàng
+export const getAllOrders = async () => {
+  try {
+    const response = await orderAPI.get("/orders");
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+    return null;
+  }
+};
 
+//Cập nhật trạng thái đơn hàng
+export const updateOrderStatus = async (orderID, status) => {
+  try {
+    const response = await orderAPI.put(`/orders/${orderID}`, { status });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
+    return null;
+  }
+};
 export const insertStockEntry = async (data) => {
   try {
     if (!data.productID || data.entryPrice <= 0 || data.entryQuantity <= 0) {
