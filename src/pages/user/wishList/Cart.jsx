@@ -3,18 +3,21 @@ import bgImage from "../../../assets/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getShoppingCartByUserId,
   getProductById,
   deleteShoppingCartDetailById,
-  saveShoppingCarts,
+  updateCartQuantity,
 } from "../../../api/api"; // Import the API functions
-import debounce from "lodash.debounce"; // Import debounce function
 
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
+
+  const calculateSellingPrice = (price) => {
+    return price * 1.5;
+  };
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -36,7 +39,8 @@ const Cart = () => {
                   ...productDetails,
                   quantity: item.quantity || 1, // Ensure quantity is set
                   totalAmount:
-                    (item.quantity || 1) * (productDetails.price || 0), // Calculate totalAmount
+                    (item.quantity || 1) *
+                    (calculateSellingPrice(productDetails.price) || 0), // Calculate totalAmount
                 };
               })
             );
@@ -97,80 +101,52 @@ const Cart = () => {
       state: { productID: product.productID },
     });
   };
-  const updateQuantityInDatabase = useCallback(
-    debounce(async (id, value) => {
-      try {
-        const userID = localStorage.getItem("userID");
-        const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
-        const itemToUpdate = wishlist.find((item) => item.productID === id);
+  const handleQuantityChange = async (shoppingCartID, productID, value) => {
+    console.log("ShoppingCartID:", shoppingCartID);
+    console.log("ProductID:", productID);
+    console.log("Value:", value);
 
-        if (!itemToUpdate) return;
+    if (!productID) {
+      console.error("ProductID is invalid:", productID);
+      return;
+    }
 
-        const productDetails = await getProductById(id);
-        const updatedItem = {
-          productID: id,
-          name: productDetails.name,
-          quantity: value, // Ghi đè số lượng mới
-          description: productDetails.description,
-          price: productDetails.price,
-          imageUrl: productDetails.imageUrl,
-        };
-
-        const newWishlist = wishlist.map((item) =>
-          item.productID === id ? updatedItem : item
-        );
-
-        // Cập nhật localStorage
-        localStorage.setItem("wishlist", JSON.stringify(newWishlist));
-
-        // Gửi dữ liệu mới lên database
-        await saveShoppingCarts({
-          userID,
-          items: [updatedItem],
-          totalPrice: productDetails.price * value,
-        });
-
-        // Gửi sự kiện để cập nhật giao diện
-        window.dispatchEvent(
-          new CustomEvent("wishlistUpdated", { detail: newWishlist.length })
-        );
-
-        console.log("Wishlist updated:", newWishlist);
-      } catch (error) {
-        console.error("Failed to update item quantity:", error);
-      }
-    }, 200),
-    []
-  );
-
-  const handleQuantityChange = async (id, value) => {
-    if (value < 1) return;
+    if (value === null || value < 1) {
+      console.error("Invalid value:", value);
+      return;
+    }
 
     try {
-      const productDetails = await getProductById(id);
+      // Cập nhật danh sách wishlist
       setWishlist((prevWishlist) => {
         const updatedWishlist = prevWishlist.map((item) =>
-          item.productID === id
+          item.productID === productID
             ? {
                 ...item,
-                quantity: value, // Ghi đè số lượng mới
-                totalAmount: value * (productDetails.price || 0), // Tính lại tổng giá
+                quantity: value,
+                totalAmount: value * (calculateSellingPrice(item.price) || 0),
               }
             : item
         );
 
+        // Cập nhật localStorage
         localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-
-        // Cập nhật vào database ngay lập tức
-        updateQuantityInDatabase(id, value);
 
         return updatedWishlist;
       });
+
+      // Gọi API để cập nhật số lượng
+      const result = await updateCartQuantity(shoppingCartID, productID, value);
+      if (!result) {
+        console.error("Failed to update quantity in database.");
+      }
     } catch (error) {
-      console.error("Failed to fetch product details:", error);
+      console.error(
+        "Failed to update quantity in database or update wishlist:",
+        error
+      );
     }
   };
-
   const handleCheckout = () => {
     navigate("/order");
   };
@@ -221,8 +197,7 @@ const Cart = () => {
 
                   <div
                     className="col-span-2 flex items-center gap-4 "
-                    onClick={() => handleProductClick(item)}
-                  >
+                    onClick={() => handleProductClick(item)}>
                     <img
                       src={
                         Array.isArray(item.imageUrl) && item.imageUrl.length > 0
@@ -238,25 +213,38 @@ const Cart = () => {
                   </div>
 
                   <div className="col-span-1 text-center">
-                    {(item.price || 0).toLocaleString()} VND
+                    {(calculateSellingPrice(item.price) || 0).toLocaleString()}{" "}
+                    VND
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber
                       min={1}
                       value={item.quantity}
                       onChange={(value) => {
+                        if (value === null || value < 1) {
+                          console.error("Invalid value:", value);
+                          return;
+                        }
+
                         console.log(
                           "Changing quantity for:",
                           item.productID,
                           "New value:",
                           value
-                        ); // Debugging statement
-                        handleQuantityChange(item.productID, value);
+                        );
+                        handleQuantityChange(
+                          item.shoppingCartID,
+                          item.productID,
+                          value
+                        );
                       }}
                     />
                   </div>
                   <div className="col-span-1 text-center">
-                    {((item.price || 0) * item.quantity).toLocaleString()} VND
+                    {(
+                      (calculateSellingPrice(item.price) || 0) * item.quantity
+                    ).toLocaleString()}{" "}
+                    VND
                   </div>
                 </div>
 
@@ -290,8 +278,7 @@ const Cart = () => {
             <div className="col-span-2 col-start-5 flex justify-end mt-4">
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
-                onClick={handleCheckout}
-              >
+                onClick={handleCheckout}>
                 Tiến hành thanh toán
               </button>
             </div>
