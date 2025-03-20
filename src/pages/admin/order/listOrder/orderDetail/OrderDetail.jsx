@@ -62,9 +62,8 @@ const OrderDetail = ({
               ...item,
               item: response?.name || "Sản phẩm không tồn tại",
               unit: response?.unit || "N/A",
-              //Nhớ sửa
-              price: (item.totalAmount * 1.5) / item.quantity,
-              totalAmount: item.totalAmount * 1.5,
+              price: item.totalAmount / item.quantity,
+              totalAmount: item.totalAmount,
             };
           })
         );
