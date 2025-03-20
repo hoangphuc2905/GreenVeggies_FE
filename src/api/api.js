@@ -413,6 +413,7 @@ export const updateProduct = async (id, data) => {
       category: data.category,
       unit: data.unit,
       status: data.status,
+      price: data.price,
     };
 
     const response = await productAPI.put(`/products/${id}`, formattedData, {

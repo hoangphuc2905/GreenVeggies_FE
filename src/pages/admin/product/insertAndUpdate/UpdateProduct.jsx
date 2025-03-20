@@ -9,6 +9,7 @@ import {
   Col,
   ConfigProvider,
   App,
+  InputNumber,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
@@ -102,6 +103,8 @@ const UpdateProduct = () => {
           description: getProduct.description || "",
           unit: getProduct.unit || "piece",
           status: getProduct.status || "available",
+          price: getProduct.price || 0,
+          entryPrice: getProduct.price * 1.5 || 0,
           imageUrl: getProduct.imageUrl
             ? getProduct.imageUrl.map((url, index) => ({
                 uid: index,
@@ -120,10 +123,11 @@ const UpdateProduct = () => {
       setLoading(true);
       const imageUrls =
         values.imageUrl?.map((file) => file.url || file.response?.url) || [];
-      const formData = { ...values, sold: 0, imageUrl: imageUrls };
+      const formData = { ...values, imageUrl: imageUrls };
       const response = await updateProduct(product.productID, formData);
       if (response) {
         message.success("Cập nhật sản phẩm thành công!");
+        console.log("Cập nhật sản phẩm thành công!", formData);
         setTimeout(() => navigate("/admin/products"), 1000);
       } else {
         message.error("Cập nhật thất bại. Vui lòng thử lại!");
@@ -260,6 +264,39 @@ const UpdateProduct = () => {
                     <Select.Option value="liter">Lít</Select.Option>
                     <Select.Option value="ml">Ml</Select.Option>
                   </Select>
+                </Form.Item>
+                <Form.Item
+                  label="Đơn giá"
+                  name="price"
+                  rules={[
+                    {
+                      type: "number",
+                      min: 0,
+                      message: "Giá nhập không hợp lệ!",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    type="number"
+                    className="w-full"
+                    onChange={(value) => {
+                      form.setFieldsValue({ entryPrice: (value || 0) * 1.5 });
+                    }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="Giá bán"
+                  name="entryPrice"
+                  rules={[
+                    {
+                      type: "number",
+                      min: 0,
+                      message: "Giá nhập không hợp lệ!",
+                    },
+                  ]}
+                >
+                  <InputNumber className="w-full" disabled={true} />
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">
                   <Select className="w-full">
