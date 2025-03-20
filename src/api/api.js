@@ -68,6 +68,18 @@ const shoppingCartAPI = axios.create({
   },
 });
 
+export const handleProductApi = {
+  getListProducts: async (key) => {
+    try {
+      const response = await productAPI.get(`/${key}`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+      return null;
+    }
+  },
+};
+
 // Xóa hình ảnh trên cloundary
 export const deleteImage = async (publicId) => {
   const response = await productAPI.post("/products/delete-image", {
