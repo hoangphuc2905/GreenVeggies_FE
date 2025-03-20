@@ -21,7 +21,7 @@ import {
   TagFilled,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { getListProducts, updateProduct } from "../../../api/api";
+import { handleProductApi, updateProduct } from "../../../api/api";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
 import UserRender from "../userRender/UserRender";
 import FilterButton from "../../../components/filter/FilterButton";
@@ -31,7 +31,7 @@ const { Search } = Input;
 
 const fetchProducts = async (key) => {
   try {
-    const response = await getListProducts(key);
+    const response = await handleProductApi.getListProducts(key);
 
     // Cập nhật trạng thái sản phẩm nếu cần
     const updatedProducts = await Promise.all(
