@@ -4,11 +4,35 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
     const [emailqmk, setEmailqmk] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [emailError, setEmailError] = useState(""); // Track email error
+
+    const handleChange = (e) => {
+        setEmailqmk(e.target.value);
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+        // Real-time email validation
+        if (!e.target.value) {
+            setEmailError("Vui lòng nhập Email.");
+        } else if (!emailRegex.test(e.target.value)) {
+            setEmailError("Vui lòng nhập địa chỉ Gmail hợp lệ.");
+        } else {
+            setEmailError(""); // Clear error if valid
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(""); // Reset error
+        setError(""); // Reset general error message
+
+        // Ensure no validation errors before submitting
+        if (!emailqmk) {
+            setEmailError("Vui lòng nhập Email.");
+            setLoading(false);
+            return;
+        } else if (emailError) {
+            setLoading(false);
+            return;
+        }
 
         try {
             const response = await fetch(`http://localhost:8001/api/auth/forgot-password?email=${emailqmk}`, {
@@ -21,8 +45,8 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
             const data = await response.json();
 
             if (response.ok) {
-                closeForgotPasswordForm(); // Đóng form quên mật khẩu
-                openOtpFormqmk(emailqmk); // Truyền email vào form OTP
+                closeForgotPasswordForm(); // Close forgot password form
+                openOtpFormqmk(emailqmk); // Open OTP form and pass email
             } else {
                 setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
@@ -60,15 +84,17 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="email"
-                        name="emailqmk"
-                        value={emailqmk}
-                        onChange={(e) => setEmailqmk(e.target.value)}
-                        placeholder="Email"
-                        className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                        required
-                    />
+                    <div>
+                        <input
+                            type="email"
+                            name="emailqmk"
+                            value={emailqmk}
+                            onChange={handleChange}
+                            placeholder="Email"
+                            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+                        />
+                        {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
+                    </div>
 
                     <button
                         type="submit"

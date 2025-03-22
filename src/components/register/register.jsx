@@ -1,23 +1,40 @@
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react"; // Import icon mũi tên quay về
+import { ArrowLeft } from "lucide-react"; // Import the left arrow icon
 
 const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); // To track general error
+  const [emailError, setEmailError] = useState(""); // To track email error
+
+  const handleChange = (e) => {
+    setEmail(e.target.value);
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    // Real-time email validation
+    if (!e.target.value) {
+      setEmailError("Vui lòng nhập Email.");
+    } else if (!emailRegex.test(e.target.value)) {
+      setEmailError("Vui lòng nhập địa chỉ Email hợp lệ.");
+    } else {
+      setEmailError(""); // Clear error if valid
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(""); // Reset general error message
 
-    // Kiểm tra định dạng email
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-      alert("Email không hợp lệ!");
+    // Ensure no validation errors before submitting
+    if (!email) {
+      setEmailError("Vui lòng nhập Email.");
+      setLoading(false);
+      return;
+    } else if (emailError) {
+      setLoading(false);
       return;
     }
-
-    setLoading(true);
-    setError("");
 
     try {
       const response = await fetch(
@@ -33,10 +50,9 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Mở form OTP
-        alert("Mã xác thực đã được gửi đến email của bạn!");
-        closeRegisterForm(); // Đóng form đăng ký
-        openOtpFormdk(email); // Mở form OTP và truyền email
+        // Open OTP form and pass the email
+        closeRegisterForm(); // Close the register form
+        openOtpFormdk(email); // Open the OTP form
       } else {
         setError(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
       }
@@ -49,15 +65,15 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-      {/* Nút quay lại */}
+      {/* Back button */}
       <button
-        onClick={goBack} // Gọi goBack để quay về trang đăng nhập
+        onClick={goBack} // Call goBack to return to the login page
         className="absolute top-2 left-2 flex items-center text-gray-500 hover:text-gray-700 transition"
       >
         <ArrowLeft size={24} />
       </button>
 
-      {/* Nút đóng ở góc trên bên phải */}
+      {/* Close button */}
       <button
         onClick={closeRegisterForm}
         className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
@@ -78,22 +94,26 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
         <h3 className="text-xl font-bold mb-4 text-black text-center">Đăng ký tài khoản</h3>
         <p className="text-center text-gray-500 mb-3">Vui lòng nhập địa chỉ email để nhận mã xác thực</p>
 
+        {/* Display error if any */}
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
+          <div>
+            <input
+              type="email"
+              name="email"
+              value={email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+            />
+            {/* Show email error */}
+            {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
+          </div>
 
           <button
             type="submit"
-            className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
+            className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={loading}
           >
             {loading ? "Đang gửi mã..." : "Tiếp tục"}
@@ -102,7 +122,7 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
 
         <div className="text-center text-sm text-gray-500 mt-2">
           <button
-            onClick={goBack} // Gọi goBack để quay lại trang đăng nhập
+            onClick={goBack} // Call goBack to return to the login page
             className="text-green-500 hover:underline"
           >
             Quay lại trang đăng nhập
