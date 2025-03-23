@@ -5,24 +5,24 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const inputRefs = useRef([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(""); // Để lưu thông báo lỗi từ API
-    const [success, setSuccess] = useState(""); // Để lưu thông báo thành công
+    const [error, setError] = useState(""); // To store error message
+    const [success, setSuccess] = useState(""); // To store success message
 
     const handleOtpChange = (e, index) => {
         const value = e.target.value;
-        if (/[^0-9]/.test(value)) return; // Chỉ cho phép nhập số
+        if (/[^0-9]/.test(value)) return; // Allow only numbers
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
 
-        // Tự động chuyển focus sang ô tiếp theo khi có giá trị
+        // Move focus to next input when a value is entered
         if (value && index < otp.length - 1) {
             inputRefs.current[index + 1].focus();
         }
     };
 
     const handleKeyDown = (e, index) => {
-        // Khi nhấn phím Backspace, chuyển focus sang ô trước
+        // Move focus to previous input when Backspace is pressed
         if (e.key === "Backspace" && otp[index] === "") {
             if (index > 0) {
                 inputRefs.current[index - 1].focus();
@@ -33,20 +33,20 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(""); // Reset lỗi khi gửi lại
-        setSuccess(""); // Reset thành công khi gửi lại
+        setError(""); // Reset error
+        setSuccess(""); // Reset success
 
-        // Kết hợp các ký tự OTP thành một chuỗi
+        // Combine OTP digits into a single string
         const otpValue = otp.join("");
 
-        // Kiểm tra OTP đầy đủ chưa
+        // Check if OTP is complete
         if (otpValue.length !== 6) {
-            alert("Vui lòng nhập đầy đủ mã OTP.");
+            setError("Vui lòng nhập đầy đủ mã OTP.");
             setLoading(false);
             return;
         }
 
-        // Gửi yêu cầu xác thực OTP đến API
+        // Send OTP verification request to the API
         try {
             const response = await fetch(
                 `http://localhost:8001/api/auth/verify-otp-reset?email=${encodeURIComponent(emailqmk)}&otp=${otpValue}`,
@@ -59,20 +59,19 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
             );
 
             const data = await response.json();
-            console.log('Email:', emailqmk);
-            console.log('OTP:', otpValue);
 
             if (response.ok) {
-                alert("OTP đã được xác nhận!");
-                localStorage.setItem("verifiedOtp", otpValue); // Lưu OTP vào localStorage
-                localStorage.setItem("verifiedEmail", emailqmk); // Lưu email vào localStorage
-                closeOtpForm(); // Đóng form OTP
-                openResetPasswordForm(emailqmk, otpValue); // Mở form Reset Password và truyền email cùng OTP
+                setSuccess("OTP đã được xác nhận!");
+                localStorage.setItem("verifiedOtp", otpValue); // Store OTP in localStorage
+                localStorage.setItem("verifiedEmail", emailqmk); // Store email in localStorage
+                closeOtpForm(); // Close OTP form
+                openResetPasswordForm(emailqmk, otpValue); // Open reset password form and pass email and OTP
             } else {
-                alert(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+                setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
             }
         } catch (error) {
             console.error("Lỗi kết nối:", error);
+            setError("Lỗi kết nối, vui lòng thử lại.");
         } finally {
             setLoading(false);
         }
@@ -80,7 +79,7 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-            {/* Nút quay lại ở góc trên bên trái */}
+            {/* Back button */}
             <button
                 onClick={goBack}
                 className="absolute top-2 left-2 flex items-center text-gray-500 hover:text-gray-700 transition"
@@ -88,7 +87,7 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
                 <ArrowLeft size={24} />
             </button>
 
-            {/* Nút đóng ở góc trên bên phải */}
+            {/* Close button */}
             <button
                 onClick={closeOtpForm}
                 className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
@@ -112,7 +111,11 @@ const OtpFormqmk = ({ goBack, closeOtpForm, openResetPasswordForm, emailqmk }) =
                     Email: {emailqmk ? emailqmk : "Không có email được truyền"}
                 </p>
 
+                {/* Error message */}
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
+
+                {/* Success message */}
+                {success && <div className="text-green-500 text-center mb-3">{success}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="flex justify-center space-x-2">

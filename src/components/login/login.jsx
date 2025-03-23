@@ -16,15 +16,41 @@ const LoginForm = ({
     password: "",
   });
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");  // Track email error
+  const [passwordError, setPasswordError] = useState("");  // Track password error
+  const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [userInfo, setUserInfo] = useState({});
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    // Real-time email validation
+    if (e.target.name === "username") {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      if (!e.target.value) {
+        setEmailError("Vui lòng nhập Email.");
+      } else if (!emailRegex.test(e.target.value)) {
+        setEmailError("Vui lòng nhập địa chỉ Gmail hợp lệ.");
+      } else {
+        setEmailError(""); // Clear error if valid
+      }
+    }
+
+    // Real-time password validation
+    if (e.target.name === "password") {
+      if (!e.target.value) {
+        setPasswordError("Vui lòng nhập mật khẩu.");
+      } else if (e.target.value.length < 6) {
+        setPasswordError("Mật khẩu phải có ít nhất 6 ký tự.");
+      } else {
+        setPasswordError(""); // Clear error if valid
+      }
+    }
   };
 
   useEffect(() => {
@@ -48,7 +74,22 @@ const LoginForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(""); // Reset general error message
+
+    // Ensure no validation errors before submitting
+    if (!formData.username) {
+      setEmailError("Vui lòng nhập Email.");
+    }
+
+    if (!formData.password) {
+      setPasswordError("Vui lòng nhập mật khẩu.");
+    }
+
+    // If there are validation errors, stop form submission
+    if (emailError || passwordError || !formData.username || !formData.password) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch(`http://localhost:8001/api/auth/login`, {
@@ -123,24 +164,29 @@ const LoginForm = ({
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Email"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Mật khẩu"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
+          <div>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Email"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+            />
+            {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
+          </div>
+
+          <div>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Mật khẩu"
+              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+            />
+            {passwordError && <div className="text-red-500 text-sm">{passwordError}</div>}
+          </div>
 
           <div className="text-right text-sm text-gray-500">
             <button
