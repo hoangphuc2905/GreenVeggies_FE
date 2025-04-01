@@ -15,6 +15,7 @@ import {
   getUserInfo,
   saveShoppingCarts,
 } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
+import { Image } from 'antd'; // Add this import at the top
 
 const Detail = () => {
   const location = useLocation();
@@ -250,6 +251,8 @@ const Detail = () => {
                 <Carousel
                   ref={carouselRef}
                   infinite={true}
+                  autoplay={true}
+                  autoplaySpeed={3000}
                   afterChange={(current) => {
                     if (Array.isArray(product.imageUrl)) {
                       setSelectedImage(product.imageUrl[current]);
@@ -258,25 +261,22 @@ const Detail = () => {
                   {Array.isArray(product.imageUrl) &&
                     product.imageUrl.map((img, index) => (
                       <div key={index}>
-                        <img
+                        <Image
                           src={img}
                           alt={`Ảnh ${index + 1}`}
-                          className="w-full h-96 object-cover rounded-md cursor-pointer"
-                          style={{
-                            transition: "transform 0.3s ease-in-out",
-                            transformOrigin: "center center",
+                          className="w-full h-96 object-cover rounded-md"
+                          preview={{
+                            mask: (
+                              <div className="flex items-center justify-center group hover:text-[#82AE46] transition-colors duration-300">
+                                <ZoomInOutlined className="text-2xl" />
+                                <span className="ml-2">Xem</span>
+                              </div>
+                            ),
                           }}
                         />
                       </div>
                     ))}
                 </Carousel>
-                {/* Nút Zoom */}
-                <button
-                  onClick={handleZoom}
-                  className="absolute bottom-4 left-4 p-3 bg-transparent hover:bg-transparent transition-all">
-                  <ZoomInOutlined className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125" />
-                </button>
-                {/* Nút điều hướng bên trái và phải khi hover */}
                 <div className="absolute top-1/2 left-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                   <button
                     onClick={() => carouselRef.current.prev()}
@@ -434,7 +434,16 @@ const Detail = () => {
               </p>
             </div>
 
-            <div className="overflow-y-auto overflow-x-hidden max-h-[416px] pr-2 w-full">
+            <div
+              className="w-full [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#82AE46] [&::-webkit-scrollbar-thumb]:rounded-full"
+              style={{
+                height: "416px",
+                overflowY: "auto",
+                overflowX: "hidden",
+                paddingRight: "8px",
+                scrollbarWidth: "thin",
+                scrollbarColor: "#82AE46 #f0f0f0",
+              }}>
               <Favourite />
             </div>
           </div>
