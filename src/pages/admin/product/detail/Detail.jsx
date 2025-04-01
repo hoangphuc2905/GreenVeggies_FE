@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Layout, Spin, Button, Menu, ConfigProvider, Image } from "antd";
 import { PlusCircleFilled, TagOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
-import { getProductDetail } from "../../../../api/api";
+// import { getProductDetail } from "../../../../api/api";
 import Description from "./Description";
 import Rating from "./Rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";
 import { useLocation } from "react-router-dom";
 import History from "../../stockEntry/history";
 import InsertStockEntry from "../../stockEntry/InsertStockEntry";
+import { getProductById } from "../../../../services/ProductService";
 const Detail = () => {
   const location = useLocation();
   const id = location.state?.productID;
@@ -23,31 +24,17 @@ const Detail = () => {
     setIsStockEntryOpen(true);
     setProduct(product);
   };
-  useEffect(() => {
-    const fetchProductDetail = async () => {
-      try {
-        const response = await getProductDetail(id);
-        setProduct(response);
-      } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProductDetail();
-  }, [id]);
 
-  const reloadProduct = async () => {
+  const reloadProduct = async (id) => {
     setLoading(true);
-    try {
-      const response = await getProductDetail(id);
-      setProduct(response);
-    } catch (error) {
-      console.error("Lỗi khi tải lại sản phẩm:", error);
-    } finally {
-      setLoading(false);
-    }
+    const response = await getProductById(id); // Gọi lại hàm hợp nhất
+    setProduct(response);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    reloadProduct(id);
+  }, [id]);
 
   if (loading)
     return <Spin size="large" className="flex justify-center mt-10" />;
@@ -62,7 +49,8 @@ const Detail = () => {
                 Array.isArray(product?.imageUrl) && product.imageUrl.length > 0
                   ? product.imageUrl
                   : [product?.imageUrl]
-              }>
+              }
+            >
               <Image
                 width={65}
                 height={65}
@@ -96,7 +84,8 @@ const Detail = () => {
               type="primary"
               className="bg-[#EAF3FE] text-[#689CF8] font-medium"
               icon={<PlusCircleFilled />}
-              onClick={() => handlerClickUpdate(product)}>
+              onClick={() => handlerClickUpdate(product)}
+            >
               Chỉnh sửa
             </Button>
 
@@ -104,7 +93,8 @@ const Detail = () => {
               type="primary"
               className="bg-[#EAF3FE] text-[#689CF8] font-medium"
               icon={<TagOutlined />}
-              onClick={() => openInsertStockEntry(product)}>
+              onClick={() => openInsertStockEntry(product)}
+            >
               Nhập hàng
             </Button>
           </div>
@@ -122,7 +112,8 @@ const Detail = () => {
                   colorText: "#7A8699",
                 },
               },
-            }}>
+            }}
+          >
             <Menu
               mode="horizontal"
               items={[
@@ -143,7 +134,8 @@ const Detail = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ x: "100%", opacity: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="mt-6">
+        className="mt-6"
+      >
         {selectedKey === "Detail" && <Description product={product} />}
         {selectedKey === "Rate" && <Rating product={product} />}
         {selectedKey === "Stock" && <History product={product} />}
@@ -155,7 +147,8 @@ const Detail = () => {
         productID={product?.productID}
         productName={product?.name}
         onStockUpdated={reloadProduct}
-        entryPrice={product?.price}></InsertStockEntry>
+        entryPrice={product?.price}
+      ></InsertStockEntry>
     </Layout>
   );
 };
