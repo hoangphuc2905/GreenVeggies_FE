@@ -11,6 +11,7 @@ import {
   ConfigProvider,
   message,
   Modal,
+  Tooltip,
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
@@ -26,6 +27,11 @@ import { useHandlerClickUpdate } from "../../../components/updateProduct/handler
 import UserRender from "../userRender/UserRender";
 import FilterButton from "../../../components/filter/FilterButton";
 import InsertStockEntry from "../stockEntry/InsertStockEntry";
+import {
+  CalcPrice,
+  formattedPrice,
+} from "../../../components/calcSoldPrice/CalcPrice";
+import updateStatus from "../../../components/updateProduct/updateStatus";
 
 const { Search } = Input;
 
@@ -38,12 +44,7 @@ const fetchProducts = async (key) => {
       response.map(async (product) => {
         if (product.quantity === 0 && product.status !== "out_of_stock") {
           try {
-            await updateProduct(product.productID, {
-              status: "out_of_stock",
-              name: product.name,
-              origin: product.origin,
-              description: product.description,
-            });
+            updateStatus(product.productID, "out_of_stock"); // Cập nhật trạng thái sản phẩm
             return { ...product, status: "out_of_stock" }; // Cập nhật trạng thái trong danh sách
           } catch (error) {
             console.error(
@@ -53,12 +54,7 @@ const fetchProducts = async (key) => {
           }
         } else if (product.status === "out_of_stock" && product.quantity > 0) {
           try {
-            await updateProduct(product.productID, {
-              status: "available",
-              name: product.name,
-              origin: product.origin,
-              description: product.description,
-            });
+            updateStatus(product.productID, "available"); // Cập nhật trạng thái sản phẩm
             return { ...product, status: "available" }; // Cập nhật trạng thái trong danh sách
           } catch (error) {
             console.error(
@@ -112,8 +108,16 @@ const Page = () => {
   });
 
   const columns = [
-    { key: "productID", typeCol: "none", title: "Mã sản phẩm" },
-    { key: "name", typeCol: "text", title: "Tên sản phẩm" },
+    {
+      key: "productID",
+      typeCol: "none",
+      title: "Mã sản phẩm",
+    },
+    {
+      key: "name",
+      typeCol: "text",
+      title: "Tên sản phẩm",
+    },
     { key: "imageUrl", typeCol: "none", title: "Hình ảnh" },
     {
       key: "category",
@@ -182,9 +186,24 @@ const Page = () => {
     applyFilters(value.includes("Tất cả") ? ["Tất cả"] : value, searchQuery);
   };
 
+  const [productStatuses] = useState([
+    { value: "available", label: "Còn hàng" },
+    { value: "unavailable", label: "Ngừng bán" },
+    { value: "out_of_stock", label: "Hết hàng" },
+  ]);
+
+  <Select
+    mode="multiple"
+    tagRender={UserRender}
+    value={selectedOptions}
+    className="w-72"
+    options={categories}
+    onChange={handlerFilter}
+  />;
+
   const onSearch = (value) => {
     setSearchQuery(value);
-    applyFilters(selectedOptions, value);
+    applyFilters(selectedOptions, value); // Gọi lại hàm lọc sản phẩm sau khi tìm kiếm
   };
 
   const applyFilters = (categories, query) => {
@@ -220,7 +239,7 @@ const Page = () => {
       }
     });
 
-    setFilteredProducts(filteredProducts);
+    setFilteredProducts(filteredProducts); // Cập nhật danh sách sản phẩm đã lọc
   };
 
   useEffect(() => {
@@ -258,16 +277,27 @@ const Page = () => {
         cancelText: "Hủy",
         onOk: async () => {
           try {
-            const response = await updateProduct(value.productID, {
-              status: "unavailable",
-              name: value.name,
-              origin: value.origin,
-              description: value.description,
-            });
+            const response = updateStatus(value.productID, "unavailable"); // Cập nhật trạng thái sản phẩm
 
             if (response) {
               setSuccessMessage("Đã ngừng bán sản phẩm thành công!");
-              await reloadProducts(); // ✅ Cập nhật lại danh sách sản phẩm
+
+              // Cập nhật trạng thái sản phẩm trong danh sách hiện tại
+              setProducts((prevProducts) =>
+                prevProducts.map((product) =>
+                  product.productID === value.productID
+                    ? { ...product, status: "unavailable" }
+                    : product
+                )
+              );
+
+              setFilteredProducts((prevFilteredProducts) =>
+                prevFilteredProducts.map((product) =>
+                  product.productID === value.productID
+                    ? { ...product, status: "unavailable" }
+                    : product
+                )
+              );
             }
           } catch (error) {
             setWarningMessage("Có lỗi xảy ra khi ngừng bán sản phẩm");
@@ -351,6 +381,7 @@ const Page = () => {
           </Flex>
           <Table
             size="small"
+            scroll={{ x: "max-content" }}
             dataSource={filteredProducts}
             rowKey="productID"
             className="text-sm font-thin hover:cursor-pointer"
@@ -366,6 +397,22 @@ const Page = () => {
             onRow={(record) => ({
               onClick: () => handlerClickProduct(record),
             })}
+            onChange={(pagination, filters, sorter) => {
+              const { order, columnKey } = sorter;
+              const sortedData = [...filteredProducts];
+
+              if (order === "ascend") {
+                sortedData.sort((a, b) =>
+                  a[columnKey] > b[columnKey] ? 1 : -1
+                );
+              } else if (order === "descend") {
+                sortedData.sort((a, b) =>
+                  a[columnKey] < b[columnKey] ? 1 : -1
+                );
+              }
+
+              setFilteredProducts(sortedData);
+            }}
           >
             <Column
               title="#"
@@ -381,6 +428,7 @@ const Page = () => {
                 dataIndex="productID"
                 key="productID"
                 align="center"
+                sorter={(a, b) => a.productID.localeCompare(b.productID)}
               />
             )}
             {columnsVisibility.name && (
@@ -390,6 +438,8 @@ const Page = () => {
                 ellipsis={true}
                 key="name"
                 align="center"
+                fixed="left"
+                sorter={(a, b) => a.name.localeCompare(b.name)}
               />
             )}
             {columnsVisibility.imageUrl && (
@@ -429,6 +479,9 @@ const Page = () => {
                 key="category"
                 align="center"
                 render={(category) => category?.name || "--|--"}
+                sorter={(a, b) =>
+                  a.category?.name.localeCompare(b.category?.name)
+                }
               />
             )}
             {columnsVisibility.price && (
@@ -438,8 +491,9 @@ const Page = () => {
                 key="price"
                 align="center"
                 render={(text, record) =>
-                  `${(record.price * 1.5).toLocaleString()} / ${record.unit}`
+                  `${formattedPrice(CalcPrice(record.price))} / ${record.unit}`
                 }
+                sorter={(a, b) => a.price - b.price}
               />
             )}
             {columnsVisibility.origin && (
@@ -448,17 +502,19 @@ const Page = () => {
                 dataIndex="origin"
                 key="origin"
                 align="center"
+                render={(origin) => origin || "--|--"}
               />
             )}
             {columnsVisibility.quantity && (
               <Column
-                title="Số lượng"
+                title="SL còn lại"
                 dataIndex="quantity"
                 key="quantity"
                 align="center"
                 render={(text, record) =>
                   `${text.toLocaleString()} ${record.unit}`
                 }
+                sorter={(a, b) => a.quantity - b.quantity}
               />
             )}
             {columnsVisibility.sold && (
@@ -470,6 +526,7 @@ const Page = () => {
                 render={(text, record) =>
                   `${text.toLocaleString()} ${record.unit}`
                 }
+                sorter={(a, b) => a.sold - b.sold}
               />
             )}
             {columnsVisibility.reviews && (
@@ -481,6 +538,10 @@ const Page = () => {
                 render={(reviews) => (
                   <div>{calculateAverageRating(reviews)}</div>
                 )}
+                sorter={(a, b) =>
+                  calculateAverageRating(a.reviews) -
+                  calculateAverageRating(b.reviews)
+                }
               />
             )}
             {columnsVisibility.status && (
@@ -494,13 +555,20 @@ const Page = () => {
                     {statusMapping[status]?.text}
                   </Tag>
                 )}
+                filters={productStatuses.map((status) => ({
+                  text: status.label,
+                  value: status.value,
+                }))}
+                onFilter={(value, record) => record.status === value}
               />
             )}
+
             {columnsVisibility.action && (
               <Column
                 title="Tác vụ"
                 key="action"
                 align="center"
+                fixed="right"
                 render={(text, record) => (
                   <Space size="small">
                     <ConfigProvider
@@ -569,6 +637,7 @@ const Page = () => {
               />
             )}
           </Table>
+
           <InsertStockEntry
             isOpen={isStockEntryOpen}
             onClose={() => setIsStockEntryOpen(false)}

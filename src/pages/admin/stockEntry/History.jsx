@@ -2,6 +2,8 @@ import { ConfigProvider, Table, message, Button, Space } from "antd";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { getProductDetail, getStockEntry } from "../../../api/api";
+import { formattedPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { render } from "react-dom";
 
 const History = () => {
   const location = useLocation();
@@ -114,12 +116,17 @@ const History = () => {
       sortOrder:
         sortedInfo.columnKey === "entryPrice" ? sortedInfo.order : null,
       ellipsis: true,
+      render: (text) => <span>{formattedPrice(text)}</span>,
     },
     {
       title: "Tổng Tiền",
       key: "totalPrice",
       render: (text, record) => (
-        <span>{totalEntryPrice(record.entryQuantity, record.entryPrice)}</span>
+        <span>
+          {formattedPrice(
+            totalEntryPrice(record.entryQuantity, record.entryPrice)
+          )}
+        </span>
       ),
     },
   ];

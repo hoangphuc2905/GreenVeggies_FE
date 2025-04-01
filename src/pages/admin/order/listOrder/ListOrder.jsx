@@ -4,13 +4,22 @@ import {
   DownloadOutlined,
   DeleteFilled,
 } from "@ant-design/icons";
-import { Button, ConfigProvider, Input, Space, Table, Tag } from "antd";
+import {
+  Button,
+  ConfigProvider,
+  Input,
+  Space,
+  Table,
+  Tag,
+  Tooltip,
+} from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
 import FilterButton from "../../../../components/filter/FilterButton";
 import { getAllOrders, getUserInfo } from "../../../../api/api";
 import { render } from "react-dom";
+import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -62,6 +71,7 @@ const fetchUserInfo = async (userID) => {
 
 const ListOrder = () => {
   const [visibleColumns, setVisibleColumns] = useState({
+    key: true,
     orderID: true,
     userID: true,
     phone: true,
@@ -217,44 +227,86 @@ const ListOrder = () => {
 
   const columns = [
     {
+      title: "STT",
+      dataIndex: "key",
+      key: "key",
+      width: 50,
+      render: (text, record, index) => {
+        return index + 1;
+      },
+    },
+    {
       title: "Mã đơn hàng",
       dataIndex: "orderID",
       key: "orderID",
-      width: 100,
+      ellipsis: true, // Hiển thị chữ dạng ... nếu nội dung quá dài
+      fixed: "left",
+      ...getColumnSearchProps("orderID", true),
+      render: (orderID) => {
+        return (
+          <Tooltip placement="topLeft" title={orderID}>
+            {orderID}
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Mã khách hàng",
       dataIndex: "userID",
       key: "userID",
-      width: 200,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("userID", true),
+      fixed: "left",
+      render: (userID) => {
+        return (
+          <Tooltip placement="topLeft" title={userID}>
+            {userID}
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
-      width: 150,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("phone"),
+      render: (phone) => {
+        return (
+          <Tooltip placement="topLeft" title={phone}>
+            {phone}
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Giá tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      width: 120,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("totalAmount", true),
+      render: (totalAmount) => {
+        const format = formattedPrice(totalAmount); // Sử dụng hàm formattedPrice để định dạng
+        return <span>{format}</span>; // Trả về giá đã định dạng
+      },
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
-      width: 120,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("address"),
+      render: (address) => (
+        <Tooltip placement="topLeft" title={address}>
+          {address}
+        </Tooltip>
+      ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 150,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("status", true),
       render: (status) => {
         let color =
@@ -281,7 +333,7 @@ const ListOrder = () => {
       title: "Thời gian",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 200,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("createdAt", true),
       render: (createdAt) => formattedDate(createdAt), // Sử dụng hàm formattedDate để định dạng
     },
@@ -289,21 +341,32 @@ const ListOrder = () => {
       title: "Phương thức thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
-      width: 150,
+      ellipsis: true, // Hiển thị chữ dạng ...
       ...getColumnSearchProps("paymentMethod", true),
       render: (paymentMethod) => {
         let paymentText =
           paymentMethod === "COD" || paymentMethod === "CASH"
             ? "Thanh toán khi nhận hàng"
             : "Chuyển khoản";
-        return <Tag>{paymentText}</Tag>;
+
+        let color =
+          paymentMethod === "COD" || paymentMethod === "CASH"
+            ? "green"
+            : "blue";
+
+        return (
+          <Tag color={color} className="text-white">
+            {paymentText}
+          </Tag>
+        );
       },
     },
     {
       title: "Tác vụ",
       key: "actions",
-      width: 120,
+      ellipsis: true, // Hiển thị chữ dạng ...
       fixed: "right",
+
       render: () => (
         <div>
           <ConfigProvider
@@ -369,14 +432,13 @@ const ListOrder = () => {
         </Space>
       </div>
       <Table
-        bordered
         className={styles.customTable + " hover:cursor-pointer"}
         size="small"
         columns={filteredColumns}
         dataSource={orders}
         pagination={{ pageSize: 5 }}
-        tableLayout="auto"
-        scroll={{ x: "max-content" }}
+        // tableLayout="auto"
+        scroll={{ x: filteredColumns.length * 150 }}
         onChange={(pagination, filters, sorter) => {
           setFilteredInfo(filters);
           setSortedInfo(sorter);
