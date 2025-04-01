@@ -20,6 +20,12 @@ import {
 } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 import { Image } from "antd"; // Add this import at the top
 
+// Change this import
+import {
+  formattedPrice,
+  CalcPrice,
+} from "../../../components/calcSoldPrice/CalcPrice";
+
 const Detail = () => {
   const location = useLocation();
   const id = location.state?.productID;
@@ -208,19 +214,10 @@ const Detail = () => {
     }
   };
 
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    });
-  };
-
   const handleZoom = () => {
     setIsZoomed((prev) => !prev); // Toggle zoom
   };
-  const calculateSellingPrice = (price) => {
-    return price * 1.5;
-  };
+
   if (!product) {
     return <div>Loading...</div>;
   }
@@ -394,7 +391,7 @@ const Detail = () => {
               <Typography.Text
                 className="text-xl block mt-2"
                 style={{ color: "#FEA837" }}>
-                {formatPrice(calculateSellingPrice(product.price))}
+                {formattedPrice(CalcPrice(product.price))}
               </Typography.Text>
 
               <div className="mt-4">
@@ -514,7 +511,8 @@ const Detail = () => {
             <Typography.Title level={2}>Thông tin sản phẩm</Typography.Title>
             <div className="grid grid-cols-2 gap-4">
               <Typography.Text strong>
-                Danh mục: <Typography.Text>{product.category.name}</Typography.Text>
+                Danh mục:{" "}
+                <Typography.Text>{product.category.name}</Typography.Text>
               </Typography.Text>
               <Typography.Text strong>
                 Nguồn gốc: <Typography.Text>{product.origin}</Typography.Text>
@@ -553,8 +551,10 @@ const Detail = () => {
                       </Typography.Text>
                     </Space>
                     <Rate disabled defaultValue={review.rating} />
-                    <Typography.Paragraph>{review.comment}</Typography.Paragraph>
-                    <Divider style={{ margin: '12px 0' }} />
+                    <Typography.Paragraph>
+                      {review.comment}
+                    </Typography.Paragraph>
+                    <Divider style={{ margin: "12px 0" }} />
                   </Space>
                 </div>
               ))}

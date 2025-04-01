@@ -18,7 +18,7 @@ import {
   addOrder,
 } from "../../../api/api";
 import { useNavigate } from "react-router-dom";
-
+import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 const style = {
   display: "flex",
   flexDirection: "column",
@@ -43,10 +43,6 @@ const validateMessages = {
   number: {
     range: "${label} must be between ${min} và ${max}",
   },
-};
-
-const calculateSellingPrice = (price) => {
-  return price * 1.5;
 };
 
 const onFinish = (values) => {
@@ -122,7 +118,7 @@ const OrderPage = () => {
           return {
             ...item,
             name: product.name,
-            price: calculateSellingPrice(product.price),
+            price: CalcPrice(product.price),
           };
         })
       );

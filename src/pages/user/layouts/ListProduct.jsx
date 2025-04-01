@@ -5,6 +5,10 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { saveShoppingCarts } from "../../../api/api";
+import {
+  formattedPrice,
+  CalcPrice,
+} from "../../../components/calcSoldPrice/CalcPrice";
 
 const ListProduct = ({
   minPrice,
@@ -29,16 +33,6 @@ const ListProduct = ({
       });
   }, [API_URL]);
 
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    });
-  };
-
-  const calculateSellingPrice = (price) => {
-    return price * 1.5;
-  };
   const removeAccents = (str) => {
     return str
       .normalize("NFD")
@@ -55,8 +49,8 @@ const ListProduct = ({
 
   const filteredByPrice = products.filter(
     (product) =>
-      calculateSellingPrice(product.price) >= minPrice &&
-      calculateSellingPrice(product.price) <= maxPrice
+      CalcPrice(product.price) >= minPrice &&
+      CalcPrice(product.price) <= maxPrice
   );
 
   const indexOfLastProduct = currentPage * pageSize;
@@ -83,11 +77,11 @@ const ListProduct = ({
           name: product.name,
           quantity: 1,
           description: product.description,
-          price: calculateSellingPrice(product.price),
+          price: CalcPrice(product.price),
           imageUrl: imageUrl,
         },
       ],
-      totalPrice: calculateSellingPrice(product.price) * 1,
+      totalPrice: CalcPrice(product.price) * 1,
     };
     try {
       await saveShoppingCarts(newWishlistItem);
@@ -206,11 +200,11 @@ const ListProduct = ({
                       <div className="text-center">
                         {product.oldPrice && (
                           <Typography.Text delete className="mr-2">
-                            {formatPrice(product.oldPrice)}
+                            {formattedPrice(product.oldPrice)}
                           </Typography.Text>
                         )}
                         <Typography.Text strong>
-                          {formatPrice(calculateSellingPrice(product.price))}
+                          {formattedPrice(CalcPrice(product.price))}
                         </Typography.Text>
                         <div className="flex justify-between mt-2 text-xs text-gray-500">
                           <span>Đánh giá: {averageRating.toFixed(1)}</span>

@@ -23,6 +23,7 @@ import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
 import Favourite from "./layouts/Favourite";
+import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
 
 const images = [
   {
@@ -58,13 +59,6 @@ const Home = () => {
   const handleProductClick = (product) => {
     navigate(`/product/${product.id || product._id}`, {
       state: { productID: product.productID },
-    });
-  };
-
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
     });
   };
 
@@ -285,7 +279,7 @@ const Home = () => {
                       <span className="line-through">{product.oldPrice}đ</span>
                     )}{" "}
                     <span className="text-gray-700">
-                      {formatPrice(product.price)}
+                      {formattedPrice(product.price)}
                     </span>
                   </p>
                 </div>
@@ -400,13 +394,13 @@ const Home = () => {
                       />
                     </div>
                     <p className="mt-4 font-semibold text-black">
-                     Khách hàng : {review.user?.username || "Khách hàng"}
+                      Khách hàng : {review.user?.username || "Khách hàng"}
                     </p>
                     <p className="mt-4 font-semibold text-black">
-                     Tên sản phẩm : {review.product?.name || "Khách hàng"}
+                      Tên sản phẩm : {review.product?.name || "Khách hàng"}
                     </p>
                     <h3 className="text-xl font-semibold mt-4">
-                    Nhận xét :  {review.comment}
+                      Nhận xét : {review.comment}
                     </h3>
                     <p className="text-sm">Đánh giá : {review.rating}</p>
                   </div>

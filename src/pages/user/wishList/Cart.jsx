@@ -11,14 +11,10 @@ import {
   deleteShoppingCartDetailById,
   updateCartQuantity,
 } from "../../../api/api"; // Import the API functions
-
+import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
-
-  const calculateSellingPrice = (price) => {
-    return price * 1.5;
-  };
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -41,7 +37,7 @@ const Cart = () => {
                   quantity: item.quantity || 1, // Ensure quantity is set
                   totalAmount:
                     (item.quantity || 1) *
-                    (calculateSellingPrice(productDetails.price) || 0), // Calculate totalAmount
+                    (CalcPrice(productDetails.price) || 0), // Calculate totalAmount
                 };
               })
             );
@@ -125,7 +121,7 @@ const Cart = () => {
             ? {
                 ...item,
                 quantity: value,
-                totalAmount: value * (calculateSellingPrice(item.price) || 0),
+                totalAmount: value * (CalcPrice(item.price) || 0),
               }
             : item
         );
@@ -223,8 +219,7 @@ const Cart = () => {
                   </div>
 
                   <div className="col-span-1 text-center">
-                    {(calculateSellingPrice(item.price) || 0).toLocaleString()}{" "}
-                    VND
+                    {(CalcPrice(item.price) || 0).toLocaleString()} VND
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber
@@ -252,7 +247,7 @@ const Cart = () => {
                   </div>
                   <div className="col-span-1 text-center">
                     {(
-                      (calculateSellingPrice(item.price) || 0) * item.quantity
+                      (CalcPrice(item.price) || 0) * item.quantity
                     ).toLocaleString()}{" "}
                     VND
                   </div>
