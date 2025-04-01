@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Pagination } from "antd";
+import { Pagination, notification } from "antd";
 import PropTypes from "prop-types";
 import { saveShoppingCarts } from "../../../api/api";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
@@ -50,16 +50,16 @@ const ListProductByCatelogyID = ({
   };
 
   const addToWishlist = async (product) => {
-    const userID = localStorage.getItem("userID"); // Lấy userID từ localStorage
+    const userID = localStorage.getItem("userID");
     const imageUrl = Array.isArray(product.imageUrl)
       ? product.imageUrl[0]
-      : product.imageUrl; // Lấy hình ảnh đầu tiên nếu imageUrl là mảng
+      : product.imageUrl;
     const newWishlistItem = {
       userID: userID,
       items: [
         {
-          productID: product.productID, // Đảm bảo sử dụng đúng thuộc tính productID
-          name: product.name, // Thêm tên sản phẩm
+          productID: product.productID,
+          name: product.name,
           quantity: 1,
           description: product.description,
           price: calculateSellingPrice(product.price),
@@ -69,33 +69,43 @@ const ListProductByCatelogyID = ({
       totalPrice: calculateSellingPrice(product.price) * 1,
     };
     try {
-      console.log("New Wishlist Item:", newWishlistItem); // In ra dữ liệu gửi đi
-      await saveShoppingCarts(newWishlistItem); // Gọi API để lưu thông tin sản phẩm vào order
+      await saveShoppingCarts(newWishlistItem);
 
-      // Lưu sản phẩm vào localStorage
       const currentWishlist =
         JSON.parse(localStorage.getItem("wishlist")) || [];
       const existingItemIndex = currentWishlist.findIndex(
-        (item) => item.productID === product.productID // Đảm bảo sử dụng đúng thuộc tính productID
+        (item) => item.productID === product.productID
       );
 
       if (existingItemIndex !== -1) {
-        // Sản phẩm đã tồn tại, tăng số lượng
         currentWishlist[existingItemIndex].quantity += 1;
       } else {
-        // Sản phẩm chưa tồn tại, thêm sản phẩm mới
         currentWishlist.push(newWishlistItem.items[0]);
       }
 
       localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
 
-      // Phát ra sự kiện cập nhật giỏ hàng
       const event = new CustomEvent("wishlistUpdated", {
         detail: currentWishlist.length,
       });
       window.dispatchEvent(event);
+
+      // Add success notification
+      notification.success({
+        message: "Thêm vào giỏ hàng thành công",
+        description: `Đã thêm ${product.name} với số lượng 1 vào giỏ hàng`,
+        duration: 4,
+        placement: "topRight",
+      });
     } catch (error) {
       console.error("Failed to save order:", error);
+      // Add error notification
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể thêm sản phẩm vào giỏ hàng",
+        duration: 4,
+        placement: "topRight",
+      });
     }
   };
 
@@ -147,7 +157,7 @@ const ListProductByCatelogyID = ({
                           to={`/product/${product._id}`}
                           key={product.productID} // Thêm key cho mỗi phần tử Link
                           state={{ productID: product.productID }}
-                          className="flex flex-col items-center text-gray-500 hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                          className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
                           <i className="fas fa-info-circle text-3xl"></i>
                           <p className="text-xs mt-2">
                             <EyeOutlined />
@@ -164,7 +174,7 @@ const ListProductByCatelogyID = ({
                           className={`flex flex-col items-center ${
                             product.quantity === 0
                               ? "text-gray-300 cursor-not-allowed" // Styles for disabled state
-                              : "text-gray-500 hover:text-[#82AE46] transition-transform transform hover:scale-125" // Styles for enabled state
+                              : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125" // Styles for enabled state
                           }`}>
                           <i className="fas fa-cart-plus text-3xl"></i>
                           <p className="text-xs mt-2">
@@ -203,12 +213,13 @@ const ListProductByCatelogyID = ({
         )}
       </div>
 
-      <div className="w-full flex justify-center mt-6 text-[#82AE46]">
+      <div className="w-full flex justify-center mt-6">
         <Pagination
           current={currentPage}
           pageSize={pageSize}
           total={products.length}
           onChange={handlePageChange}
+          className="[&_.ant-pagination-item]:!bg-white [&_.ant-pagination-item]:!border-[#82AE46] [&_.ant-pagination-item>a]:!text-[#82AE46] [&_.ant-pagination-item-active]:!bg-[#82AE46] [&_.ant-pagination-item-active>a]:!text-white [&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-item:hover]:!bg-[#82AE46] [&_.ant-pagination-item:hover>a]:!text-white [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
         />
       </div>
     </div>

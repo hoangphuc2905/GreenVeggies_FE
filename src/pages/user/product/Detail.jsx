@@ -230,7 +230,7 @@ const Detail = () => {
         <Breadcrumb
           items={[
             { title: <Link to="/">Home</Link> },
-            { title: <Link to="/product">Products</Link> },
+            { title: <Link to="/product">Sản phẩm</Link> },
             {
               title: (
                 <Link to={`/category/${product.category._id}`}>
@@ -566,7 +566,7 @@ const Detail = () => {
               pageSize={pageSize}
               total={product.reviews.length}
               onChange={(page) => setCurrentPage(page)}
-              className="mt-4 flex justify-center"
+              className="mt-4 flex justify-center [&_.ant-pagination-item]:!bg-white [&_.ant-pagination-item]:!border-[#82AE46] [&_.ant-pagination-item>a]:!text-[#82AE46] [&_.ant-pagination-item-active]:!bg-[#82AE46] [&_.ant-pagination-item-active>a]:!text-white [&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-item:hover]:!bg-[#82AE46] [&_.ant-pagination-item:hover>a]:!text-white [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
             />
           </div>
         )}

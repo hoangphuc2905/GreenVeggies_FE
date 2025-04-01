@@ -377,7 +377,12 @@ const Home = () => {
             và giàu dinh dưỡng, mang đến bữa ăn chất lượng cho gia đình!
           </h3>
 
-          <Carousel autoplay dots={true} className="mt-10">
+          <Carousel
+            autoplay
+            dots={true}
+            className="mt-10"
+            slidesToShow={3}
+            slidesToScroll={3}>
             {reviews
               .filter((review) => review.rating === 5)
               .map((review, index) => {
@@ -390,13 +395,18 @@ const Home = () => {
                             ? review.imageUrl[0]
                             : review.imageUrl
                         }
-                        alt={`Ảnh của ${review.name}`}
+                        alt={`Ảnh của ${review.user?.username || "Khách hàng"}`}
                         className="w-full h-full object-cover rounded-full"
                       />
                     </div>
-                    <p className="mt-4">{review.userID}</p>
+                    <p className="mt-4 font-semibold text-black">
+                     Khách hàng : {review.user?.username || "Khách hàng"}
+                    </p>
+                    <p className="mt-4 font-semibold text-black">
+                     Tên sản phẩm : {review.product?.name || "Khách hàng"}
+                    </p>
                     <h3 className="text-xl font-semibold mt-4">
-                      {review.comment}
+                    Nhận xét :  {review.comment}
                     </h3>
                     <p className="text-sm">Đánh giá : {review.rating}</p>
                   </div>

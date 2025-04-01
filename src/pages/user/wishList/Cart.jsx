@@ -1,4 +1,5 @@
-import { Divider, InputNumber } from "antd";
+// Add notification to imports at the top
+import { Divider, InputNumber, notification } from "antd";
 import bgImage from "../../../assets/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -148,6 +149,15 @@ const Cart = () => {
     }
   };
   const handleCheckout = () => {
+    if (mergedWishlist.length === 0) {
+      notification.warning({
+        message: "Giỏ hàng trống",
+        description: "Bạn chưa có sản phẩm nào trong giỏ hàng",
+        placement: "top",
+        duration: 3,
+      });
+      return;
+    }
     navigate("/order");
   };
 
