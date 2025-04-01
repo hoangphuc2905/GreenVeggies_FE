@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import PropTypes from "prop-types";
+import { Menu, Input, Button, Alert } from "antd";
 
 const FilterPrice = ({
   setMinPrice,
@@ -115,68 +116,83 @@ const FilterPrice = ({
     setSelectedPriceRange(null);
   };
 
+  const menuItems = [
+    {
+      key: "under500k",
+      label: "Dưới 500K",
+    },
+    {
+      key: "500kTo1m",
+      label: "500K - 1M",
+    },
+    {
+      key: "1mTo2m",
+      label: "1M - 2M",
+    },
+    {
+      key: "above2m",
+      label: "Trên 2M",
+    },
+  ];
+
   return (
     <div className="p-4 border rounded-lg shadow-md mt-6 mb-6">
       <h3 className="text-white text-l font-bold uppercase tracking-wide text-center bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] rounded-xl p-4 shadow-lg hover:scale-105 transition duration-300 ease-in-out">
         Lọc theo giá
       </h3>
       <div className="flex flex-col space-y-4 mt-4">
-        <label>
-          <input
-            type="radio"
-            name="price"
-            checked={selectedPriceRange === "under500k"}
-            onChange={() => handlePriceRangeChange("under500k")}
-          />
-          Dưới 500K
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="price"
-            checked={selectedPriceRange === "500kTo1m"}
-            onChange={() => handlePriceRangeChange("500kTo1m")}
-          />
-          500K - 1M
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="price"
-            checked={selectedPriceRange === "1mTo2m"}
-            onChange={() => handlePriceRangeChange("1mTo2m")}
-          />
-          1M - 2M
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="price"
-            checked={selectedPriceRange === "above2m"}
-            onChange={() => handlePriceRangeChange("above2m")}
-          />
-          Trên 2M
-        </label>
-        <input
+        <Menu
+          mode="vertical"
+          selectedKeys={selectedPriceRange ? [selectedPriceRange] : []}
+          items={menuItems}
+          onClick={({ key }) => handlePriceRangeChange(key)}
+          style={{
+            border: "none",
+          }}
+          className="[&_.ant-menu-item:hover]:!bg-[#82AE46] [&_.ant-menu-item:hover]:!text-white [&_.ant-menu-item-selected]:!bg-[#82AE46] [&_.ant-menu-item-selected]:!text-white"
+        />
+
+        <Input
           type="number"
           placeholder="Giá tối thiểu"
-          className="border px-3 py-2 rounded w-full"
           value={tempMinPrice}
           onChange={handleMinPriceChange}
+          className="mt-4 hover:border-[#82AE46] focus:border-[#82AE46] focus:shadow-[0_0_0_2px_rgba(130,174,70,0.2)]"
+          status={errorMessage ? "error" : ""}
         />
-        <input
+        <Input
           type="number"
           placeholder="Giá tối đa"
-          className="border px-3 py-2 rounded w-full"
           value={tempMaxPrice}
           onChange={handleMaxPriceChange}
+          className="hover:border-[#82AE46] focus:border-[#82AE46] focus:shadow-[0_0_0_2px_rgba(130,174,70,0.2)]"
+          status={errorMessage ? "error" : ""}
         />
-        {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
-        <button
+        {errorMessage && (
+          <Alert
+            message={errorMessage}
+            type="error"
+            showIcon
+            className="!p-2"
+          />
+        )}
+        <Button
           onClick={handleFilter}
-          className="text-white text-l font-bold uppercase tracking-wide text-center bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] rounded-xl p-2 shadow-lg hover:scale-105 transition duration-300 ease-in-out">
+          className="text-[#82AE46] font-bold uppercase hover:!text-white transition-all duration-300"
+          style={{
+            background: "white",
+            border: "2px solid #82AE46",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#82AE46";
+            e.currentTarget.style.borderColor = "#82AE46";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "white";
+            e.currentTarget.style.borderColor = "#82AE46";
+          }}>
           Tìm kiếm
-        </button>
+        </Button>
       </div>
     </div>
   );
