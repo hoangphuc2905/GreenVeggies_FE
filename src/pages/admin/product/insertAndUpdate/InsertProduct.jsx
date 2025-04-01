@@ -13,7 +13,6 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
 import UploadPicture from "../../../../components/uploadPicture/UploadPicture";
@@ -21,6 +20,7 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../../components/calcSoldPrice/CalcPrice";
+import { addProduct, getCategories } from "../../../../services/ProductService";
 
 const { TextArea } = Input;
 
@@ -71,14 +71,11 @@ const InsertProduct = () => {
 
   // Lấy danh sách danh mục
   const fetchCategories = async () => {
-    try {
-      const response = await getListProducts("categories");
-      console.log("API Response:", response);
-
-      setCategories(Array.isArray(response) ? response : []);
-    } catch (error) {
-      console.error("Lỗi lấy danh mục:", error);
-      message.error("Lỗi tải danh mục!");
+    const response = await getCategories();
+    console.log("API Response:", response);
+    if (Array.isArray(response)) {
+      setCategories(response);
+    } else {
       setCategories([]);
     }
   };
@@ -93,23 +90,8 @@ const InsertProduct = () => {
     try {
       setLoading(true);
 
-      const imageUrls =
-        values.imageUrl?.map((file) => file.url || file.response?.url) || [];
-
-      const formData = {
-        name: values.name,
-        description: values.description,
-        price: values.price,
-        quantity: values.import,
-        import: values.import,
-        category: values.category,
-        origin: values.origin,
-        imageUrl: imageUrls,
-        unit: values.unit,
-        status: values.status,
-      };
-
-      const response = await insertProduct(formData);
+      // Gọi hàm addProduct từ ProductService
+      const response = await addProduct(values);
       if (response) {
         message.success("Thêm sản phẩm thành công! 🎉");
 

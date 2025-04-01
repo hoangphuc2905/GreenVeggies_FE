@@ -75,7 +75,7 @@ export const handleProductApi = {
       return response.data;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-      return null;
+      return error;
     }
   },
   //Cập nhật trạng thái sản phẩm
@@ -87,6 +87,27 @@ export const handleProductApi = {
       return response.data;
     } catch (error) {
       console.error("Lỗi khi cập nhật trạng thái sản phẩm:", error);
+      return null;
+    }
+  },
+  //Tìm sản phẩm theo id
+  getProductById: async (id) => {
+    try {
+      const response = await productAPI.get(`products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy sản phẩm theo ID:", error);
+      return null;
+    }
+  },
+
+  //Thêm sản phẩm mới
+  addProduct: async (data) => {
+    try {
+      const response = await productAPI.post("/products", data);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm:", error);
       return null;
     }
   },
@@ -462,20 +483,20 @@ export const getAllReviews = async () => {
         try {
           const [userResponse, productResponse] = await Promise.all([
             userAPI.get(`/user/${review.userID}`),
-            productAPI.get(`/products/${review.productID}`)
+            productAPI.get(`/products/${review.productID}`),
           ]);
 
           return {
             ...review,
             user: userResponse.data,
-            product: productResponse.data
+            product: productResponse.data,
           };
         } catch (error) {
           console.error("Error fetching data:", error);
           return {
             ...review,
             user: null,
-            product: null
+            product: null,
           };
         }
       })

@@ -11,7 +11,6 @@ import {
   ConfigProvider,
   message,
   Modal,
-  Tooltip,
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
@@ -22,7 +21,6 @@ import {
   TagFilled,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { handleProductApi, updateProduct } from "../../../api/api";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
 import UserRender from "../userRender/UserRender";
 import FilterButton from "../../../components/filter/FilterButton";
@@ -32,47 +30,9 @@ import {
   formattedPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import updateStatus from "../../../components/updateProduct/updateStatus";
+import { getProducts, getCategories } from "../../../services/ProductService";
 
 const { Search } = Input;
-
-const fetchProducts = async (key) => {
-  try {
-    const response = await handleProductApi.getListProducts(key);
-
-    // Cập nhật trạng thái sản phẩm nếu cần
-    const updatedProducts = await Promise.all(
-      response.map(async (product) => {
-        if (product.quantity === 0 && product.status !== "out_of_stock") {
-          try {
-            updateStatus(product.productID, "out_of_stock"); // Cập nhật trạng thái sản phẩm
-            return { ...product, status: "out_of_stock" }; // Cập nhật trạng thái trong danh sách
-          } catch (error) {
-            console.error(
-              `Lỗi cập nhật trạng thái sản phẩm ${product.name}:`,
-              error
-            );
-          }
-        } else if (product.status === "out_of_stock" && product.quantity > 0) {
-          try {
-            updateStatus(product.productID, "available"); // Cập nhật trạng thái sản phẩm
-            return { ...product, status: "available" }; // Cập nhật trạng thái trong danh sách
-          } catch (error) {
-            console.error(
-              `Lỗi cập nhật trạng thái sản phẩm ${product.name}:`,
-              error
-            );
-          }
-        }
-        return product;
-      })
-    );
-
-    return updatedProducts;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
 
 const Page = () => {
   const [products, setProducts] = useState([]);
@@ -152,13 +112,13 @@ const Page = () => {
 
   useEffect(() => {
     const fetchAndSetProducts = async () => {
-      const data = await fetchProducts("products");
-      setProducts(data); // Cập nhật danh sách sản phẩm
-      setFilteredProducts(data); // Cập nhật danh sách sản phẩm đã lọc
+      const data = (await getProducts()).reverse(); // Lấy danh sách sản phẩm từ API
+      setProducts(data);
+      setFilteredProducts(data);
     };
 
-    const fetchCategories = async () => {
-      const data = await fetchProducts("categories");
+    const fetchAndSetCategories = async () => {
+      const data = await getCategories();
       const formattedCategories = data.map((category) => ({
         value: category._id,
         label: category.name,
@@ -169,8 +129,8 @@ const Page = () => {
       ]);
     };
 
-    fetchCategories();
-    fetchAndSetProducts(); // Tải và cập nhật danh sách sản phẩm
+    fetchAndSetProducts();
+    fetchAndSetCategories();
   }, []);
 
   const handlerFilter = (value) => {
@@ -315,7 +275,7 @@ const Page = () => {
     return (totalRating / reviews.length).toFixed(1);
   };
   const reloadProducts = async () => {
-    const data = await fetchProducts("products");
+    const data = await getProducts("products");
     setProducts(data);
     setFilteredProducts(data);
   };
