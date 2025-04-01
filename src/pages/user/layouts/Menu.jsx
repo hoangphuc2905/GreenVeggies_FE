@@ -1,11 +1,13 @@
+import { Menu as AntMenu } from 'antd';
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getCategories } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin danh mục
+import { getCategories } from "../../../api/api";
 
 const Menu = () => {
   const [categories, setCategories] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -20,27 +22,43 @@ const Menu = () => {
     fetchCategories();
   }, []);
 
+  const handleMenuClick = (categoryId) => {
+    navigate(`/category/${categoryId}`);
+  };
+
+  const menuItems = categories.map((category) => ({
+    key: category._id,
+    label: (
+      <span>
+        <FontAwesomeIcon icon={faArrowRight} className="mr-2" />
+        {category.name}
+      </span>
+    ),
+  }));
+
   return (
-    <div className="flex flex-col ">
-      <div>
-        <h2
-          className="text-white text-l font-bold uppercase tracking-wide text-center 
+    <div className="flex flex-col w-full bg-white rounded-lg shadow-md">
+      <div className="mb-2">
+        <h2 className="text-white text-lg font-bold uppercase tracking-wide text-center 
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
-               rounded-xl p-4 shadow-lg 
-               hover:scale-105 transition duration-300 ease-in-out">
+               rounded-t-lg p-4
+               transition duration-300 ease-in-out">
           Danh mục sản phẩm
         </h2>
       </div>
-      {categories.map((category, index) => (
-        <Link key={index} to={`/category/${category._id}`}>
-          <div className="p-4 border rounded-lg shadow-md transition-all duration-200 hover:scale-105 cursor-pointer">
-            <h3 className="text-l font-semibold">
-              <FontAwesomeIcon icon={faArrowRight} className="text-l mr-2" />{" "}
-              {category.name}
-            </h3>
-          </div>
-        </Link>
-      ))}
+      <AntMenu
+        mode="vertical"
+        items={menuItems}
+        onClick={({ key }) => handleMenuClick(key)}
+        style={{
+          border: 'none',
+          padding: '8px',
+          '--menu-item-hover-bg': '#82AE46',
+          '--menu-item-hover-color': 'white',
+        }}
+        className="[&_.ant-menu-item:hover]:!bg-[#82AE46] [&_.ant-menu-item:hover]:!text-white [&_.ant-menu-item-selected]:!bg-[#82AE46] [&_.ant-menu-item-selected]:!text-white"
+        theme="light"
+      />
     </div>
   );
 };

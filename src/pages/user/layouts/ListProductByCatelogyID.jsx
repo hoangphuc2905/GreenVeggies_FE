@@ -1,9 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Pagination } from "antd";
+import {
+  Pagination,
+  notification,
+  Card,
+  List,
+  Badge,
+  Typography,
+  Empty,
+} from "antd";
 import PropTypes from "prop-types";
 import { saveShoppingCarts } from "../../../api/api";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import {
+  formattedPrice,
+  CalcPrice,
+} from "../../../components/calcSoldPrice/CalcPrice";
 
 const ListProductByCatelogyID = ({
   allProducts,
@@ -23,8 +35,8 @@ const ListProductByCatelogyID = ({
         return (
           product.category._id === categoryId &&
           product.status !== "unavailable" &&
-          calculateSellingPrice(product.price) >= minPrice &&
-          calculateSellingPrice(product.price) <= maxPrice
+          CalcPrice(product.price) >= minPrice &&
+          CalcPrice(product.price) <= maxPrice
         );
       });
       setProducts(filteredProducts);
@@ -38,177 +50,189 @@ const ListProductByCatelogyID = ({
     setCurrentPage(page);
   };
 
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    });
-  };
-
-  const calculateSellingPrice = (price) => {
-    return price * 1.5;
-  };
-
   const addToWishlist = async (product) => {
-    const userID = localStorage.getItem("userID"); // Lấy userID từ localStorage
+    const userID = localStorage.getItem("userID");
     const imageUrl = Array.isArray(product.imageUrl)
       ? product.imageUrl[0]
-      : product.imageUrl; // Lấy hình ảnh đầu tiên nếu imageUrl là mảng
+      : product.imageUrl;
     const newWishlistItem = {
       userID: userID,
       items: [
         {
-          productID: product.productID, // Đảm bảo sử dụng đúng thuộc tính productID
-          name: product.name, // Thêm tên sản phẩm
+          productID: product.productID,
+          name: product.name,
           quantity: 1,
           description: product.description,
-          price: calculateSellingPrice(product.price),
+          price: CalcPrice(product.price),
           imageUrl: imageUrl,
         },
       ],
-      totalPrice: calculateSellingPrice(product.price) * 1,
+      totalPrice: CalcPrice(product.price) * 1,
     };
     try {
-      console.log("New Wishlist Item:", newWishlistItem); // In ra dữ liệu gửi đi
-      await saveShoppingCarts(newWishlistItem); // Gọi API để lưu thông tin sản phẩm vào order
+      await saveShoppingCarts(newWishlistItem);
 
-      // Lưu sản phẩm vào localStorage
       const currentWishlist =
         JSON.parse(localStorage.getItem("wishlist")) || [];
       const existingItemIndex = currentWishlist.findIndex(
-        (item) => item.productID === product.productID // Đảm bảo sử dụng đúng thuộc tính productID
+        (item) => item.productID === product.productID
       );
 
       if (existingItemIndex !== -1) {
-        // Sản phẩm đã tồn tại, tăng số lượng
         currentWishlist[existingItemIndex].quantity += 1;
       } else {
-        // Sản phẩm chưa tồn tại, thêm sản phẩm mới
         currentWishlist.push(newWishlistItem.items[0]);
       }
 
       localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
 
-      // Phát ra sự kiện cập nhật giỏ hàng
       const event = new CustomEvent("wishlistUpdated", {
         detail: currentWishlist.length,
       });
       window.dispatchEvent(event);
+
+      // Add success notification
+      notification.success({
+        message: "Thêm vào giỏ hàng thành công",
+        description: `Đã thêm ${product.name} với số lượng 1 vào giỏ hàng`,
+        duration: 4,
+        placement: "topRight",
+      });
     } catch (error) {
       console.error("Failed to save order:", error);
+      // Add error notification
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể thêm sản phẩm vào giỏ hàng",
+        duration: 4,
+        placement: "topRight",
+      });
     }
   };
 
   return (
     <div className="flex flex-col w-full">
-      <div className="p-4">
-        <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer">
-          Sản phẩm thuộc danh mục: {products[0]?.category?.name}
-        </h2>
-        {loading ? (
-          <p>Đang tải...</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {products.length > 0 ? (
-              products.map((product) => {
-                const averageRating =
-                  product.reviews?.length > 0
-                    ? product.reviews.reduce(
-                        (sum, review) => sum + review.rating,
-                        0
-                      ) / product.reviews.length
-                    : 0;
-                return (
-                  <div
-                    key={product.productID} // Thêm key cho mỗi sản phẩm
-                    className="p-4 bg-white rounded-sm shadow-md ml-4 h-[300px] relative hover:shadow-xl hover:scale-105">
-                    {product.discount && (
-                      <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
-                        {product.discount}%
+      <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer px-4">
+        Sản phẩm thuộc danh mục: {products[0]?.category?.name}
+      </h2>
+      {loading ? (
+        <p>Đang tải...</p>
+      ) : (
+        <List
+          grid={{ gutter: 16, column: 4 }}
+          className="px-2"
+          dataSource={products}
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span className="text-gray-700">
+                    Không có sản phẩm nào trong danh mục này
+                  </span>
+                }
+              />
+            ),
+          }}
+          renderItem={(product) => {
+            const averageRating =
+              product.reviews?.length > 0
+                ? product.reviews.reduce(
+                    (sum, review) => sum + review.rating,
+                    0
+                  ) / product.reviews.length
+                : 0;
+
+            return (
+              <List.Item>
+                <Badge.Ribbon
+                  text={`${product.discount}%`}
+                  color="#82AE46"
+                  style={{ display: product.discount ? "block" : "none" }}>
+                  <Card
+                    hoverable
+                    className="h-[300px] relative hover:scale-105 transition-all duration-300"
+                    cover={
+                      <div className="relative h-[150px] group">
+                        <img
+                          src={
+                            Array.isArray(product.imageUrl)
+                              ? product.imageUrl[0]
+                              : product.imageUrl
+                          }
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-50"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                          <Link
+                            to={`/product/${product._id}`}
+                            state={{ productID: product.productID }}
+                            className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                            <EyeOutlined className="text-2xl" />
+                            <Typography.Text className="text-xs mt-2">
+                              Xem chi tiết
+                            </Typography.Text>
+                          </Link>
+
+                          <button
+                            onClick={() =>
+                              product.quantity > 0 && addToWishlist(product)
+                            }
+                            disabled={product.quantity === 0}
+                            className={`flex flex-col items-center ${
+                              product.quantity === 0
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
+                            }`}>
+                            <ShoppingCartOutlined className="text-2xl" />
+                            <Typography.Text className="text-xs mt-2">
+                              Thêm vào giỏ hàng
+                            </Typography.Text>
+                          </button>
+                        </div>
                       </div>
-                    )}
+                    }>
+                    <Card.Meta
+                      title={
+                        <Typography.Text
+                          ellipsis
+                          className="font-bold text-center block"
+                          style={{ textAlign: "center", width: "100%" }}>
+                          {product.name}
+                        </Typography.Text>
+                      }
+                      description={
+                        <div className="text-center">
+                          {product.oldPrice && (
+                            <Typography.Text delete className="mr-2">
+                              {formattedPrice(product.oldPrice)}
+                            </Typography.Text>
+                          )}
+                          <Typography.Text strong>
+                            {formattedPrice(CalcPrice(product.price))}
+                          </Typography.Text>
+                          <div className="flex justify-between mt-2 text-xs text-gray-500">
+                            <span>Đánh giá: {averageRating.toFixed(1)}</span>
+                            <span>Đã bán: {product.sold}</span>
+                          </div>
+                        </div>
+                      }
+                    />
+                  </Card>
+                </Badge.Ribbon>
+              </List.Item>
+            );
+          }}
+        />
+      )}
 
-                    <div className="container mx-auto relative h-[150px] group">
-                      {/* Image */}
-                      <img
-                        src={
-                          Array.isArray(product.imageUrl)
-                            ? product.imageUrl[0]
-                            : product.imageUrl
-                        }
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-50"
-                      />
-
-                      {/* Icons on hover */}
-                      <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                        {/* Icon "Xem chi tiết" - left */}
-                        <Link
-                          to={`/product/${product._id}`}
-                          key={product.productID} // Thêm key cho mỗi phần tử Link
-                          state={{ productID: product.productID }}
-                          className="flex flex-col items-center text-gray-500 hover:text-[#82AE46] transition-transform transform hover:scale-125">
-                          <i className="fas fa-info-circle text-3xl"></i>
-                          <p className="text-xs mt-2">
-                            <EyeOutlined />
-                            Xem chi tiết
-                          </p>
-                        </Link>
-
-                        {/* Icon "Thêm vào giỏ hàng" - right */}
-                        <button
-                          onClick={() =>
-                            product.quantity > 0 && addToWishlist(product)
-                          } // Only call addToWishlist if quantity > 0
-                          disabled={product.quantity === 0} // Disable the button if quantity is 0
-                          className={`flex flex-col items-center ${
-                            product.quantity === 0
-                              ? "text-gray-300 cursor-not-allowed" // Styles for disabled state
-                              : "text-gray-500 hover:text-[#82AE46] transition-transform transform hover:scale-125" // Styles for enabled state
-                          }`}>
-                          <i className="fas fa-cart-plus text-3xl"></i>
-                          <p className="text-xs mt-2">
-                            <ShoppingCartOutlined /> Thêm vào giỏ hàng
-                          </p>
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-700 font-bold text-center overflow-hidden text-ellipsis line-clamp-2">
-                      {product.name}
-                    </p>
-                    <p className="text-gray-700 text-center">
-                      {product.oldPrice && (
-                        <span className="line-through">
-                          {formatPrice(product.oldPrice)}
-                        </span>
-                      )}
-                      <span className="text-gray-700">
-                        {formatPrice(calculateSellingPrice(product.price))}
-                      </span>
-                    </p>
-                    <div className="absolute bottom-2 right-2 text-gray-700 text-xs px-2 py-1 rounded-md">
-                      Đã bán: {product.sold}
-                    </div>
-                    <div className="absolute bottom-2 left-2 text-gray-700 text-xs px-2 py-1 rounded-md">
-                      Đánh giá: {averageRating.toFixed(1)}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p>Không có sản phẩm nào trong danh mục này.</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="w-full flex justify-center mt-6 text-[#82AE46]">
+      <div className="w-full flex justify-center mt-6">
         <Pagination
           current={currentPage}
           pageSize={pageSize}
           total={products.length}
           onChange={handlePageChange}
+          className="[&_.ant-pagination-item]:!bg-white [&_.ant-pagination-item]:!border-[#82AE46] [&_.ant-pagination-item>a]:!text-[#82AE46] [&_.ant-pagination-item-active]:!bg-[#82AE46] [&_.ant-pagination-item-active>a]:!text-white [&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-item:hover]:!bg-[#82AE46] [&_.ant-pagination-item:hover>a]:!text-white [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
         />
       </div>
     </div>

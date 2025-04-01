@@ -1,4 +1,5 @@
-import { Divider, InputNumber } from "antd";
+// Add notification to imports at the top
+import { Divider, InputNumber, notification } from "antd";
 import bgImage from "../../../assets/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -10,14 +11,10 @@ import {
   deleteShoppingCartDetailById,
   updateCartQuantity,
 } from "../../../api/api"; // Import the API functions
-
+import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
-
-  const calculateSellingPrice = (price) => {
-    return price * 1.5;
-  };
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -40,7 +37,7 @@ const Cart = () => {
                   quantity: item.quantity || 1, // Ensure quantity is set
                   totalAmount:
                     (item.quantity || 1) *
-                    (calculateSellingPrice(productDetails.price) || 0), // Calculate totalAmount
+                    (CalcPrice(productDetails.price) || 0), // Calculate totalAmount
                 };
               })
             );
@@ -124,7 +121,7 @@ const Cart = () => {
             ? {
                 ...item,
                 quantity: value,
-                totalAmount: value * (calculateSellingPrice(item.price) || 0),
+                totalAmount: value * (CalcPrice(item.price) || 0),
               }
             : item
         );
@@ -148,6 +145,15 @@ const Cart = () => {
     }
   };
   const handleCheckout = () => {
+    if (mergedWishlist.length === 0) {
+      notification.warning({
+        message: "Giỏ hàng trống",
+        description: "Bạn chưa có sản phẩm nào trong giỏ hàng",
+        placement: "top",
+        duration: 3,
+      });
+      return;
+    }
     navigate("/order");
   };
 
@@ -213,8 +219,7 @@ const Cart = () => {
                   </div>
 
                   <div className="col-span-1 text-center">
-                    {(calculateSellingPrice(item.price) || 0).toLocaleString()}{" "}
-                    VND
+                    {(CalcPrice(item.price) || 0).toLocaleString()} VND
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber
@@ -242,7 +247,7 @@ const Cart = () => {
                   </div>
                   <div className="col-span-1 text-center">
                     {(
-                      (calculateSellingPrice(item.price) || 0) * item.quantity
+                      (CalcPrice(item.price) || 0) * item.quantity
                     ).toLocaleString()}{" "}
                     VND
                   </div>

@@ -2,11 +2,14 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Breadcrumb,
+  Button,
   Carousel,
   Divider,
   InputNumber,
   Pagination,
   Rate,
+  Space,
+  Typography,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
@@ -15,6 +18,13 @@ import {
   getUserInfo,
   saveShoppingCarts,
 } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
+import { Image } from "antd"; // Add this import at the top
+
+// Change this import
+import {
+  formattedPrice,
+  CalcPrice,
+} from "../../../components/calcSoldPrice/CalcPrice";
 
 const Detail = () => {
   const location = useLocation();
@@ -204,19 +214,10 @@ const Detail = () => {
     }
   };
 
-  const formatPrice = (price) => {
-    return price.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    });
-  };
-
   const handleZoom = () => {
     setIsZoomed((prev) => !prev); // Toggle zoom
   };
-  const calculateSellingPrice = (price) => {
-    return price * 1.5;
-  };
+
   if (!product) {
     return <div>Loading...</div>;
   }
@@ -230,7 +231,7 @@ const Detail = () => {
         <Breadcrumb
           items={[
             { title: <Link to="/">Home</Link> },
-            { title: <Link to="/product">Products</Link> },
+            { title: <Link to="/product">Sản phẩm</Link> },
             {
               title: (
                 <Link to={`/category/${product.category._id}`}>
@@ -250,6 +251,8 @@ const Detail = () => {
                 <Carousel
                   ref={carouselRef}
                   infinite={true}
+                  autoplay={true}
+                  autoplaySpeed={3000}
                   afterChange={(current) => {
                     if (Array.isArray(product.imageUrl)) {
                       setSelectedImage(product.imageUrl[current]);
@@ -258,25 +261,22 @@ const Detail = () => {
                   {Array.isArray(product.imageUrl) &&
                     product.imageUrl.map((img, index) => (
                       <div key={index}>
-                        <img
+                        <Image
                           src={img}
                           alt={`Ảnh ${index + 1}`}
-                          className="w-full h-96 object-cover rounded-md cursor-pointer"
-                          style={{
-                            transition: "transform 0.3s ease-in-out",
-                            transformOrigin: "center center",
+                          className="w-full h-96 object-cover rounded-md"
+                          preview={{
+                            mask: (
+                              <div className="flex items-center justify-center group hover:text-[#82AE46] transition-colors duration-300">
+                                <ZoomInOutlined className="text-2xl" />
+                                <span className="ml-2">Xem</span>
+                              </div>
+                            ),
                           }}
                         />
                       </div>
                     ))}
                 </Carousel>
-                {/* Nút Zoom */}
-                <button
-                  onClick={handleZoom}
-                  className="absolute bottom-4 left-4 p-3 bg-transparent hover:bg-transparent transition-all">
-                  <ZoomInOutlined className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125" />
-                </button>
-                {/* Nút điều hướng bên trái và phải khi hover */}
                 <div className="absolute top-1/2 left-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                   <button
                     onClick={() => carouselRef.current.prev()}
@@ -353,210 +353,209 @@ const Detail = () => {
               )}
             </div>
 
-            <div className="p-4 w-full h-[416px] overflow-auto">
-              <h1 className="text-3xl font-bold mt-4">{product.name}</h1>
-              <div className="mt-4 flex items-center">
-                <Rate allowHalf value={averageRating} disabled />
-                <span className="ml-2">
-                  ({product.reviews.length} đánh giá)
-                </span>
-              </div>
+            <div className="p-4 w-full h-[416px] overflow-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#82AE46] [&::-webkit-scrollbar-thumb]:rounded-full">
+              <Typography.Title level={2} className="mt-4">
+                {product.name}
+              </Typography.Title>
 
-              {/* Mô tả sản phẩm */}
+              <Space className="mt-4" align="center">
+                <Rate allowHalf value={averageRating} disabled />
+                <Typography.Text>
+                  ({product.reviews.length} đánh giá)
+                </Typography.Text>
+              </Space>
+
               <div className="mt-4">
-                <p
+                <Typography.Paragraph
                   ref={descriptionRef}
-                  className={`text-wrap ${!isExpanded ? "line-clamp-3" : ""}`}>
+                  ellipsis={!isExpanded ? { rows: 3 } : false}>
                   {product.description}
-                </p>
+                </Typography.Paragraph>
                 {showSeeMore && (
-                  <button
-                    className="text-blue-500 underline mt-2"
-                    onClick={() => setIsExpanded(!isExpanded)}>
-                    {isExpanded ? "Rút gọn" : "Xem thêm"}
-                  </button>
+                  <Button
+                    type={selectedTab === "description" ? "primary" : "default"}
+                    className={`w-full h-14 text-base font-medium hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+                      selectedTab === "description"
+                        ? "!bg-[#82AE46] !text-white !border-[#82AE46]"
+                        : "!bg-[#f0fdf4] !text-[#82AE46] !border-[#82AE46]"
+                    }`}
+                    onClick={() => {
+                      setSelectedTab("description");
+                      toggleDescription();
+                    }}>
+                    MÔ TẢ
+                  </Button>
                 )}
               </div>
 
-              <p className="text-xl mt-2 text-[#FEA837]">
-                {formatPrice(calculateSellingPrice(product.price))}
-              </p>
-              {product.oldPrice && (
-                <p className="text-xl line-through">
-                  {product.oldPrice} <span className="mr-2">VNĐ</span>
-                </p>
-              )}
+              <Typography.Text
+                className="text-xl block mt-2"
+                style={{ color: "#FEA837" }}>
+                {formattedPrice(CalcPrice(product.price))}
+              </Typography.Text>
 
-              <p className="mt-4">
-                <b>Số lượng : {product.quantity}</b>
-              </p>
-              <p className="mt-4">
-                <b>Loại : {product.category.name}</b>
-              </p>
+              <div className="mt-4">
+                <Typography.Text strong className="block mb-2">
+                  Số lượng: {product.quantity}
+                </Typography.Text>
+                <Typography.Text strong className="block mb-4">
+                  Loại: {product.category.name}
+                </Typography.Text>
+              </div>
 
-              <p
-                className={`mt-4 flex items-center text-center ${
-                  product.quantity === 0 ? "opacity-50 cursor-not-allowed" : ""
-                }`}>
-                <button
-                  className="px-2 py-1 border rounded-l bg-gray-200"
-                  onClick={decrementQuantity}
-                  disabled={product.quantity === 0 || quantity <= 1}>
-                  -
-                </button>
-                <InputNumber
-                  min={1}
-                  max={product.quantity} // Giới hạn nhập số lượng không vượt quá số lượng trong kho
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                  className="w-16 text-center"
-                  disabled={product.quantity === 0} // Vô hiệu hóa InputNumber nếu số lượng bằng 0
-                />
-                <button
-                  className="px-2 py-1 border rounded-r bg-gray-200"
-                  onClick={incrementQuantity}
-                  disabled={
-                    product.quantity === 0 || quantity >= product.quantity
-                  } // Vô hiệu hóa nếu đã đạt số lượng tối đa
-                >
-                  +
-                </button>
-                <button
-                  className={`text-white text-xs font-bold tracking-wide text-center 
-      bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
-      rounded-lg p-3 shadow-lg 
-      hover:scale-105 transition duration-300 ease-in-out ml-2
-      ${product.quantity === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+              <Space className="mt-4" align="center">
+                <Space.Compact>
+                  <Button
+                    onClick={decrementQuantity}
+                    disabled={product.quantity === 0 || quantity <= 1}
+                    className="hover:text-[#82AE46] hover:border-[#82AE46] transition-colors">
+                    -
+                  </Button>
+                  <InputNumber
+                    min={1}
+                    max={product.quantity}
+                    value={quantity}
+                    onChange={(value) => handleQuantityChange(value)}
+                    className="w-16 hover:border-[#82AE46] "
+                    disabled={product.quantity === 0}
+                    controls={false}
+                    style={{ textAlign: "center" }}
+                  />
+                  <Button
+                    onClick={incrementQuantity}
+                    disabled={
+                      product.quantity === 0 || quantity >= product.quantity
+                    }
+                    className="!hover:bg-[#82AE46] !hover:text-white !hover:border-[#82AE46] transition-colors">
+                    +
+                  </Button>
+                </Space.Compact>
+
+                <Button
+                  type="primary"
                   onClick={addToWishlist}
-                  disabled={product.quantity === 0}>
+                  disabled={product.quantity === 0}
+                  className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]">
                   THÊM VÀO GIỎ
-                </button>
-              </p>
+                </Button>
+              </Space>
             </div>
 
-            <div className="overflow-y-auto overflow-x-hidden max-h-[416px] pr-2 w-full">
+            <div
+              className="w-full rounded-lg bg-[#ffffff] p-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-[#82AE46] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#5A8E1B] transition-all duration-300"
+              style={{
+                height: "416px",
+                overflowY: "auto",
+                overflowX: "hidden",
+                boxShadow: "inset 0 0 6px rgba(0, 0, 0, 0.1)",
+                scrollbarWidth: "thin",
+                scrollbarColor: "#82AE46 #f0f0f0",
+              }}>
               <Favourite />
             </div>
           </div>
         </div>
         <Divider style={{ borderColor: "#7cb305" }}></Divider>
         <div className="grid grid-cols-3 gap-4 mb-">
-          <button
-            className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+          <Button
+            type={selectedTab === "description" ? "primary" : "default"}
+            className={`w-full h-14 text-base font-medium hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
               selectedTab === "description"
-                ? "bg-[#82AE46] text-white font-bold"
-                : ""
+                ? "!bg-[#82AE46] !text-white !border-[#82AE46]"
+                : "!bg-[#f0fdf4] !text-[#82AE46] !border-[#82AE46]"
             }`}
-            style={{
-              backgroundColor:
-                selectedTab === "description" ? "#82AE46" : "#f0fdf4",
-              color: selectedTab === "description" ? "white" : "#82AE46",
-              padding: "16px",
-              borderRadius: "8px",
-              border: "2px solid #82AE46",
-            }}
             onClick={() => {
               setSelectedTab("description");
               toggleDescription();
             }}>
             MÔ TẢ
-          </button>
-          <button
-            className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+          </Button>
+          <Button
+            type={selectedTab === "informations" ? "primary" : "default"}
+            className={`w-full h-14 text-base font-medium hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
               selectedTab === "informations"
-                ? "bg-[#82AE46] text-white font-bold"
-                : ""
+                ? "!bg-[#82AE46] !text-white !border-[#82AE46]"
+                : "!bg-[#f0fdf4] !text-[#82AE46] !border-[#82AE46]"
             }`}
-            style={{
-              backgroundColor:
-                selectedTab === "informations" ? "#82AE46" : "#f0fdf4",
-              color: selectedTab === "informations" ? "white" : "#82AE46",
-              padding: "16px",
-              borderRadius: "8px",
-              border: "2px solid #82AE46",
-            }}
             onClick={() => {
               setSelectedTab("informations");
               toggleInformations();
             }}>
             THÔNG TIN LIÊN QUAN
-          </button>
+          </Button>
 
-          <button
-            className={`hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
+          <Button
+            type={selectedTab === "reviews" ? "primary" : "default"}
+            className={`w-full h-14 text-base font-medium hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
               selectedTab === "reviews"
-                ? "bg-[#82AE46] text-white font-bold"
-                : ""
+                ? "!bg-[#82AE46] !text-white !border-[#82AE46]"
+                : "!bg-[#f0fdf4] !text-[#82AE46] !border-[#82AE46]"
             }`}
-            style={{
-              backgroundColor:
-                selectedTab === "reviews" ? "#82AE46" : "#f0fdf4",
-              color: selectedTab === "reviews" ? "white" : "#82AE46",
-              padding: "16px",
-              borderRadius: "8px",
-              border: "2px solid #82AE46",
-            }}
             onClick={() => {
               setSelectedTab("reviews");
               toggleReviews();
             }}>
             ĐÁNH GIÁ
-          </button>
+          </Button>
         </div>
         {showDescription && (
           <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
-            <h2 className="text-2xl font-bold">Mô tả sản phẩm</h2>
-            <p>
-              {product.description.split("\n").map((line, index) => (
-                <span key={index}>
-                  {line}
-                  <br />
-                </span>
-              ))}
-            </p>
+            <Typography.Title level={2}>Mô tả sản phẩm</Typography.Title>
+            <Typography.Paragraph className="whitespace-pre-line">
+              {product.description}
+            </Typography.Paragraph>
           </div>
         )}
         {showInformations && (
-          <div className="mt-4 p-4  rounded-lg bg-[#f0fdf4]">
-            <h2 className="text-2xl font-bold">Thông tin sản phẩm</h2>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "10px",
-              }}>
-              <p>Danh mục: {product.category.name}</p>
-              <p>Nguồn gốc: {product.origin}</p>
-              <p>Đơn vị tính: {product.unit}</p>
-              <p>
+          <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
+            <Typography.Title level={2}>Thông tin sản phẩm</Typography.Title>
+            <div className="grid grid-cols-2 gap-4">
+              <Typography.Text strong>
+                Danh mục:{" "}
+                <Typography.Text>{product.category.name}</Typography.Text>
+              </Typography.Text>
+              <Typography.Text strong>
+                Nguồn gốc: <Typography.Text>{product.origin}</Typography.Text>
+              </Typography.Text>
+              <Typography.Text strong>
+                Đơn vị tính: <Typography.Text>{product.unit}</Typography.Text>
+              </Typography.Text>
+              <Typography.Text strong>
                 Trạng thái:{" "}
                 {product.quantity === 0 ? (
-                  <span className="text-red-500">Hết hàng</span>
+                  <Typography.Text type="danger">Hết hàng</Typography.Text>
                 ) : product.status === "available" ? (
-                  "Còn hàng"
+                  <Typography.Text type="success">Còn hàng</Typography.Text>
                 ) : (
-                  <span className="text-red-500">Hết hàng</span>
+                  <Typography.Text type="danger">Hết hàng</Typography.Text>
                 )}
-              </p>
+              </Typography.Text>
             </div>
           </div>
         )}
         {showReviews && (
           <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
-            <h2 className="text-2xl font-bold">Đánh giá sản phẩm</h2>
+            <Typography.Title level={2}>Đánh giá sản phẩm</Typography.Title>
 
-            {/* Xác định phạm vi đánh giá hiển thị */}
             {product.reviews
               .slice((currentPage - 1) * pageSize, currentPage * pageSize)
               .map((review, index) => (
-                <div key={index} className="mt-2">
-                  <p>
-                    <b>{userData[review.userID] || "Người dùng ẩn danh"}</b> -{" "}
-                    {new Date(review.createdAt).toLocaleDateString()}
-                  </p>
-                  <Rate disabled defaultValue={review.rating} />
-                  <p>{review.comment}</p>
-                  <Divider />
+                <div key={index} className="mt-4">
+                  <Space direction="vertical" size="small" className="w-full">
+                    <Space align="center">
+                      <Typography.Text strong>
+                        {userData[review.userID] || "Người dùng ẩn danh"}
+                      </Typography.Text>
+                      <Typography.Text type="secondary">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </Typography.Text>
+                    </Space>
+                    <Rate disabled defaultValue={review.rating} />
+                    <Typography.Paragraph>
+                      {review.comment}
+                    </Typography.Paragraph>
+                    <Divider style={{ margin: "12px 0" }} />
+                  </Space>
                 </div>
               ))}
 
@@ -566,7 +565,7 @@ const Detail = () => {
               pageSize={pageSize}
               total={product.reviews.length}
               onChange={(page) => setCurrentPage(page)}
-              className="mt-4 flex justify-center"
+              className="mt-4 flex justify-center [&_.ant-pagination-item]:!bg-white [&_.ant-pagination-item]:!border-[#82AE46] [&_.ant-pagination-item>a]:!text-[#82AE46] [&_.ant-pagination-item-active]:!bg-[#82AE46] [&_.ant-pagination-item-active>a]:!text-white [&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-item:hover]:!bg-[#82AE46] [&_.ant-pagination-item:hover>a]:!text-white [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
             />
           </div>
         )}

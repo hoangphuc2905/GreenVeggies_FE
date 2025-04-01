@@ -442,7 +442,34 @@ export const updateProduct = async (id, data) => {
 export const getAllReviews = async () => {
   try {
     const response = await reviewAPI.get("/reviews");
-    return response.data;
+    const reviews = response.data;
+
+    // Fetch both user and product information for each review
+    const reviewsWithInfo = await Promise.all(
+      reviews.map(async (review) => {
+        try {
+          const [userResponse, productResponse] = await Promise.all([
+            userAPI.get(`/user/${review.userID}`),
+            productAPI.get(`/products/${review.productID}`)
+          ]);
+
+          return {
+            ...review,
+            user: userResponse.data,
+            product: productResponse.data
+          };
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          return {
+            ...review,
+            user: null,
+            product: null
+          };
+        }
+      })
+    );
+
+    return reviewsWithInfo;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách đánh giá:", error);
     return [];

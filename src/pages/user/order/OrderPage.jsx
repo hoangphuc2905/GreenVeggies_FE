@@ -1,4 +1,13 @@
-import { Divider, Button, Form, Input, Radio, message } from "antd";
+// First, import notification from antd at the top of the file
+import {
+  Divider,
+  Button,
+  Form,
+  Input,
+  Radio,
+  message,
+  notification,
+} from "antd";
 import { useState, useEffect } from "react";
 import QRCode from "qrcode";
 import {
@@ -9,7 +18,7 @@ import {
   addOrder,
 } from "../../../api/api";
 import { useNavigate } from "react-router-dom";
-
+import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 const style = {
   display: "flex",
   flexDirection: "column",
@@ -34,10 +43,6 @@ const validateMessages = {
   number: {
     range: "${label} must be between ${min} và ${max}",
   },
-};
-
-const calculateSellingPrice = (price) => {
-  return price * 1.5;
 };
 
 const onFinish = (values) => {
@@ -113,7 +118,7 @@ const OrderPage = () => {
           return {
             ...item,
             name: product.name,
-            price: calculateSellingPrice(product.price),
+            price: CalcPrice(product.price),
           };
         })
       );
@@ -128,7 +133,8 @@ const OrderPage = () => {
     cartItems,
     totalQuantity,
     totalAmount,
-    paymentMethod
+    paymentMethod,
+    address
   ) => {
     try {
       const orderData = {
@@ -139,6 +145,7 @@ const OrderPage = () => {
         })),
         totalQuantity,
         totalAmount,
+        address,
         paymentMethod,
       };
 
@@ -152,18 +159,33 @@ const OrderPage = () => {
           await deleteShoppingCartDetailById(item.shoppingCartDetailID);
         }
 
-        alert("Đặt hàng thành công!");
+        notification.success({
+          message: "Thành công",
+          description: "Đặt hàng thành công!",
+          placement: "topRight",
+          duration: 4,
+        });
 
         // Cập nhật giỏ hàng sau khi đặt hàng thành công
         await fetchCartItems(userID);
 
-        navigate("/");
+        navigate("/user/orders");
       } else {
-        alert("Đặt hàng thất bại. Vui lòng thử lại.");
+        notification.error({
+          message: "Thất bại",
+          description: "Đặt hàng thất bại. Vui lòng thử lại.",
+          placement: "topRight",
+          duration: 4,
+        });
       }
     } catch (error) {
       console.error("Error placing order:", error);
-      alert("Đã xảy ra lỗi khi đặt hàng.");
+      notification.error({
+        message: "Lỗi",
+        description: "Đã xảy ra lỗi khi đặt hàng.",
+        placement: "topRight",
+        duration: 4,
+      });
     }
     const updatedCartItemCount = cartItems.length; // Hoặc tính toán số lượng mới
     const event = new CustomEvent("wishlistUpdated", {
@@ -427,6 +449,8 @@ const OrderPage = () => {
                   0
                 );
                 const totalAmount = totalPrice;
+                const formValues = form.getFieldsValue();
+                const userAddress = `${formValues.user.address}, ${formValues.user.city}`;
 
                 if (!userID) {
                   alert("User ID không tồn tại. Vui lòng đăng nhập lại.");
@@ -438,7 +462,8 @@ const OrderPage = () => {
                   cartItems,
                   totalQuantity,
                   totalAmount,
-                  "CASH"
+                  value === 1 ? "CASH" : value === 2 ? "BANK" : "MOMO",
+                  userAddress
                 );
               }}>
               Đặt hàng
