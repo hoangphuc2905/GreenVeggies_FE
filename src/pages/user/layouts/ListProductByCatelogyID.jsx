@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Pagination, notification } from "antd";
+import { Pagination, notification, Empty } from "antd";
 import PropTypes from "prop-types";
 import { saveShoppingCarts } from "../../../api/api";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
@@ -207,7 +207,14 @@ const ListProductByCatelogyID = ({
                 );
               })
             ) : (
-              <p>Không có sản phẩm nào trong danh mục này.</p>
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span className="text-gray-700">
+                    Không có sản phẩm nào trong danh mục này
+                  </span>
+                }
+              />
             )}
           </div>
         )}

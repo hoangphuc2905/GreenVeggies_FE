@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProducts } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy danh sách sản phẩm
+import { getProducts } from "../../../api/api";
+import { List, Avatar } from 'antd';
 
 const Favourite = () => {
   const [products, setProducts] = useState([]);
@@ -32,40 +33,38 @@ const Favourite = () => {
 
   return (
     <div>
-      <h2
-        className="text-white text-l font-bold uppercase tracking-wide text-center 
+      <div className="mb-2">
+        <h2 className="text-white text-lg font-bold uppercase tracking-wide text-center 
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
-               rounded-xl p-4 shadow-lg 
-               hover:scale-105 transition duration-300 ease-in-out">
-        Bạn có thể thích
-      </h2>
-      <div className="grid grid-cols-1 gap-4">
-        {products.slice(0, 4).map((product, index) => (
-          <div
-            key={index}
-            className="flex mt-4 cursor-pointer hover:shadow-xl hover:scale-110"
-            
-            onClick={() => handleProductClick(product)}>
-            <div className="w-1/2 h-[100px]">
-              <img
-                src={
-                  Array.isArray(product.imageUrl)
-                    ? product.imageUrl[0]
-                    : product.imageUrl
-                }
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="w-1/2 pl-4 flex flex-col justify-center">
-              <p className="text-gray-700 font-bold">{product.name}</p>
-              <span className="text-gray-700">
-                {formatPrice(product.price)}
-              </span>
-            </div>
-          </div>
-        ))}
+               rounded-t-lg p-4
+               transition duration-300 ease-in-out">
+          Có thể bạn sẽ thích
+        </h2>
       </div>
+      <List
+        itemLayout="horizontal"
+        dataSource={products.slice(0, 4)}
+        className="mt-4"
+        renderItem={(product) => (
+          <List.Item
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 rounded-lg p-2"
+            onClick={() => handleProductClick(product)}
+          >
+            <List.Item.Meta
+              avatar={
+                <Avatar
+                  shape="square"
+                  size={100}
+                  src={Array.isArray(product.imageUrl) ? product.imageUrl[0] : product.imageUrl}
+                  className="object-cover"
+                />
+              }
+              title={<span className="text-gray-700 font-bold">{product.name}</span>}
+              description={<span className="text-gray-700">{formatPrice(product.price)}</span>}
+            />
+          </List.Item>
+        )}
+      />
     </div>
   );
 };
