@@ -24,8 +24,9 @@ const ProfilePage = () => {
           duration: 3,
         });
 
-        // Chuyển hướng về trang Home
+        // Chuyển hướng về trang Home và làm mới trang
         navigate('/');
+        window.location.reload();
       },
       onCancel() {
         console.log('Đăng xuất đã bị hủy');

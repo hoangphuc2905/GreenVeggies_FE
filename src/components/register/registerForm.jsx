@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 
 const SignupForm = ({ switchToLogin, email }) => {
   const [formData, setFormData] = useState({
-    email: email || "", // Gán giá trị email từ props
+    email: email || "",
     username: "",
     phone: "",
     dateOfBirth: "",
@@ -15,8 +15,14 @@ const SignupForm = ({ switchToLogin, email }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [formErrors, setFormErrors] = useState({
+    email: "",
+    username: "",
+    phone: "",
+    dateOfBirth: "",
+    password: "",
+  });
 
-  // Cập nhật email khi nhận được từ props
   useEffect(() => {
     if (email) {
       setFormData((prevFormData) => ({ ...prevFormData, email }));
@@ -25,11 +31,52 @@ const SignupForm = ({ switchToLogin, email }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormErrors({ ...formErrors, [e.target.name]: "" }); // Clear error when input changes
   };
 
   const handleFileChange = (e) => {
     setFormData({ ...formData, image: e.target.files[0] });
   };
+
+  const validateForm = () => {
+    const errors = {};
+  
+    // Kiểm tra email
+    if (!formData.email) errors.email = "Email không được để trống";
+  
+    // Kiểm tra tên người dùng (không được chứa số)
+    if (!formData.username) {
+      errors.username = "Tên người dùng không được để trống";
+    } else if (/\d/.test(formData.username)) {
+      errors.username = "Tên người dùng không được chứa số";
+    }
+  
+    // Kiểm tra số điện thoại
+    if (!formData.phone) {
+      errors.phone = "Số điện thoại không được để trống";
+    } else if (!/^\d{10}$/.test(formData.phone)) {
+      errors.phone = "Số điện thoại phải gồm 10 chữ số";
+    }
+  
+    // Kiểm tra ngày sinh (phải trên 12 tuổi)
+    if (!formData.dateOfBirth) {
+      errors.dateOfBirth = "Ngày sinh không được để trống";
+    } else {
+      const birthDate = new Date(formData.dateOfBirth);
+      const age = new Date().getFullYear() - birthDate.getFullYear();
+      const month = new Date().getMonth() - birthDate.getMonth();
+      if (age < 12 || (age === 12 && month < 0)) {
+        errors.dateOfBirth = "Bạn phải trên 12 tuổi";
+      }
+    }
+  
+    // Kiểm tra mật khẩu
+    if (!formData.password) errors.password = "Mật khẩu không được để trống";
+  
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,22 +84,12 @@ const SignupForm = ({ switchToLogin, email }) => {
     setError("");
     setSuccess("");
 
-    // Kiểm tra nếu các trường bắt buộc không có giá trị
-    if (
-      !formData.email ||
-      !formData.phone ||
-      !formData.username ||
-      !formData.password ||
-      !formData.dateOfBirth
-    ) {
-      setError(
-        "Vui lòng nhập đầy đủ các trường: email, phone, username, password, dateOfBirth."
-      );
+    // Kiểm tra tính hợp lệ của form
+    if (!validateForm()) {
       setLoading(false);
       return;
     }
 
-    // Kiểm tra ảnh, nếu không có thì sử dụng ảnh mặc định
     const avatar = formData.image ? formData.image.name : "https://res.cloudinary.com/dze57n4oa/image/upload/v1741758315/e693481de2901eaee3e8746472c2a552_nle9hj.jpg";
 
     const requestBody = {
@@ -61,7 +98,7 @@ const SignupForm = ({ switchToLogin, email }) => {
       phone: formData.phone,
       dateOfBirth: formData.dateOfBirth,
       password: formData.password,
-      avatar: avatar, // Gửi avatar là ảnh mặc định nếu không có ảnh người dùng
+      avatar: avatar,
     };
 
     try {
@@ -121,15 +158,16 @@ const SignupForm = ({ switchToLogin, email }) => {
           <div className="text-green-500 text-center mb-3">{success}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
           <input
             type="email"
             name="email"
             value={formData.email}
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-            readOnly // Không cho chỉnh sửa email
+            readOnly
           />
+          {formErrors.email && <div className="text-red-500">{formErrors.email}</div>}
+
           <input
             type="text"
             name="username"
@@ -137,8 +175,9 @@ const SignupForm = ({ switchToLogin, email }) => {
             onChange={handleChange}
             placeholder="Tên người dùng"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
           />
+          {formErrors.username && <div className="text-red-500">{formErrors.username}</div>}
+
           <input
             type="tel"
             name="phone"
@@ -146,16 +185,18 @@ const SignupForm = ({ switchToLogin, email }) => {
             onChange={handleChange}
             placeholder="Số điện thoại"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
           />
+          {formErrors.phone && <div className="text-red-500">{formErrors.phone}</div>}
+
           <input
             type="date"
             name="dateOfBirth"
             value={formData.dateOfBirth}
             onChange={handleChange}
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
           />
+          {formErrors.dateOfBirth && <div className="text-red-500">{formErrors.dateOfBirth}</div>}
+
           <input
             type="password"
             name="password"
@@ -163,8 +204,9 @@ const SignupForm = ({ switchToLogin, email }) => {
             onChange={handleChange}
             placeholder="Mật khẩu"
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
           />
+          {formErrors.password && <div className="text-red-500">{formErrors.password}</div>}
+
           <input
             type="file"
             name="image"
