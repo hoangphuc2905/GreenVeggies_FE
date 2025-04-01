@@ -78,6 +78,18 @@ export const handleProductApi = {
       return null;
     }
   },
+  //Cập nhật trạng thái sản phẩm
+  updateProductStatus: async (productID, status) => {
+    try {
+      const response = await productAPI.put(`/products/status/${productID}`, {
+        status,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái sản phẩm:", error);
+      return null;
+    }
+  },
 };
 
 // Xóa hình ảnh trên cloundary
@@ -417,9 +429,9 @@ export const updateProduct = async (id, data) => {
     }
 
     const formattedData = {
-      name: decodeURIComponent(data.name),
-      description: decodeURIComponent(data.description),
-      origin: decodeURIComponent(data.origin),
+      name: data.name,
+      description: data.description,
+      origin: data.origin,
       imageUrl: data.imageUrl,
       import: data.import,
       category: data.category,

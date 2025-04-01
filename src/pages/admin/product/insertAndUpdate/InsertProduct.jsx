@@ -17,6 +17,10 @@ import { getListProducts, insertProduct } from "../../../../api/api";
 import { useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
 import UploadPicture from "../../../../components/uploadPicture/UploadPicture";
+import {
+  CalcPrice,
+  formattedPrice,
+} from "../../../../components/calcSoldPrice/CalcPrice";
 
 const { TextArea } = Input;
 
@@ -190,7 +194,11 @@ const InsertProduct = () => {
                 >
                   <Input />
                 </Form.Item>
-                <Form.Item label="Loại danh mục" name="category">
+                <Form.Item
+                  label="Loại danh mục"
+                  name="category"
+                  rules={[{ required: true }]}
+                >
                   <div className="flex items-center gap-2">
                     <Select
                       className="flex-1"
@@ -244,6 +252,7 @@ const InsertProduct = () => {
                   name="price"
                   rules={[
                     {
+                      required: true,
                       type: "number",
                       min: 0,
                       message: "Giá nhập không hợp lệ!",
@@ -251,27 +260,30 @@ const InsertProduct = () => {
                   ]}
                 >
                   <InputNumber
+                    type="number"
                     className="w-full"
                     onChange={(value) => {
-                      form.setFieldsValue({ entryPrice: (value || 0) * 1.5 });
+                      const calculatedPrice = CalcPrice(value || 0); // Tính giá bán
+                      form.setFieldsValue({
+                        entryPrice: calculatedPrice, // Lưu giá trị chưa định dạng
+                        formattedEntryPrice: formattedPrice(calculatedPrice), // Hiển thị giá trị đã định dạng
+                      });
                     }}
                   />
                 </Form.Item>
 
                 <Form.Item
                   label="Giá bán"
-                  name="entryPrice"
+                  name="formattedEntryPrice"
                   rules={[
                     {
-                      type: "number",
-                      min: 0,
-                      message: "Giá nhập không hợp lệ!",
+                      type: "string",
+                      message: "Giá bán không hợp lệ!",
                     },
                   ]}
                 >
-                  <InputNumber className="w-full" disabled={true} />
+                  <Input className="w-full" disabled={true} />
                 </Form.Item>
-
                 <Form.Item
                   label="Số lượng nhập"
                   name="import"

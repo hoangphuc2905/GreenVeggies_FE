@@ -19,6 +19,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
 import UploadPicture from "../../../../components/uploadPicture/UploadPicture.jsx";
 import InsertStockEntry from "../../stockEntry/InsertStockEntry";
+import {
+  CalcPrice,
+  formattedPrice,
+} from "../../../../components/calcSoldPrice/CalcPrice.jsx";
 
 const { TextArea } = Input;
 
@@ -104,7 +108,7 @@ const UpdateProduct = () => {
           unit: getProduct.unit || "piece",
           status: getProduct.status || "available",
           price: getProduct.price || 0,
-          entryPrice: getProduct.price * 1.5 || 0,
+          entryPrice: formattedPrice(CalcPrice(getProduct.price)) || 0,
           imageUrl: getProduct.imageUrl
             ? getProduct.imageUrl.map((url, index) => ({
                 uid: index,
@@ -280,7 +284,9 @@ const UpdateProduct = () => {
                     type="number"
                     className="w-full"
                     onChange={(value) => {
-                      form.setFieldsValue({ entryPrice: (value || 0) * 1.5 });
+                      form.setFieldsValue({
+                        entryPrice: formattedPrice(CalcPrice(value)),
+                      });
                     }}
                   />
                 </Form.Item>

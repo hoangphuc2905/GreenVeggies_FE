@@ -1,5 +1,9 @@
 import { Card, Col, Rate, Row, Table, Tag } from "antd";
 import PropTypes from "prop-types";
+import {
+  CalcPrice,
+  formattedPrice,
+} from "../../../../components/calcSoldPrice/CalcPrice";
 
 const Description = ({ product }) => {
   if (!product) return <p>Không có dữ liệu sản phẩm.</p>;
@@ -17,7 +21,11 @@ const Description = ({ product }) => {
   };
 
   const dataSource = [
-    { key: "1", label: "Giá nhập", value: `${product.price} VND / KG` },
+    {
+      key: "1",
+      label: "Giá nhập",
+      value: `${formattedPrice(product.price)} / KG`,
+    },
     {
       key: "2",
       label: "Danh mục",
@@ -102,7 +110,7 @@ const Description = ({ product }) => {
           <Col span={4}>
             <Card className="text-[#808080] shadow-md" title="Giá bán">
               {product.price
-                ? `${(product.price * 1.5).toLocaleString()} VND`
+                ? `${formattedPrice(CalcPrice(product.price))}`
                 : "Chưa cập nhật"}
             </Card>
           </Col>
