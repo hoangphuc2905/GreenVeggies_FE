@@ -111,6 +111,9 @@ export const handleProductApi = {
       return null;
     }
   },
+  addCategory: async (data) => {
+    return await productAPI.post("/categories", data);
+  },
 };
 
 // Xóa hình ảnh trên cloundary

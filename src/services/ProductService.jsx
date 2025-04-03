@@ -97,3 +97,24 @@ export const addProduct = async (values) => {
     return null;
   }
 };
+
+//Thêm danh mục mới
+export const addCategory = async (values) => {
+  try {
+    // Gọi API thêm danh mục
+    const response = await handleProductApi.addCategory(values);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu danh mục vừa thêm
+    }
+
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Trả về thông báo lỗi từ BE nếu có
+      throw error; // Ném lỗi để Frontend xử lý
+    }
+    console.error("Lỗi khi gọi API addCategory:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};

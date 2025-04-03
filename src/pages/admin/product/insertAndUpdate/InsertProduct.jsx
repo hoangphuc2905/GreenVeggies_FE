@@ -98,17 +98,15 @@ const InsertProduct = () => {
         setTimeout(() => {
           navigate("/admin/products");
         }, 1000);
-      } else {
-        message.error("Thêm sản phẩm thất bại. Vui lòng thử lại! ❌");
       }
     } catch (error) {
       console.error("Lỗi khi thêm sản phẩm:", error);
-      message.error("Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
+      // Hiển thị thông báo lỗi từ BE nếu có
+      message.error(error.message || "Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <Layout className="h-full">
       <div className="w-full bg-white rounded-md px-[2%] py-[1%] shadow-md">
