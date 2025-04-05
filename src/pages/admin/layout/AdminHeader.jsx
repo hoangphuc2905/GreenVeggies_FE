@@ -1,7 +1,7 @@
 import { Avatar, Badge, Dropdown, message, Modal, Popover } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell } from "@fortawesome/free-solid-svg-icons";
-import logo from "../../../assets/Green.png";
+import logo from "../../../assets/pictures/Green.png";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";

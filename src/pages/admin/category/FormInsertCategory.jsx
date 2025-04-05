@@ -9,12 +9,13 @@ import {
   Modal,
   Skeleton,
 } from "antd";
-import logo from "../../../assets/Green.png";
+import logo from "../../../assets/pictures/Green.png";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { getListProducts, insertCategory } from "../../../api/api";
+import { getListProducts } from "../../../api/api";
 import { ReloadOutlined, SaveFilled } from "@ant-design/icons";
+import { addCategory } from "../../../services/ProductService";
 
 const fetchCategories = async (page, limit) => {
   try {
@@ -93,23 +94,31 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
   const handleInsertCategory = async (values) => {
     try {
       setLoading(true);
-      if (categories.some((item) => item.name === values.name)) {
-        message.error("Danh mục đã tồn tại");
-        return;
-      } else if (values.name.length < 3) {
-        message.error("Tên danh mục phải có ít nhất 3 ký tự");
-        return;
-      }
-      const response = await insertCategory(values);
+
+      // Gọi hàm addCategory từ ProductService
+      const response = await addCategory(values);
       if (response) {
         message.success("Thêm mới danh mục thành công");
-        handleRefresh();
+        handleRefresh(); // Làm mới danh sách danh mục
         onCategoryAdded(); // Gọi lại API danh mục trong InsertForm
-        form.resetFields();
+        form.resetFields(); // Reset form
       }
     } catch (error) {
       console.error("Lỗi khi thêm mới danh mục:", error);
-      message.error("Lỗi khi thêm mới danh mục");
+
+      // Hiển thị thông báo lỗi từ BE nếu có
+      if (error.response && error.response.data && error.response.data.errors) {
+        const errors = error.response.data.errors;
+        if (errors.name) {
+          message.error(errors.name); // Hiển thị lỗi liên quan đến tên danh mục
+        } else if (errors.server) {
+          message.error(errors.server); // Hiển thị lỗi từ server
+        } else {
+          message.error("Lỗi không xác định, vui lòng thử lại!");
+        }
+      } else {
+        message.error("Lỗi hệ thống, vui lòng thử lại sau!");
+      }
     } finally {
       setLoading(false);
     }
@@ -138,6 +147,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
             </div>
           </div>
         }
+        centered
         open={isOpen}
         onCancel={onClose}
         footer={null}
@@ -157,7 +167,7 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
                 <div className="font-bold"> Nhập vào tên danh mục mới</div>
               }
               name="name"
-              rules={[{ required: true }]}
+              // rules={[{ required: true }]}
             >
               <Input />
             </Form.Item>

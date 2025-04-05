@@ -14,7 +14,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { insertStockEntry } from "../../../api/api";
 import { ReloadOutlined, SaveFilled } from "@ant-design/icons";
-import logo from "../../../assets/Green.png";
+import logo from "../../../assets/pictures/Green.png";
 
 dayjs.extend(customParseFormat);
 const dateFormat = "DD-MM-YYYY";

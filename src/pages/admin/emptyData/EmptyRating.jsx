@@ -1,4 +1,4 @@
-import emptyRating from "../../../assets/emptyRating.png";
+import emptyRating from "../../../assets/pictures/emptyRating.png";
 
 const EmptyRating = () => {
   return (

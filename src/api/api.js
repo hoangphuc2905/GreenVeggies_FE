@@ -92,24 +92,15 @@ export const handleProductApi = {
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
-    try {
-      const response = await productAPI.get(`products/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy sản phẩm theo ID:", error);
-      return null;
-    }
+    return await productAPI.get(`/products/${id}`);
   },
 
   //Thêm sản phẩm mới
   addProduct: async (data) => {
-    try {
-      const response = await productAPI.post("/products", data);
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi thêm sản phẩm:", error);
-      return null;
-    }
+    return await productAPI.post("/products", data);
+  },
+  addCategory: async (data) => {
+    return await productAPI.post("/categories", data);
   },
 };
 

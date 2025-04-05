@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Modal, Button, Image } from "antd";
-import DefaultAVT from "../../../assets/default.png";
+import DefaultAVT from "../../../assets/pictures/default.png";
 
 const UserDetailModal = ({ isOpen, onClose, user }) => {
   return (
