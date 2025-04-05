@@ -5,19 +5,19 @@ import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
 const countdownDate = new Date("2025-04-13T00:00:00").getTime();
 
-import bgImage from "../../../src/assets/bg.png";
-import bg1Image from "../../../src/assets/bg1.png";
-import bg2Image from "../../../src/assets/bg2.png";
-import shipImage from "../../../src/assets/ship.png";
-import alwayImage from "../../../src/assets/alway.png";
-import supportImage from "../../../src/assets/support.png";
-import qualityImage from "../../../src/assets/quality.png";
-import categoryImage from "../../../src/assets/category1.png";
-import category1Image from "../../../src/assets/category11.png";
-import category2Image from "../../../src/assets/category-2.png";
-import category3Image from "../../../src/assets/category-3.png";
-import category4Image from "../../../src/assets/category-4.png";
-import bg3Image from "../../../src/assets/bg_3_1.png";
+import bgImage from "../../../src/assets/pictures/bg.png";
+import bg1Image from "../../../src/assets/pictures/bg1.png";
+import bg2Image from "../../../src/assets/pictures/bg2.png";
+import shipImage from "../../../src/assets/pictures/ship.png";
+import alwayImage from "../../../src/assets/pictures/alway.png";
+import supportImage from "../../../src/assets/pictures/support.png";
+import qualityImage from "../../../src/assets/pictures/quality.png";
+import categoryImage from "../../../src/assets/pictures/category1.png";
+import category1Image from "../../../src/assets/pictures/category11.png";
+import category2Image from "../../../src/assets/pictures/category-2.png";
+import category3Image from "../../../src/assets/pictures/category-3.png";
+import category4Image from "../../../src/assets/pictures/category-4.png";
+import bg3Image from "../../../src/assets/pictures/bg_3_1.png";
 
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
@@ -254,7 +254,8 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product)}>
+                  onClick={() => handleProductClick(product)}
+                >
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -376,7 +377,8 @@ const Home = () => {
             dots={true}
             className="mt-10"
             slidesToShow={3}
-            slidesToScroll={3}>
+            slidesToScroll={3}
+          >
             {reviews
               .filter((review) => review.rating === 5)
               .map((review, index) => {

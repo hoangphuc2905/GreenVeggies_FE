@@ -9,7 +9,7 @@ import {
   Modal,
   Skeleton,
 } from "antd";
-import logo from "../../../assets/Green.png";
+import logo from "../../../assets/pictures/Green.png";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -148,11 +148,9 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
           </div>
         }
         centered
-
         open={isOpen}
         onCancel={onClose}
         footer={null}
-
         className="custom-modal"
       >
         <div className="flex flex-col gap-4 p-4 bg-white rounded-md">

@@ -3,7 +3,7 @@ import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 
 import Menu from "../layouts/Menu";
-import bgImage from "../../../assets/bg_1.png";
+import bgImage from "../../../assets/pictures/bg_1.png";
 
 import Favourite from "../layouts/Favourite";
 import ListProduct from "../layouts/ListProduct";

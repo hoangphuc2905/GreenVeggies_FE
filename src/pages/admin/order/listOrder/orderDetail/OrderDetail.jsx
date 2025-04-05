@@ -1,6 +1,6 @@
 import { Modal, Descriptions, Button, Table, ConfigProvider } from "antd";
 import PropTypes from "prop-types";
-import logo from "../../../../../assets/Green.png";
+import logo from "../../../../../assets/pictures/Green.png";
 import { getProductById, updateOrderStatus } from "../../../../../api/api";
 import { useEffect, useState } from "react";
 

@@ -44,11 +44,6 @@ const STATUS_OPTIONS = [
     dot: "bg-red-500",
   },
 ];
-// Message hiển thị khi validate form
-const validateMessages = {
-  required: "${label} không được để trống!",
-  types: { number: "${label} phải là số hợp lệ!" },
-};
 
 const InsertProduct = () => {
   const [form] = Form.useForm();
@@ -63,16 +58,8 @@ const InsertProduct = () => {
     fetchCategories();
   }, []);
 
-  // Mở modal thêm danh mục
-  const openInsertCategory = () => {
-    console.log("Open modal");
-    setIsModalOpen(true);
-  };
-
-  // Lấy danh sách danh mục
   const fetchCategories = async () => {
     const response = await getCategories();
-    console.log("API Response:", response);
     if (Array.isArray(response)) {
       setCategories(response);
     } else {
@@ -80,12 +67,13 @@ const InsertProduct = () => {
     }
   };
 
-  // Xử lý khi thêm danh mục
   const handleCategoryAdded = async () => {
     await fetchCategories();
   };
 
-  // Xử lý khi nhấn nút Lưu
+  const openInsertCategory = () => {
+    setIsModalOpen(true);
+  };
   const handlerInsertProduct = async (values) => {
     try {
       setLoading(true);
@@ -99,10 +87,20 @@ const InsertProduct = () => {
           navigate("/admin/products");
         }, 1000);
       }
-    } catch (error) {
-      console.error("Lỗi khi thêm sản phẩm:", error);
-      // Hiển thị thông báo lỗi từ BE nếu có
-      message.error(error.message || "Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
+    } catch (errors) {
+      console.error("Lỗi khi thêm sản phẩm:", errors);
+
+      // Hiển thị lỗi từ BE
+      if (errors) {
+        const fieldErrors = Object.keys(errors).map((field) => ({
+          name: field,
+          errors: [errors[field]],
+        }));
+        console.error("Có lỗi xảy ra khi thêm sản phẩm:", errors);
+        form.setFields(fieldErrors);
+      } else {
+        message.error("Lỗi hệ thống, vui lòng thử lại sau! ⚠️");
+      }
     } finally {
       setLoading(false);
     }
@@ -120,7 +118,6 @@ const InsertProduct = () => {
             layout="horizontal"
             style={{ maxWidth: "100%" }}
             onFinish={handlerInsertProduct}
-            validateMessages={validateMessages}
             initialValues={{ status: "available", quantity: 0 }}
           >
             <Flex className="mb-[5vh]" justify="space-between" align="center">
@@ -235,7 +232,6 @@ const InsertProduct = () => {
                       required: true,
                       type: "number",
                       min: 0,
-                      message: "Giá nhập không hợp lệ!",
                     },
                   ]}
                 >
@@ -251,16 +247,10 @@ const InsertProduct = () => {
                     }}
                   />
                 </Form.Item>
-
                 <Form.Item
                   label="Giá bán"
                   name="formattedEntryPrice"
-                  rules={[
-                    {
-                      type: "string",
-                      message: "Giá bán không hợp lệ!",
-                    },
-                  ]}
+                  rules={[{ type: "string" }]}
                 >
                   <Input className="w-full" disabled={true} />
                 </Form.Item>
@@ -272,13 +262,11 @@ const InsertProduct = () => {
                       required: true,
                       type: "number",
                       min: 0,
-                      message: "Tồn kho không hợp lệ!",
                     },
                   ]}
                 >
                   <InputNumber className="w-full" />
                 </Form.Item>
-
                 <Form.Item
                   label="Đơn vị"
                   name="unit"
@@ -293,11 +281,7 @@ const InsertProduct = () => {
                   </Select>
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">
-                  <Select
-                    disabled={true}
-                    defaultValue="available"
-                    className="w-full"
-                  >
+                  <Select disabled={true} defaultValue="available">
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Option key={option.value} value={option.value}>
                         <div className="flex items-center gap-2 font-bold">
@@ -313,7 +297,6 @@ const InsertProduct = () => {
               </Col>
             </Row>
           </Form>
-
           {/* Modal thêm danh mục */}
           <FormInsertCategory
             isOpen={isModalOpen}

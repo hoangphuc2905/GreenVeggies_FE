@@ -86,18 +86,21 @@ export const addProduct = async (values) => {
 
     // Gọi API thêm sản phẩm
     const response = await handleProductApi.addProduct(formData);
-    if (response) {
-      return response; // Trả về dữ liệu sản phẩm vừa thêm
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu sản phẩm vừa thêm
     }
 
     console.error("API không trả về dữ liệu hợp lệ:", response);
     return null;
   } catch (error) {
+    if (error.response && error.response.data && error.response.data.errors) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
     console.error("Lỗi khi gọi API addProduct:", error);
-    return null;
+    throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
-
 //Thêm danh mục mới
 export const addCategory = async (values) => {
   try {

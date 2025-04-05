@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 import Menu from "../layouts/Menu";
-import bgImage from "../../../assets/bg_1.png";
+import bgImage from "../../../assets/pictures/bg_1.png";
 
 import Favourite from "../layouts/Favourite";
 import { getAllProducts } from "../../../api/api"; // Import hàm API để lấy tất cả sản phẩm
