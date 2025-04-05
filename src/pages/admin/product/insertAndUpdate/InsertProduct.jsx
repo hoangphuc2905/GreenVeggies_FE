@@ -167,14 +167,18 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Tên sản phẩm"
                   name="name"
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: "Vui lòng nhập tên sản phẩm." },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
                 <Form.Item
                   label="Loại danh mục"
                   name="category"
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: "Vui lòng chọn danh mục." },
+                  ]}
                 >
                   <div className="flex items-center gap-2">
                     <Select
@@ -202,11 +206,22 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Nguồn gốc"
                   name="origin"
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: "Vui lòng nhập nguồn gốc." },
+                  ]}
                 >
                   <Input />
                 </Form.Item>
-                <Form.Item label="Mô tả" name="description">
+                <Form.Item
+                  label="Mô tả"
+                  name="description"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập mô tả sản phẩm.",
+                    },
+                  ]}
+                >
                   <TextArea rows={6} />
                 </Form.Item>
                 <Form.Item
@@ -214,6 +229,12 @@ const InsertProduct = () => {
                   valuePropName="fileList"
                   getValueFromEvent={(e) => e.fileList}
                   name="imageUrl"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng tải lên hình ảnh sản phẩm.",
+                    },
+                  ]}
                 >
                   <UploadPicture
                     fileList={form.getFieldValue("imageUrl")}
@@ -232,6 +253,7 @@ const InsertProduct = () => {
                       required: true,
                       type: "number",
                       min: 0,
+                      message: "Vui lòng nhập giá sản phẩm.",
                     },
                   ]}
                 >
@@ -262,6 +284,7 @@ const InsertProduct = () => {
                       required: true,
                       type: "number",
                       min: 0,
+                      message: "Vui lòng nhập số lượng sản phẩm.",
                     },
                   ]}
                 >
@@ -270,7 +293,7 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Đơn vị"
                   name="unit"
-                  rules={[{ required: true }]}
+                  rules={[{ required: true, message: "Vui lòng chọn đơn vị." }]}
                 >
                   <Select>
                     <Select.Option value="piece">Cái</Select.Option>

@@ -55,14 +55,24 @@ export const getCategories = async () => {
 //Tìm sản phẩm theo id
 export const getProductById = async (id) => {
   try {
+    // Gọi API lấy thông tin sản phẩm theo id
     const response = await handleProductApi.getProductById(id);
-    return response; // Trả về dữ liệu sản phẩm
-  } catch (error) {
-    console.error("Lỗi khi gọi API getProductById:", error);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu sản phẩm
+    }
+
+    console.error("API không trả về dữ liệu hợp lệ:", response);
     return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Xử lý lỗi từ BE nếu có
+      console.error("Lỗi từ BE:", error.response.data.message);
+      return { error: error.response.data.message }; // Trả về lỗi từ BE
+    }
+    console.error("Lỗi khi gọi API getProductById:", error);
+    return { error: "Lỗi kết nối đến máy chủ!" }; // Trả về lỗi kết nối
   }
 };
-
 // Thêm sản phẩm mới
 export const addProduct = async (values) => {
   try {

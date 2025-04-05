@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Layout, Spin, Button, Menu, ConfigProvider, Image } from "antd";
+import {
+  Layout,
+  Spin,
+  Button,
+  Menu,
+  ConfigProvider,
+  Image,
+  message,
+} from "antd";
 import { PlusCircleFilled, TagOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
 // import { getProductDetail } from "../../../../api/api";
@@ -27,9 +35,23 @@ const Detail = () => {
 
   const reloadProduct = async (id) => {
     setLoading(true);
-    const response = await getProductById(id); // Gọi lại hàm hợp nhất
-    setProduct(response);
-    setLoading(false);
+    try {
+      const response = await getProductById(id); // Gọi API lấy sản phẩm theo ID
+
+      if (response.error) {
+        // Nếu có lỗi từ BE, hiển thị thông báo lỗi
+        console.error("Lỗi từ BE:", response.error);
+        message.error(response.error); // Hiển thị thông báo lỗi
+      } else {
+        // Nếu thành công, cập nhật sản phẩm
+        setProduct(response);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải sản phẩm:", error);
+      message.error("Đã xảy ra lỗi khi tải sản phẩm. Vui lòng thử lại sau!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
