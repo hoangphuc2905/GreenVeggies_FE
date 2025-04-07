@@ -5,7 +5,7 @@ const Lienhe = () => {
     <div className="px-[10%]">
       <div className="container mx-auto relative">
         <img
-          src="src\assets\Lienhe.jpg"
+          src="src/assets/pictures/lienhe.jpg"
           alt="Background"
           className="w-full h-[550px]"
         />
@@ -25,7 +25,7 @@ const Lienhe = () => {
           {/* Thay khung "Gửi tin nhắn" bằng 1 hình ảnh */}
           <div className="flex justify-center ">
             <img
-              src="src/assets/thuan2.png"
+              src="src/assets/pictures/thuan2.png"
               alt="Hỗ trợ khách hàng"
               className="rounded-lg shadow-lg w-full"
             />

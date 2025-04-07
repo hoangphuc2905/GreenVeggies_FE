@@ -3,6 +3,7 @@ import {
   faPhone,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import useLogout from "../../../components/logout/Logout";
 import { Modal, notification } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -137,31 +138,7 @@ const Header = () => {
     setShowForgotPasswordForm(false);
     setShowOtpFormqmk(true);
   };
-  const handleLogout = () => {
-    Modal.confirm({
-      title: "Bạn có chắc chắn muốn đăng xuất?",
-      onOk() {
-        // Xóa thông tin người dùng và token khỏi localStorage
-        localStorage.removeItem("token");
-        localStorage.removeItem("userID");
-        setUser(null); // Cập nhật trạng thái user về null
-
-        // Hiển thị thông báo đăng xuất thành công
-        notification.success({
-          message: "Đăng xuất thành công",
-          description: "Bạn đã đăng xuất khỏi hệ thống.",
-          placement: "topRight",
-          duration: 3,
-        });
-
-        // Chuyển hướng về trang Home
-        navigate("/");
-      },
-      onCancel() {
-        console.log("Đăng xuất đã bị hủy");
-      },
-    });
-  };
+  const handleLogout = useLogout();
 
   const items = [
     {
