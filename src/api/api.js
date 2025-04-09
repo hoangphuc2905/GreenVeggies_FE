@@ -102,6 +102,14 @@ export const handleProductApi = {
   addCategory: async (data) => {
     return await productAPI.post("/categories", data);
   },
+  updateProduct: async (id, data) => {
+    return await productAPI.put(`/products/${id}`, data);
+  },
+  //Thêm phiếu nhập kho
+
+  insertStockEntry: async (data) => {
+    return await productAPI.post("/stock-entries", data);
+  },
 };
 
 // Xóa hình ảnh trên cloundary
@@ -405,34 +413,6 @@ export const updateOrderStatus = async (orderID, status) => {
     return null;
   }
 };
-export const insertStockEntry = async (data) => {
-  try {
-    if (!data.productID || data.entryPrice <= 0 || data.entryQuantity <= 0) {
-      throw new Error("Dữ liệu nhập kho không hợp lệ!");
-    }
-
-    const response = await productAPI.post(
-      "/stock-entries",
-      {
-        productID: data.productID,
-        entryPrice: data.entryPrice,
-        entryQuantity: data.entryQuantity,
-      },
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    if (!response.data) {
-      throw new Error("Phản hồi từ server không hợp lệ!");
-    }
-
-    console.log("Stock entry response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi thêm phiếu nhập kho:", error.message);
-    return null;
-  }
-};
-
 // 🟢 Cập nhật sản phẩm theo ID
 export const updateProduct = async (id, data) => {
   try {
@@ -500,16 +480,6 @@ export const getAllReviews = async () => {
   }
 };
 
-// 🟢 Thêm danh mục mới
-export const insertCategory = async (data) => {
-  try {
-    const response = await api.post("/categories", data);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi thêm danh mục:", error);
-    return null;
-  }
-};
 
 // 🟢 Lấy tất cả sản phẩm
 export const getAllProducts = async () => {

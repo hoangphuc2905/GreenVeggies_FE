@@ -14,7 +14,7 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { getListProducts, updateProduct } from "../../../../api/api";
+import { getListProducts } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
 import UploadPicture from "../../../../components/uploadPicture/UploadPicture.jsx";
@@ -23,6 +23,7 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../../components/calcSoldPrice/CalcPrice.jsx";
+import { updateProduct } from "../../../../services/ProductService.jsx";
 
 const { TextArea } = Input;
 
@@ -46,11 +47,6 @@ const STATUS_OPTIONS = [
     dot: "bg-red-500",
   },
 ];
-
-const validateMessages = {
-  required: "${label} không được để trống!",
-  types: { number: "${label} phải là số hợp lệ!" },
-};
 
 const UpdateProduct = () => {
   const { message } = App.useApp();
@@ -125,19 +121,28 @@ const UpdateProduct = () => {
   const handlerUpdateProduct = async (values) => {
     try {
       setLoading(true);
-      const imageUrls =
-        values.imageUrl?.map((file) => file.url || file.response?.url) || [];
-      const formData = { ...values, imageUrl: imageUrls };
-      const response = await updateProduct(product.productID, formData);
+
+      // Gọi API cập nhật sản phẩm
+      const response = await updateProduct(product.productID, values);
+
       if (response) {
         message.success("Cập nhật sản phẩm thành công!");
-        console.log("Cập nhật sản phẩm thành công!", formData);
+        console.log("Cập nhật sản phẩm thành công!", values);
         setTimeout(() => navigate("/admin/products"), 1000);
-      } else {
-        message.error("Cập nhật thất bại. Vui lòng thử lại!");
       }
-    } catch (error) {
-      message.error("Lỗi hệ thống, vui lòng thử lại sau!" + error);
+    } catch (errors) {
+      console.error("Lỗi khi cập nhật sản phẩm:", errors);
+
+      if (errors) {
+        const fieldErrors = Object.keys(errors).map((field) => ({
+          name: field,
+          errors: [errors[field]],
+        }));
+        console.error("Có lỗi xảy ra khi cập nhật sản phẩm:", errors);
+        form.setFields(fieldErrors);
+      } else {
+        message.error("Lỗi hệ thống ở service, vui lòng thử lại sau! ⚠️");
+      }
     } finally {
       setLoading(false);
     }
@@ -156,7 +161,6 @@ const UpdateProduct = () => {
             layout="horizontal"
             style={{ maxWidth: "100%" }}
             onFinish={handlerUpdateProduct}
-            validateMessages={validateMessages}
             initialValues={{ status: "available", quantity: 0 }}
           >
             <Flex className="mb-[5vh]" justify="space-between" align="center">
@@ -215,7 +219,7 @@ const UpdateProduct = () => {
                 <Form.Item
                   label="Tên sản phẩm"
                   name="name"
-                  rules={[{ required: true }]}
+                  // rules={[{ required: true }]}
                 >
                   <Input />
                 </Form.Item>
@@ -247,7 +251,7 @@ const UpdateProduct = () => {
                 <Form.Item
                   label="Nguồn gốc"
                   name="origin"
-                  rules={[{ required: true }]}
+                  // rules={[{ required: true }]}
                 >
                   <Input />
                 </Form.Item>
@@ -259,7 +263,7 @@ const UpdateProduct = () => {
                 <Form.Item
                   label="Đơn vị"
                   name="unit"
-                  rules={[{ required: true }]}
+                  // rules={[{ required: true }]}
                 >
                   <Select>
                     <Select.Option value="piece">Cái</Select.Option>
@@ -276,7 +280,7 @@ const UpdateProduct = () => {
                     {
                       type: "number",
                       min: 0,
-                      message: "Giá nhập không hợp lệ!",
+                      // message: "Giá nhập không hợp lệ!",
                     },
                   ]}
                 >
@@ -291,17 +295,7 @@ const UpdateProduct = () => {
                   />
                 </Form.Item>
 
-                <Form.Item
-                  label="Giá bán"
-                  name="entryPrice"
-                  rules={[
-                    {
-                      type: "number",
-                      min: 0,
-                      message: "Giá nhập không hợp lệ!",
-                    },
-                  ]}
-                >
+                <Form.Item label="Giá bán" name="entryPrice">
                   <InputNumber className="w-full" disabled={true} />
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">

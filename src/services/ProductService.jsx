@@ -40,7 +40,25 @@ export const getProducts = async () => {
     return [];
   }
 };
+//Cập nhật trạng thái sản phẩm
+export const updateProductStatus = async (productID, status) => {
+  try {
+    const response = await handleProductApi.updateStatus(productID, status);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu sản phẩm vừa cập nhật
+    }
 
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API updateProductStatus:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
 //Lấy danh sách các danh mục sản phẩm từ API
 export const getCategories = async () => {
   try {
@@ -123,11 +141,71 @@ export const addCategory = async (values) => {
     console.error("API không trả về dữ liệu hợp lệ:", response);
     return null;
   } catch (error) {
-    if (error.response && error.response.data) {
-      // Trả về thông báo lỗi từ BE nếu có
-      throw error; // Ném lỗi để Frontend xử lý
+    if (error.response && error.response.data && error.response.data.errors) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
     }
     console.error("Lỗi khi gọi API addCategory:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
+
+export const updateProduct = async (productID, values) => {
+  try {
+    // Xử lý danh sách hình ảnh
+    const imageUrls =
+      values.imageUrl?.map((file) => file.url || file.response?.url) || [];
+    // Chuẩn bị dữ liệu gửi lên API
+    const formData = {
+      name: values.name,
+      description: values.description,
+      origin: values.origin,
+      imageUrl: imageUrls,
+      category: values.category,
+      unit: values.unit,
+      status: values.status,
+      price: values.price,
+    };
+
+    // Gọi API cập nhật sản phẩm
+    const response = await handleProductApi.updateProduct(productID, formData);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu sản phẩm vừa cập nhật
+    }
+
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API updateProduct:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
+//Thêm phiếu nhập hàng
+export const insertStockEntry = async (values) => {
+  try {
+    // Gọi API thêm phiếu nhập hàng
+    const formData = {
+      productID: values.productID,
+      entryPrice: values.entryPrice,
+      entryQuantity: values.entryQuantity,
+    };
+    const response = await handleProductApi.insertStockEntry(formData);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu phiếu nhập vừa thêm
+    }
+
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API insertStockEntry:", error);
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };

@@ -98,26 +98,24 @@ const FormInsertCategory = ({ isOpen, onClose, onCategoryAdded }) => {
       // Gọi hàm addCategory từ ProductService
       const response = await addCategory(values);
       if (response) {
-        message.success("Thêm mới danh mục thành công");
+        message.success("Thêm mới danh mục thành công!");
         handleRefresh(); // Làm mới danh sách danh mục
         onCategoryAdded(); // Gọi lại API danh mục trong InsertForm
         form.resetFields(); // Reset form
       }
-    } catch (error) {
-      console.error("Lỗi khi thêm mới danh mục:", error);
+    } catch (errors) {
+      console.error("Lỗi khi thêm mới danh mục:", errors);
 
       // Hiển thị thông báo lỗi từ BE nếu có
-      if (error.response && error.response.data && error.response.data.errors) {
-        const errors = error.response.data.errors;
-        if (errors.name) {
-          message.error(errors.name); // Hiển thị lỗi liên quan đến tên danh mục
-        } else if (errors.server) {
-          message.error(errors.server); // Hiển thị lỗi từ server
-        } else {
-          message.error("Lỗi không xác định, vui lòng thử lại!");
-        }
+      if (errors) {
+        const fieldErrors = Object.keys(errors).map((field) => ({
+          name: field,
+          errors: [errors[field]],
+        }));
+        console.error("Có lỗi xảy ra thêm danh mục mới:", errors);
+        form.setFields(fieldErrors);
       } else {
-        message.error("Lỗi hệ thống, vui lòng thử lại sau!");
+        message.error("Lỗi hệ thống ở service, vui lòng thử lại sau! ⚠️");
       }
     } finally {
       setLoading(false);
