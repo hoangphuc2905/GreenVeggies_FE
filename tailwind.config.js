@@ -17,6 +17,7 @@ export default {
         },
         editColor: "#27A743",
         deleteColor: "#F5222D",
+        blurGreen: "#A3D9A5",
       },
     },
   },

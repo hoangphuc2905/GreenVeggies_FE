@@ -2,11 +2,11 @@ import {
   BarChartOutlined,
   ShoppingOutlined,
   UserOutlined,
-  UserAddOutlined,
   ProductOutlined,
   AppstoreAddOutlined,
   DollarOutlined,
   ShoppingCartOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
@@ -70,12 +70,13 @@ const AdminSidebar = ({ colorBgContainer }) => {
           onClick: () => navigate("/admin/user-list"),
           icon: <FontAwesomeIcon icon={faClipboardList} />,
         },
-        {
-          key: "/admin/add-user",
-          label: "Tạo User mới",
-          icon: <UserAddOutlined />,
-        },
       ],
+    },
+    {
+      key: "/admin/notifications",
+      icon: <BellOutlined />,
+      label: "Thông báo",
+      onClick: () => navigate("/admin/notifications"),
     },
   ];
 

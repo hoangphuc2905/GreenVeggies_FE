@@ -43,6 +43,9 @@ const breadcrumbItems = {
     { href: "/admin/dashboard", title: "Bảng thống kê" },
     { href: "/admin/dashboard/orders", title: "Thống kê đơn hàng" },
   ],
+  "/admin/notifications": [
+    { href: "/admin/notifications", title: "Danh sách thông báo" },
+  ],
 };
 
 const BreadcrumbNav = () => {

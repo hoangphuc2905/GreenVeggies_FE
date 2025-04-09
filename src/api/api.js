@@ -7,6 +7,7 @@ const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
 const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
+const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
@@ -67,7 +68,14 @@ const shoppingCartAPI = axios.create({
     "Content-Type": "application/json",
   },
 });
+const notifyAPI = axios.create({
+  baseURL: API_URL_NOTIFY,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
+//SẢN PHẨM
 export const handleProductApi = {
   getListProducts: async (key) => {
     try {
@@ -109,6 +117,26 @@ export const handleProductApi = {
 
   insertStockEntry: async (data) => {
     return await productAPI.post("/stock-entries", data);
+  },
+};
+
+//THÔNG BÁO
+export const handleNotifyApi = {
+  //Lấy danh sách thông báo
+
+  getNotificationsByReceiver: async (receiverID) => {
+    return await notifyAPI.get(`/notifications/${receiverID}`);
+  },
+  markAsRead: async (notifyID) => {
+    return await notifyAPI.patch(`/notifications/${notifyID}/read`);
+  },
+};
+
+//ĐƠN HÀNG
+export const handleOrderApi = {
+  //Lấy thông tin đơn hàng theo ID
+  getOrderById: async (orderID) => {
+    return await orderAPI.get(`/orders/${orderID}`);
   },
 };
 
@@ -479,7 +507,6 @@ export const getAllReviews = async () => {
     return [];
   }
 };
-
 
 // 🟢 Lấy tất cả sản phẩm
 export const getAllProducts = async () => {
