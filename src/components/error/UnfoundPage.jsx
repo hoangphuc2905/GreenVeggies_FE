@@ -1,4 +1,5 @@
 import { Button, ConfigProvider, Result } from "antd";
+import useLogout from "../logout/Logout"; // Adjust the import path as necessary
 
 const UnfoundPage = () => {
   return (
@@ -21,8 +22,12 @@ const UnfoundPage = () => {
             },
           }}
         >
-          <Button type="default" className="bg-primary text-white">
-            Quay về trang chủ
+          <Button
+            type="default"
+            className="bg-primary text-white"
+            onClick={useLogout()} // Gọi trực tiếp hàm trả về từ hook
+          >
+            Đăng xuất
           </Button>
         </ConfigProvider>
       }

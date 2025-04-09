@@ -12,9 +12,10 @@ import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { insertStockEntry } from "../../../api/api";
+
 import { ReloadOutlined, SaveFilled } from "@ant-design/icons";
 import logo from "../../../assets/pictures/Green.png";
+import { insertStockEntry } from "../../../services/ProductService";
 
 dayjs.extend(customParseFormat);
 const dateFormat = "DD-MM-YYYY";
@@ -31,32 +32,41 @@ const InsertStockEntry = ({
   const [loading, setLoading] = useState(false);
 
   const hanndlerSubmit = async (values) => {
-    console.log(values);
     try {
       setLoading(true);
-      const formData = {
-        productID: productID,
+
+      // Gọi service để thêm phiếu nhập hàng
+      const response = await insertStockEntry({
+        productID,
         entryPrice: values.entryPrice,
         entryQuantity: values.entryQuantity,
-      };
-      const response = await insertStockEntry(formData);
-      if (!response) {
-        message.error("Có lỗi xảy ra khi thêm phiếu nhập!");
-        throw new Error("Có lỗi xảy ra khi thêm phiếu nhập!");
+      });
+
+      if (response) {
+        message.success("Thêm phiếu nhập thành công!");
+        onClose();
+        if (onStockUpdated) {
+          onStockUpdated(); // Gọi callback để cập nhật danh sách
+        }
+        form.resetFields(); // Reset form sau khi thành công
       }
+    } catch (errors) {
+      console.error("Lỗi khi thêm phiếu nhập:", errors);
+
+      if (errors) {
+        const fieldErrors = Object.keys(errors).map((field) => ({
+          name: field,
+          errors: [errors[field]],
+        }));
+        console.error("Có lỗi xảy ra khi thêm phiếu nhập:", errors);
+        form.setFields(fieldErrors);
+      } else {
+        message.error("Lỗi hệ thống ở service, vui lòng thử lại sau! ⚠️");
+      }
+    } finally {
       setLoading(false);
-      onClose();
-      if (onStockUpdated) {
-        onStockUpdated();
-      }
-      message.success("Thêm phiếu nhập thành công!");
-    } catch (error) {
-      console.error(error);
-      message.error("Có lỗi xảy ra khi thêm phiếu nhập!");
-      setLoading;
     }
   };
-
   const handleCancel = () => {
     form.resetFields(); // Xóa dữ liệu khi đóng modal
     onClose();
@@ -131,7 +141,7 @@ const InsertStockEntry = ({
           <Form.Item
             label="Giá nhập"
             name="entryPrice"
-            rules={[{ required: true, type: "number" }]}
+            rules={[{  type: "number" }]}
           >
             <InputNumber className="w-full"></InputNumber>
           </Form.Item>
@@ -139,7 +149,7 @@ const InsertStockEntry = ({
           <Form.Item
             label="Số lượng nhập"
             name="entryQuantity"
-            rules={[{ required: true, type: "number" }]}
+            rules={[{  type: "number" }]}
           >
             <InputNumber className="w-full"></InputNumber>
           </Form.Item>

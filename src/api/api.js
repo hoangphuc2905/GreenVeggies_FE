@@ -7,6 +7,7 @@ const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
 const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
 const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
+const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
@@ -67,7 +68,14 @@ const shoppingCartAPI = axios.create({
     "Content-Type": "application/json",
   },
 });
+const notifyAPI = axios.create({
+  baseURL: API_URL_NOTIFY,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
+//SẢN PHẨM
 export const handleProductApi = {
   getListProducts: async (key) => {
     try {
@@ -101,6 +109,34 @@ export const handleProductApi = {
   },
   addCategory: async (data) => {
     return await productAPI.post("/categories", data);
+  },
+  updateProduct: async (id, data) => {
+    return await productAPI.put(`/products/${id}`, data);
+  },
+  //Thêm phiếu nhập kho
+
+  insertStockEntry: async (data) => {
+    return await productAPI.post("/stock-entries", data);
+  },
+};
+
+//THÔNG BÁO
+export const handleNotifyApi = {
+  //Lấy danh sách thông báo
+
+  getNotificationsByReceiver: async (receiverID) => {
+    return await notifyAPI.get(`/notifications/${receiverID}`);
+  },
+  markAsRead: async (notifyID) => {
+    return await notifyAPI.patch(`/notifications/${notifyID}/read`);
+  },
+};
+
+//ĐƠN HÀNG
+export const handleOrderApi = {
+  //Lấy thông tin đơn hàng theo ID
+  getOrderById: async (orderID) => {
+    return await orderAPI.get(`/orders/${orderID}`);
   },
 };
 
@@ -405,34 +441,6 @@ export const updateOrderStatus = async (orderID, status) => {
     return null;
   }
 };
-export const insertStockEntry = async (data) => {
-  try {
-    if (!data.productID || data.entryPrice <= 0 || data.entryQuantity <= 0) {
-      throw new Error("Dữ liệu nhập kho không hợp lệ!");
-    }
-
-    const response = await productAPI.post(
-      "/stock-entries",
-      {
-        productID: data.productID,
-        entryPrice: data.entryPrice,
-        entryQuantity: data.entryQuantity,
-      },
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    if (!response.data) {
-      throw new Error("Phản hồi từ server không hợp lệ!");
-    }
-
-    console.log("Stock entry response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi thêm phiếu nhập kho:", error.message);
-    return null;
-  }
-};
-
 // 🟢 Cập nhật sản phẩm theo ID
 export const updateProduct = async (id, data) => {
   try {
@@ -497,17 +505,6 @@ export const getAllReviews = async () => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách đánh giá:", error);
     return [];
-  }
-};
-
-// 🟢 Thêm danh mục mới
-export const insertCategory = async (data) => {
-  try {
-    const response = await api.post("/categories", data);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi thêm danh mục:", error);
-    return null;
   }
 };
 

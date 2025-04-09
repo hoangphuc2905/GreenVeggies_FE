@@ -16,6 +16,7 @@ import { useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
 import { fetchUser } from "../redux/userSlice";
 import { getUserInfo } from "../api/api";
+import NotificationScreen from "../pages/admin/notification/NotificationScreen";
 
 const AdminRouter = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -82,6 +83,10 @@ const AdminRouter = () => {
                 />
                 <Route path="/dashboard/revenue" element={<Revenue />} />
                 <Route path="/dashboard/orders" element={<Order />} />
+                <Route
+                  path="/notifications"
+                  element={<NotificationScreen userID={userInfo.userID} />}
+                />
               </Routes>
             </Layout>
           </Layout>

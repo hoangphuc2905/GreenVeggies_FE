@@ -15,11 +15,13 @@ import {
 import Profile from "../../user/Profile/Profile";
 import Notification from "../notification/Notification";
 import ChangePassword from "../../user/profile/ChangePassword";
+import { fetchNotifications } from "../../../services/NotifyService";
 
 const AdminHeader = () => {
   const [userInfo, setUserInfo] = useState({});
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // Số lượng thông báo chưa đọc
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -30,6 +32,12 @@ const AdminHeader = () => {
       dispatch(fetchUser({ userID, token }));
       getUserInfo(userID, token).then((userInfo) => {
         setUserInfo(userInfo);
+      });
+
+      // Gọi hàm lấy danh sách thông báo
+      fetchNotifications(userID, 1, (notifies) => {
+        const unread = notifies.filter((notify) => !notify.isRead).length;
+        setUnreadCount(unread); // Cập nhật số lượng thông báo chưa đọc
       });
     } else {
       navigate("/");
@@ -104,11 +112,16 @@ const AdminHeader = () => {
 
         <div className="flex items-center gap-6">
           <Popover
-            content={<Notification />}
+            content={<Notification userID={userInfo.userID} />}
             trigger="hover"
             placement="bottomRight"
           >
-            <Badge size="small" count={100} className="hover:cursor-pointer">
+            <Badge
+              size="small"
+              count={unreadCount > 5 ? "5+" : unreadCount} // Adjusted to show "5+" if unreadCount > 5
+              className="hover:cursor-pointer"
+              onClick={() => navigate("/admin/notifications")} // Added navigation to notifications page
+            >
               <Avatar
                 className="hover:cursor-pointer bg-transparent"
                 shape="square"
