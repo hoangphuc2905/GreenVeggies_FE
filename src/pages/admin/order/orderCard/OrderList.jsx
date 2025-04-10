@@ -33,7 +33,7 @@ const orderData = [
 
 const OrderList = () => {
   return (
-    <div className="grid grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {orderData.map((item, index) => (
         <OrderCard key={index} {...item} />
       ))}

@@ -141,6 +141,10 @@ export const handleOrderApi = {
   getOrderById: async (orderID) => {
     return await orderAPI.get(`/orders/${orderID}`);
   },
+  //Lấy danh sách đơn hàng theo userID
+  getOrdersByUserId: async (userID) => {
+    return await orderAPI.get(`/orders/user/${userID}`);
+  },
 };
 
 // Xóa hình ảnh trên cloundary

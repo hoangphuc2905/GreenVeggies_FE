@@ -7,7 +7,7 @@ const { Title } = Typography;
 const OrderCard = ({ title, value, growth, unit, color }) => {
   return (
     <Card
-      className="w-[41vh] h-[100px] rounded-lg shadow-md hover:shadow-lg hover:scale-105 hover:cursor-pointer p-0"
+      className="w-full h-[100px] rounded-lg shadow-md hover:shadow-lg hover:scale-105 hover:cursor-pointer p-0"
       bodyStyle={{ paddingTop: 10 }}
     >
       <Title level={5} className="text-gray-700">

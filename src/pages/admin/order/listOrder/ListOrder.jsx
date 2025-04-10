@@ -91,6 +91,7 @@ const ListOrder = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [orders, setOrders] = useState([]);
+  const [customer, setCustomer] = useState("");
 
   const [loading, setLoading] = useState(true);
 
@@ -137,6 +138,22 @@ const ListOrder = () => {
     setSelectedOrder(order);
     setIsModalVisible(true);
   };
+
+  const getUserInfoById = async (userID) => {
+    try {
+      const response = await fetchUserInfo(userID);
+      return setCustomer(response || "Không có tên");
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      return null; // Return null in case of error
+    }
+  };
+
+  useEffect(() => {
+    if (selectedOrder) {
+      getUserInfoById(selectedOrder.userID);
+    }
+  }, [selectedOrder]);
 
   const handleColumnVisibilityChange = (key) => {
     setVisibleColumns((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -453,7 +470,9 @@ const ListOrder = () => {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         order={selectedOrder}
-        userName={selectedOrder?.userID}
+        customerName={customer?.username}
+        customerPhone={customer?.phone}
+        customerID={selectedOrder?.userID}
         orderDetails={selectedOrder?.orderDetails}
         refreshOrders={refreshOrders}
       />
