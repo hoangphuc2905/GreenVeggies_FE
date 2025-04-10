@@ -4,11 +4,10 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import useLogout from "../../../components/logout/Logout";
-import { Modal, notification } from "antd";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
-import { Space } from "antd";
+import { Badge, Menu, Popover, Space } from "antd";
 import { useState, useEffect } from "react";
 import RegisterForm from "../../../components/register/register";
 import LoginForm from "../../../components/login/login";
@@ -25,13 +24,25 @@ import {
   UserOutlined,
   LogoutOutlined,
   GlobalOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import { Dropdown } from "antd";
 
 import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
+import {
+  fetchNotifications,
+  getNotify,
+  readNotify,
+} from "../../../services/NotifyService";
+import Notification from "../notification/Notification";
 
 const Header = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const notificationCount = notifications.length;
+
+
 
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
@@ -42,10 +53,9 @@ const Header = () => {
   const [showSignupForm, setShowSignupForm] = useState(false);
   const [email, setEmail] = useState("");
 
-  const [user, setUser] = useState(null); // Thêm trạng thái để lưu thông tin người dùng
-
   const [emailqmk, setEmailqmk] = useState("");
   const [otpqmk, setOtpqmk] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0); // Số lượng thông báo chưa đọc
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
@@ -129,6 +139,11 @@ const Header = () => {
         .catch((error) => {
           console.error("Error fetching user:", error);
         });
+      fetchNotifications(userID, 1, (notifies) => {
+        const unread = notifies.filter((notify) => !notify.isRead).length;
+        setUnreadCount(unread); // Cập nhật số lượng thông báo chưa 
+        setNotifications(notifies); // Cập nhật danh sách thông báo
+      });
     }
   }, []);
 
@@ -174,10 +189,9 @@ const Header = () => {
       icon: <LogoutOutlined />,
     },
   ];
-
   return (
-    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B]  w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0  px-[10%]">
-      <div className="container mx-auto flex w-full justify-between items-center  ">
+    <header className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] w-full max-w-screen flex items-center shadow-md py-4 fixed top-0 z-50 left-0 px-[10%]">
+      <div className="container mx-auto flex w-full justify-between items-center">
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPhone} className="text-white text-l " />
           <div className="text-white text-l font-bold ml-2">
@@ -194,13 +208,29 @@ const Header = () => {
         <div className="flex items-center space-x-4 cursor-pointer">
           {user ? (
             <div className="text-white text-l font-bold flex items-center space-x-2">
-              <span className="text-white">Xin chào, {user.username}</span>
+              <Space size="small">
+                {/* <Dropdown overlay={notificationMenu} trigger={["click"]}>
+                  
+                </Dropdown> */}
+                <Popover
+                  content={<Notification userID={user.userID} />}
+                  trigger="hover"
+                  placement="bottomRight">
+                  <Badge
+                  count={notificationCount}
+                  >
+                    <BellOutlined style={{ fontSize: "24px", color: "#fff" }} />
+                  </Badge>
+                </Popover>
+                <span className="text-white ml-2">
+                  Xin chào, {user.username}
+                </span>
+              </Space>
               <Dropdown
                 menu={{
                   items,
                 }}
-                className="ml-2"
-              >
+                className="ml-2">
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
                     {user?.avatar ? (
@@ -222,8 +252,7 @@ const Header = () => {
           ) : (
             <button
               className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}
-            >
+              onClick={() => setShowLoginForm(true)}>
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>

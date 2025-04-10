@@ -136,15 +136,16 @@ const FilterPrice = ({
   ];
 
   return (
-    <div className="p-0 border rounded-lg shadow-md mt-6 mb-6">
+    <div className="p-4 border rounded-lg shadow-md mt-6 mb-6">
       <h2
         className="text-white text-lg font-bold uppercase tracking-wide text-center 
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
-               rounded-t-lg p-4 w-full
+               rounded-t-lg p-4
                transition duration-300 ease-in-out">
         Lọc theo giá
       </h2>
-      <div className="flex flex-col space-y-4 p-4">
+
+      <div className="flex flex-col space-y-4 mt-4">
         <Menu
           mode="vertical"
           selectedKeys={selectedPriceRange ? [selectedPriceRange] : []}

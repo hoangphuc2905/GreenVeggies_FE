@@ -371,19 +371,12 @@ const Detail = () => {
                   ellipsis={!isExpanded ? { rows: 3 } : false}>
                   {product.description}
                 </Typography.Paragraph>
-                {showSeeMore && (
+                {showSeeMore && !isExpanded && (
                   <Button
-                    type={selectedTab === "description" ? "primary" : "default"}
-                    className={`w-full h-14 text-base font-medium hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 ${
-                      selectedTab === "description"
-                        ? "!bg-[#82AE46] !text-white !border-[#82AE46]"
-                        : "!bg-[#f0fdf4] !text-[#82AE46] !border-[#82AE46]"
-                    }`}
-                    onClick={() => {
-                      setSelectedTab("description");
-                      toggleDescription();
-                    }}>
-                    MÔ TẢ
+                    type="link"
+                    onClick={() => setIsExpanded(true)}
+                    className="text-[#82AE46]">
+                    Xem thêm
                   </Button>
                 )}
               </div>

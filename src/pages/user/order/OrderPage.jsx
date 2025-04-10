@@ -19,6 +19,7 @@ import {
 } from "../../../api/api";
 import { useNavigate } from "react-router-dom";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { createNotify } from "../../../services/NotifyService";
 const style = {
   display: "flex",
   flexDirection: "column",
@@ -151,8 +152,31 @@ const OrderPage = () => {
 
       const orderResponse = await addOrder(orderData);
 
+      console.log("Order Response:", orderResponse);
       if (orderResponse) {
         console.log("Order placed successfully:", orderResponse);
+
+        // Create a notification for the successful order
+        const notificationDataUser = {
+          senderType: "system",
+          receiverID: userID, // Assuming the receiver is the same user
+          title: "Thông báo đơn hàng",
+          message: `Đơn hàng #${orderResponse.order.orderID} đã được đặt thành công.`,
+          type: "order",
+          orderID: orderResponse.order.orderID,
+        };
+
+        const notificationDataAdmin = {
+          senderType: "system",
+          receiverID: "admin",
+          title: "Thông báo đơn hàng",
+          message: `Đơn hàng #${orderResponse.order.orderID} cần được duyệt.`,
+          type: "order",
+          orderID: orderResponse.order.orderID,
+        };
+
+        await createNotify(notificationDataUser);
+        await createNotify(notificationDataAdmin);
 
         // Clear the cart
         for (const item of cartItems) {
@@ -168,8 +192,9 @@ const OrderPage = () => {
 
         // Cập nhật giỏ hàng sau khi đặt hàng thành công
         await fetchCartItems(userID);
-
         navigate("/user/orders");
+        // Refresh the page
+        window.location.reload();
       } else {
         notification.error({
           message: "Thất bại",
