@@ -5,34 +5,40 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
     const [newPassword, setNewPassword] = useState(""); // Mật khẩu mới
     const [confirmPassword, setConfirmPassword] = useState(""); // Xác nhận mật khẩu
     const [loading, setLoading] = useState(false); // Trạng thái tải
-    const [error, setError] = useState(""); // Thông báo lỗi
-    const [success, setSuccess] = useState(""); // Thông báo thành công
+    const [error, setError] = useState(""); // Thông báo lỗi từ BE
+    const [success, setSuccess] = useState(""); // Thông báo thành công từ BE
+    const [formErrors, setFormErrors] = useState({}); // Lưu lỗi từ FE
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError("");
         setSuccess("");
+        setFormErrors({}); // Reset lỗi form
 
-        if (newPassword !== confirmPassword) {
-            setError("Mật khẩu và xác nhận mật khẩu không khớp!");
-            setLoading(false);
-            return;
+        // Kiểm tra các trường nhập
+        const errors = {};
+        if (!newPassword) {
+            errors.newPassword = "Vui lòng nhập mật khẩu mới.";
+        } else if (newPassword.length < 6) {
+            errors.newPassword = "Mật khẩu phải có ít nhất 6 ký tự.";
         }
 
-        const otpStored = localStorage.getItem("verifiedOtp");
-        const emailStored = localStorage.getItem("verifiedEmail");
+        if (!confirmPassword) {
+            errors.confirmPassword = "Vui lòng xác nhận mật khẩu mới.";
+        } else if (newPassword !== confirmPassword) {
+            errors.confirmPassword = "Mật khẩu và xác nhận mật khẩu không khớp!";
+        }
 
-        // Kiểm tra lại OTP và email
-        if (!otpStored || !emailStored) {
-            setError("Thông tin OTP hoặc email không hợp lệ.");
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
             setLoading(false);
             return;
         }
 
         try {
             const response = await fetch(
-                `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(emailStored)}&newPassword=${encodeURIComponent(newPassword)}`,
+                `http://localhost:8001/api/auth/update-password?email=${encodeURIComponent(emailqmk)}&newPassword=${encodeURIComponent(newPassword)}`,
                 {
                     method: "POST",
                     headers: {
@@ -49,9 +55,18 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
                     closeResetPasswordForm();
                 }, 2000);
             } else {
-                setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+                // Hiển thị lỗi từ BE
+                if (data.errors?.email) {
+                    setError(data.errors.email);
+                } else if (data.errors?.newPassword) {
+                    setError(data.errors.newPassword);
+                } else if (data.errors?.server) {
+                    setError(data.errors.server);
+                } else {
+                    setError("Có lỗi xảy ra. Vui lòng thử lại.");
+                }
             }
-        } catch (error) {
+        } catch (err) {
             setError("Lỗi kết nối, vui lòng thử lại.");
         } finally {
             setLoading(false);
@@ -88,28 +103,46 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
                 <p className="text-center text-gray-500 mb-3">Nhập mật khẩu mới cho tài khoản</p>
                 <p className="text-center text-gray-500 mb-3">Email: {emailqmk || "Không có email được truyền"}</p>
 
+                {/* Hiển thị lỗi từ BE */}
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
+
+                {/* Hiển thị thông báo thành công */}
                 {success && <div className="text-green-500 text-center mb-3">{success}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <input
-                        type="password"
-                        name="newPassword"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Nhập mật khẩu mới"
-                        className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                        required
-                    />
-                    <input
-                        type="password"
-                        name="confirmPassword"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Xác nhận mật khẩu mới"
-                        className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-                        required
-                    />
+                    <div>
+                        <input
+                            type="password"
+                            name="newPassword"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Nhập mật khẩu mới"
+                            className={`w-full p-2 border ${
+                                formErrors.newPassword ? "border-red-500" : "border-gray-300"
+                            } rounded-lg bg-gray-100`}
+                            
+                        />
+                        {formErrors.newPassword && (
+                            <div className="text-red-500 text-sm">{formErrors.newPassword}</div>
+                        )}
+                    </div>
+
+                    <div>
+                        <input
+                            type="password"
+                            name="confirmPassword"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Xác nhận mật khẩu mới"
+                            className={`w-full p-2 border ${
+                                formErrors.confirmPassword ? "border-red-500" : "border-gray-300"
+                            } rounded-lg bg-gray-100`}
+                    
+                        />
+                        {formErrors.confirmPassword && (
+                            <div className="text-red-500 text-sm">{formErrors.confirmPassword}</div>
+                        )}
+                    </div>
 
                     <button
                         type="submit"

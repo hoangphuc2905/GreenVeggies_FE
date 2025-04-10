@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom"; // Import Link để chuyển hướng
 
 const OrderProfile = () => {
   const [filter, setFilter] = useState("Tất cả");
@@ -30,18 +31,6 @@ const OrderProfile = () => {
   // Lọc đơn hàng dựa trên trạng thái
   const filteredOrders = filter === "Tất cả" ? sampleOrders : sampleOrders.filter(order => order.status === filter);
 
-  // Phân trang
-  const [currentPage, setCurrentPage] = useState(1);
-  const ordersPerPage = 3;
-
-  // Tính chỉ số bắt đầu và kết thúc để phân trang
-  const indexOfLastOrder = currentPage * ordersPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
-
-  // Chuyển trang
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
       {/* Menu ngang */}
@@ -63,7 +52,7 @@ const OrderProfile = () => {
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Đơn hàng của bạn</h2>
       {filteredOrders.length > 0 ? (
         <div className="space-y-4">
-          {currentOrders.map((order) => (
+          {filteredOrders.map((order) => (
             <div key={order.id} className="bg-white shadow-md rounded-lg p-4">
               <h3 className="text-lg font-bold">Đơn hàng #{order.id}</h3>
               <p className="text-sm text-gray-500">Ngày đặt: {new Date(order.date).toLocaleDateString()}</p>
@@ -78,30 +67,17 @@ const OrderProfile = () => {
                   ))}
                 </ul>
               </div>
+
+              {/* Link đến trang chi tiết đơn hàng */}
+              <Link to={`/user/order/${order.id}`} className="text-green-500 hover:text-green-600 mt-2 inline-block">
+  Xem chi tiết
+</Link>
             </div>
           ))}
         </div>
       ) : (
         <p className="text-center text-gray-500">Bạn chưa có đơn hàng nào.</p>
       )}
-
-      {/* Phân trang */}
-      <div className="flex justify-center gap-2 mt-4">
-        <button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
-        >
-          Trang trước
-        </button>
-        <button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage * ordersPerPage >= filteredOrders.length}
-          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
-        >
-          Trang tiếp
-        </button>
-      </div>
     </div>
   );
 };

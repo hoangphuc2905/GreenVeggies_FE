@@ -4,37 +4,38 @@ import { ArrowLeft } from "lucide-react"; // Import the left arrow icon
 const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // To track general error
-  const [emailError, setEmailError] = useState(""); // To track email error
+  const [errors, setErrors] = useState({}); // Lưu lỗi từ BE
 
   const handleChange = (e) => {
-    setEmail(e.target.value);
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const value = e.target.value;
+    setEmail(value);
 
-    // Real-time email validation
-    if (!e.target.value) {
-      setEmailError("Vui lòng nhập Email.");
-    } else if (!emailRegex.test(e.target.value)) {
-      setEmailError("Vui lòng nhập địa chỉ Email hợp lệ.");
+    // Kiểm tra định dạng email
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(value)) {
+      setErrors({ email: "Vui lòng nhập địa chỉ email hợp lệ." });
     } else {
-      setEmailError(""); // Clear error if valid
+      setErrors({}); // Xóa lỗi nếu email hợp lệ
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(""); // Reset general error message
 
-    // Ensure no validation errors before submitting
+    // Kiểm tra email trước khi gửi
     if (!email) {
-      setEmailError("Vui lòng nhập Email.");
-      setLoading(false);
-      return;
-    } else if (emailError) {
-      setLoading(false);
+      setErrors({ email: "Vui lòng nhập email." });
       return;
     }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      setErrors({ email: "Vui lòng nhập địa chỉ email hợp lệ." });
+      return;
+    }
+
+    setLoading(true);
+    setErrors({}); // Reset lỗi trước khi gửi
 
     try {
       const response = await fetch(
@@ -50,14 +51,17 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Open OTP form and pass the email
-        closeRegisterForm(); // Close the register form
-        openOtpFormdk(email); // Open the OTP form
+        // Mở form OTP và truyền email
+        closeRegisterForm();
+        openOtpFormdk(email);
       } else {
-        setError(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
+        // Xử lý lỗi từ BE
+        setErrors(data.errors || {});
       }
     } catch (err) {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setErrors({
+        server: "Lỗi kết nối. Vui lòng thử lại.",
+      });
     } finally {
       setLoading(false);
     }
@@ -65,15 +69,15 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
-      {/* Back button */}
+      {/* Nút quay lại */}
       <button
-        onClick={goBack} // Call goBack to return to the login page
+        onClick={goBack}
         className="absolute top-2 left-2 flex items-center text-gray-500 hover:text-gray-700 transition"
       >
         <ArrowLeft size={24} />
       </button>
 
-      {/* Close button */}
+      {/* Nút đóng */}
       <button
         onClick={closeRegisterForm}
         className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
@@ -90,12 +94,20 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
       </div>
 
       <div className="w-full md:w-1/2 p-6">
-        <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
-        <h3 className="text-xl font-bold mb-4 text-black text-center">Đăng ký tài khoản</h3>
-        <p className="text-center text-gray-500 mb-3">Vui lòng nhập địa chỉ email để nhận mã xác thực</p>
+        <h2 className="text-xl font-bold text-green-700 text-center">
+          GREENVEGGIES
+        </h2>
+        <h3 className="text-xl font-bold mb-4 text-black text-center">
+          Đăng ký tài khoản
+        </h3>
+        <p className="text-center text-gray-500 mb-3">
+          Vui lòng nhập địa chỉ email để nhận mã xác thực
+        </p>
 
-        {/* Display error if any */}
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+        {/* Hiển thị lỗi từ BE */}
+        {errors.server && (
+          <div className="text-red-500 text-center mb-4">{errors.server}</div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -105,15 +117,20 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
               value={email}
               onChange={handleChange}
               placeholder="Email"
-              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+              className={`w-full p-2 border ${
+                errors.email ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
             />
-            {/* Show email error */}
-            {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
+            {errors.email && (
+              <div className="text-red-500 text-sm">{errors.email}</div>
+            )}
           </div>
 
           <button
             type="submit"
-            className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${
+              loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             disabled={loading}
           >
             {loading ? "Đang gửi mã..." : "Tiếp tục"}
@@ -122,7 +139,7 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
 
         <div className="text-center text-sm text-gray-500 mt-2">
           <button
-            onClick={goBack} // Call goBack to return to the login page
+            onClick={goBack}
             className="text-green-500 hover:underline"
           >
             Quay lại trang đăng nhập
