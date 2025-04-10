@@ -130,6 +130,9 @@ export const handleNotifyApi = {
   markAsRead: async (notifyID) => {
     return await notifyAPI.patch(`/notifications/${notifyID}/read`);
   },
+  createNotification: async (data) => {
+    return await notifyAPI.post("/notifications", data);
+  },
 };
 
 //ĐƠN HÀNG
