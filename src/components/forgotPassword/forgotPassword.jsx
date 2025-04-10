@@ -3,54 +3,66 @@ import { useState } from "react";
 const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFormqmk }) => {
     const [emailqmk, setEmailqmk] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [emailError, setEmailError] = useState(""); // Track email error
+    const [error, setError] = useState(""); // Lưu lỗi từ BE
+    const [emailError, setEmailError] = useState(""); // Lưu lỗi email từ BE
 
     const handleChange = (e) => {
-        setEmailqmk(e.target.value);
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-        // Real-time email validation
-        if (!e.target.value) {
-            setEmailError("Vui lòng nhập Email.");
-        } else if (!emailRegex.test(e.target.value)) {
-            setEmailError("Vui lòng nhập địa chỉ Gmail hợp lệ.");
+        const value = e.target.value;
+        setEmailqmk(value);
+
+        // Kiểm tra định dạng email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            setEmailError("Email không đúng định dạng.");
         } else {
-            setEmailError(""); // Clear error if valid
+            setEmailError(""); // Xóa lỗi nếu email hợp lệ
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setError(""); // Reset general error message
+        setError(""); // Reset lỗi chung
+        setEmailError(""); // Reset lỗi email
 
-        // Ensure no validation errors before submitting
+        // Kiểm tra nếu email không hợp lệ
         if (!emailqmk) {
-            setEmailError("Vui lòng nhập Email.");
+            setEmailError("Vui lòng nhập email.");
             setLoading(false);
             return;
-        } else if (emailError) {
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailqmk)) {
+            setEmailError("Email không đúng định dạng.");
             setLoading(false);
             return;
         }
 
         try {
             const response = await fetch(`http://localhost:8001/api/auth/forgot-password?email=${emailqmk}`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                closeForgotPasswordForm(); // Close forgot password form
-                openOtpFormqmk(emailqmk); // Open OTP form and pass email
+                closeForgotPasswordForm(); // Đóng form quên mật khẩu
+                openOtpFormqmk(emailqmk); // Mở form OTP và truyền email
             } else {
-                setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+                // Hiển thị lỗi từ BE
+                if (data.errors?.email) {
+                    setEmailError(data.errors.email);
+                } else if (data.errors?.server) {
+                    setError(data.errors.server);
+                } else {
+                    setError("Có lỗi xảy ra. Vui lòng thử lại.");
+                }
             }
-        } catch (error) {
+        } catch (err) {
             setError("Lỗi kết nối, vui lòng thử lại.");
         } finally {
             setLoading(false);
@@ -81,24 +93,29 @@ const ForgotPasswordForm = ({ closeForgotPasswordForm, openLoginForm, openOtpFor
                     Nhập địa chỉ email của bạn để nhận liên kết đặt lại mật khẩu.
                 </p>
 
+                {/* Hiển thị lỗi từ BE */}
                 {error && <div className="text-red-500 text-center mb-3">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <input
-                            type="email"
+                            // type="email"
                             name="emailqmk"
                             value={emailqmk}
                             onChange={handleChange}
                             placeholder="Email"
-                            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+                            className={`w-full p-2 border ${
+                                emailError ? "border-red-500" : "border-gray-300"
+                            } rounded-lg bg-gray-100`}
                         />
                         {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
                     </div>
 
                     <button
                         type="submit"
-                        className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition ${
+                            loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
                         disabled={loading}
                     >
                         {loading ? "Đang gửi OTP..." : "Tiếp tục"}

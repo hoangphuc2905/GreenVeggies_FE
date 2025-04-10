@@ -4,7 +4,7 @@ import { getAddressByID } from "../../../api/api";
 
 const AddressForm = () => {
   const [showForm, setShowForm] = useState(false);
-  const [userID, setUserID] = useState(localStorage.getItem("userID") || ""); 
+  const [userID, setUserID] = useState(localStorage.getItem("userID") || "");
   const [addresses, setAddresses] = useState([]);
   const [address, setAddress] = useState({
     city: "",
@@ -13,6 +13,7 @@ const AddressForm = () => {
     street: "",
     isDefault: false,
   });
+  const [errors, setErrors] = useState({});  // Lỗi từ BE sẽ được lưu ở đây
 
   // Thông tin phân trang
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,7 +39,7 @@ const AddressForm = () => {
       }
     } catch (error) {
       console.error("❌ Lỗi khi lấy địa chỉ từ API:", error);
-      setAddresses([]);
+      setAddresses([]); 
     }
   };
 
@@ -48,6 +49,7 @@ const AddressForm = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    setErrors((prevErrors) => ({ ...prevErrors, [name]: "" })); // Reset lỗi khi người dùng sửa
   };
 
   // Kiểm tra xem địa chỉ mới có trùng với địa chỉ đã có không
@@ -65,10 +67,6 @@ const AddressForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!address.city || !address.district || !address.ward || !address.street) {
-      alert("⚠ Vui lòng điền đầy đủ thông tin địa chỉ!");
-      return;
-    }
 
     // Kiểm tra trùng địa chỉ
     if (isDuplicateAddress(address)) {
@@ -108,8 +106,12 @@ const AddressForm = () => {
         alert("❌ Lỗi khi thêm địa chỉ: " + response.data.message);
       }
     } catch (error) {
-      alert("❌ Lỗi khi gửi yêu cầu API, vui lòng thử lại.");
-      console.error("Lỗi API:", error);
+      if (error.response?.status === 400 || error.response?.status === 404) {
+        setErrors(error.response.data.errors || {});  // Lỗi từ BE sẽ được lưu vào state errors
+      } else {
+        alert("❌ Lỗi khi gửi yêu cầu API, vui lòng thử lại.");
+        console.error("Lỗi API:", error);
+      }
     }
   };
 
@@ -135,10 +137,10 @@ const AddressForm = () => {
                 addr.isDefault ? "border-green-500 bg-green-50" : "border-gray-300 bg-gray-100"
               }`}
             >
-              <p className="text-gray-700"><strong>Thành phố:</strong> {addr.city}</p>
-              <p className="text-gray-700"><strong>Quận/Huyện:</strong> {addr.district}</p>
-              <p className="text-gray-700"><strong>Phường/Xã:</strong> {addr.ward}</p>
-              <p className="text-gray-700"><strong>Địa chỉ cụ thể:</strong> {addr.street}</p>
+              <p><strong>Thành phố:</strong> {addr.city}</p>
+              <p><strong>Quận/Huyện:</strong> {addr.district}</p>
+              <p><strong>Phường/Xã:</strong> {addr.ward}</p>
+              <p><strong>Địa chỉ cụ thể:</strong> {addr.street}</p>
 
               {addr.default && (
                 <span className="mt-2 inline-block bg-green-500 text-white px-3 py-1 text-sm font-semibold rounded-full">
@@ -168,9 +170,11 @@ const AddressForm = () => {
               name="city"
               value={address.city}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
-              required
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.city ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.city && <p className="text-red-500 text-sm">{errors.city}</p>}
           </div>
 
           {/* Quận/Huyện */}
@@ -181,9 +185,11 @@ const AddressForm = () => {
               name="district"
               value={address.district}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
-              required
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.district ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.district && <p className="text-red-500 text-sm">{errors.district}</p>}
           </div>
 
           {/* Phường/Xã */}
@@ -194,9 +200,11 @@ const AddressForm = () => {
               name="ward"
               value={address.ward}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
-              required
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.ward ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.ward && <p className="text-red-500 text-sm">{errors.ward}</p>}
           </div>
 
           {/* Địa chỉ cụ thể */}
@@ -207,9 +215,11 @@ const AddressForm = () => {
               name="street"
               value={address.street}
               onChange={handleChange}
-              className="w-full border border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500"
-              required
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.street ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.street && <p className="text-red-500 text-sm">{errors.street}</p>}
           </div>
 
           {/* Địa chỉ mặc định */}
@@ -224,7 +234,10 @@ const AddressForm = () => {
             <label className="text-gray-700">Đặt làm địa chỉ mặc định</label>
           </div>
 
-          <button type="submit" className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition">
+          <button
+            type="submit"
+            className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition"
+          >
             Lưu địa chỉ
           </button>
         </form>

@@ -15,45 +15,28 @@ const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // Lưu lỗi từ BE
+  const [successMessage, setSuccessMessage] = useState(""); // Lưu thông báo thành công từ BE
   const [isLoading, setIsLoading] = useState(false);
 
   const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Kiểm tra mật khẩu mới không giống mật khẩu cũ
-    if (newPassword === oldPassword) {
-      setErrorMessage("Mật khẩu mới không được giống mật khẩu cũ.");
-      setSuccessMessage("");
-      return;
-    }
-
-    // Kiểm tra mật khẩu mới có ít nhất 6 ký tự
-    if (newPassword.length < 6) {
-      setErrorMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
-      setSuccessMessage("");
-      return;
-    }
+    setIsLoading(true);
+    setErrorMessage(""); // Reset lỗi
+    setSuccessMessage(""); // Reset thông báo thành công
 
     // Kiểm tra mật khẩu mới và nhập lại mật khẩu mới có khớp không
     if (newPassword !== confirmNewPassword) {
       setErrorMessage("Mật khẩu mới và nhập lại không khớp.");
-      setSuccessMessage("");
+      setIsLoading(false);
       return;
     }
 
     try {
-      setIsLoading(true);
-      setErrorMessage(""); // Xóa lỗi cũ
-      setSuccessMessage(""); // Xóa thành công cũ
-
-      // Tạo URL đầy đủ với query parameters
       const apiUrl = `http://localhost:8001/api/auth/change-password?email=${encodeURIComponent(email)}&oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`;
 
-      // Gửi request đổi mật khẩu
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -70,8 +53,17 @@ const ChangePassword = () => {
         setNewPassword("");
         setConfirmNewPassword("");
       } else {
-        if (data.message.includes("Mật khẩu cũ không đúng")) {
-          setErrorMessage("Mật khẩu cũ không đúng.");
+        // Hiển thị lỗi từ BE
+        if (data.errors) {
+          if (data.errors.email) {
+            setErrorMessage(data.errors.email);
+          } else if (data.errors.oldPassword) {
+            setErrorMessage(data.errors.oldPassword);
+          } else if (data.errors.newPassword) {
+            setErrorMessage(data.errors.newPassword);
+          } else if (data.errors.server) {
+            setErrorMessage(data.errors.server);
+          }
         } else {
           setErrorMessage(data.message || "Đổi mật khẩu thất bại. Vui lòng thử lại.");
         }
@@ -106,7 +98,7 @@ const ChangePassword = () => {
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400"
-            required
+  
           />
         </div>
 
@@ -117,7 +109,7 @@ const ChangePassword = () => {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400"
-            required
+            
           />
         </div>
 
@@ -128,7 +120,7 @@ const ChangePassword = () => {
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400"
-            required
+            
           />
         </div>
 

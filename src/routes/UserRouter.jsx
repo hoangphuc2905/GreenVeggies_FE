@@ -6,11 +6,13 @@ import Detail from "../pages/user/product/Detail";
 import Wishlist from "../pages/user/Wishlist/Cart/";
 import ProfilePage from "../pages/user/Profile/ProfilePage";
 import Profile from "../pages/user/Profile/Profile";
-import Address from "../pages/user/Profile/AddressForm"; // Import Address
-import Order from "../pages/user/Profile/OrderProFile"; // Import Order
+import Address from "../pages/user/Profile/AddressForm";
+import Order from "../pages/user/Profile/OrderProFile";
 import Contact from "../pages/user/Contact/Contact";
-import News from "../pages/user/news/News"; // Import News
-import NewsDetail from "../pages/user/news/NewsDetail"; // Import NewsDetail
+import News from "../pages/user/news/News";
+import NewsDetail from "../pages/user/news/NewsDetail";
+import OrderDetail from "../pages/user/profile/OrderDetail";
+import OrderProFile from "../pages/user/profile/OrderProfile";
 
 import { useEffect, useState } from "react";
 import CategoryPage from "../pages/user/Category/CategoryPage";
@@ -49,7 +51,7 @@ const UserRouter = () => {
   }, [dispatch, navigate]);
 
   if (isAdmin) {
-    return null; // or a loading spinner
+    return <div>Loading...</div>; // Hoặc spinner
   }
 
   return (
@@ -57,33 +59,27 @@ const UserRouter = () => {
       <Header />
 
       <Routes>
-        {/* Các route chính của user */}
+        {/* Các route chính */}
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
-        <Route
-          path="/product/:id"
-          element={<Detail wishlist={wishlist} setWishlist={setWishlist} />}
-        />
-        <Route
-          path="/wishlist"
-          element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />}
-        />
+        <Route path="/product/:id" element={<Detail wishlist={wishlist} setWishlist={setWishlist} />} />
+        <Route path="/wishlist" element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/news" element={<News />} /> {/* Thêm route cho News */}
-        <Route path="/news/:id" element={<NewsDetail />} />{" "}
-        {/* Thêm route cho NewsDetail */}
+        <Route path="/news" element={<News />} />
+        <Route path="/news/:id" element={<NewsDetail />} />
         <Route path="/category/:id" element={<CategoryPage />} />
-        <Route path="/order" element={<OrderPage />} />{" "}
-        {/* Thêm route cho OrderPage */}
-        {/* Nhóm route có Sidebar của User */}
+        <Route path="/order" element={<OrderPage />} />
+
+        {/* Các route liên quan đến user */}
         <Route path="/user" element={<ProfilePage />}>
-          <Route path="profile" element={<Profile />} />
-          <Route path="change-password" element={<ChangePassword />} />
-          <Route path="address" element={<Address />} />{" "}
-          {/* Thêm route cho Address */}
-          <Route path="orders" element={<Order />} />
-        </Route>
+  <Route path="profile" element={<Profile />} />
+  <Route path="change-password" element={<ChangePassword />} />
+  <Route path="address" element={<Address />} />
+  <Route path="orders" element={<OrderProFile />} />
+  <Route path="order/:id" element={<OrderDetail />} />
+</Route>
       </Routes>
+
       <UserFooter />
     </App>
   );

@@ -16,80 +16,22 @@ const LoginForm = ({
     password: "",
   });
 
-  const [error, setError] = useState("");
-  const [emailError, setEmailError] = useState("");  // Track email error
-  const [passwordError, setPasswordError] = useState("");  // Track password error
+  const [errors, setErrors] = useState({}); // Lưu lỗi từ BE
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
-  const [userInfo, setUserInfo] = useState({});
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    // Real-time email validation
-    if (e.target.name === "username") {
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-      if (!e.target.value) {
-        setEmailError("Vui lòng nhập Email.");
-      } else if (!emailRegex.test(e.target.value)) {
-        setEmailError("Vui lòng nhập địa chỉ Gmail hợp lệ.");
-      } else {
-        setEmailError(""); // Clear error if valid
-      }
-    }
-
-    // Real-time password validation
-    if (e.target.name === "password") {
-      if (!e.target.value) {
-        setPasswordError("Vui lòng nhập mật khẩu.");
-      } else if (e.target.value.length < 6) {
-        setPasswordError("Mật khẩu phải có ít nhất 6 ký tự.");
-      } else {
-        setPasswordError(""); // Clear error if valid
-      }
-    }
+    setErrors((prevErrors) => ({ ...prevErrors, [e.target.name]: "" })); // Xóa lỗi khi người dùng sửa
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userID = localStorage.getItem("userID");
-    if (token && userID) {
-      dispatch(fetchUser({ userID, token }));
-      getUserInfo(userID, token).then((userInfo) => {
-        setUserInfo(userInfo);
-        if (userInfo.role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        }
-      });
-    } else {
-      navigate("/");
-    }
-  }, [dispatch, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(""); // Reset general error message
-
-    // Ensure no validation errors before submitting
-    if (!formData.username) {
-      setEmailError("Vui lòng nhập Email.");
-    }
-
-    if (!formData.password) {
-      setPasswordError("Vui lòng nhập mật khẩu.");
-    }
-
-    // If there are validation errors, stop form submission
-    if (emailError || passwordError || !formData.username || !formData.password) {
-      setLoading(false);
-      return;
-    }
+    setErrors({}); // Reset lỗi trước khi gửi
 
     try {
       const response = await fetch(`http://localhost:8001/api/auth/login`, {
@@ -105,14 +47,12 @@ const LoginForm = ({
 
       const data = await response.json();
 
-      console.log("user data", data.user);
-
-      if (response.ok && data.user) {
+      if (response.ok) {
         const role = data.user.role;
         setUserRole(role);
         onLoginSuccess(data);
 
-        // Store user information in localStorage
+        // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("userID", data.user.id);
         localStorage.setItem("role", role);
@@ -121,16 +61,19 @@ const LoginForm = ({
         notification.success({
           message: "Đăng nhập thành công",
           description: "Chào mừng bạn đã quay lại!",
-          placement: "topRight", // Vị trí thông báo
-          duration: 3, // Thời gian hiển thị thông báo
+          placement: "topRight",
+          duration: 3,
         });
 
         closeLoginForm();
       } else {
-        setError(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
+        // Xử lý lỗi từ BE
+        setErrors(data.errors || {});
       }
     } catch (err) {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setErrors({
+        server: "Lỗi kết nối. Vui lòng thử lại.",
+      });
     } finally {
       setLoading(false);
     }
@@ -161,7 +104,10 @@ const LoginForm = ({
           Chào mừng trở lại
         </h3>
 
-        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+        {/* Hiển thị lỗi từ BE */}
+        {errors.server && (
+          <div className="text-red-500 text-center mb-4">{errors.server}</div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
@@ -171,9 +117,13 @@ const LoginForm = ({
               value={formData.username}
               onChange={handleChange}
               placeholder="Email"
-              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+              className={`w-full p-2 border ${
+                errors.email ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
             />
-            {emailError && <div className="text-red-500 text-sm">{emailError}</div>}
+            {errors.email && (
+              <div className="text-red-500 text-sm">{errors.email}</div>
+            )}
           </div>
 
           <div>
@@ -183,9 +133,13 @@ const LoginForm = ({
               value={formData.password}
               onChange={handleChange}
               placeholder="Mật khẩu"
-              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+              className={`w-full p-2 border ${
+                errors.password ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
             />
-            {passwordError && <div className="text-red-500 text-sm">{passwordError}</div>}
+            {errors.password && (
+              <div className="text-red-500 text-sm">{errors.password}</div>
+            )}
           </div>
 
           <div className="text-right text-sm text-gray-500">
