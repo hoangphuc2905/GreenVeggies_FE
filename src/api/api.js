@@ -130,6 +130,9 @@ export const handleNotifyApi = {
   markAsRead: async (notifyID) => {
     return await notifyAPI.patch(`/notifications/${notifyID}/read`);
   },
+  createNotification: async (data) => {
+    return await notifyAPI.post("/notifications", data);
+  },
 };
 
 //ĐƠN HÀNG
@@ -137,6 +140,10 @@ export const handleOrderApi = {
   //Lấy thông tin đơn hàng theo ID
   getOrderById: async (orderID) => {
     return await orderAPI.get(`/orders/${orderID}`);
+  },
+  //Lấy danh sách đơn hàng theo userID
+  getOrdersByUserId: async (userID) => {
+    return await orderAPI.get(`/orders/user/${userID}`);
   },
 };
 

@@ -77,7 +77,7 @@ const SuccessOrdersChart = () => {
   const ChartComponent = chartTypes[chartType];
 
   return (
-    <div className="bg-white mt-6 p-4 rounded-lg shadow-md w-full max-w-full">
+    <div className="bg-white p-4 rounded-lg shadow-md h-full w-full max-w-full">
       <h2 className="font-semibold text-lg mb-4">
         Thống kê đơn hàng
       </h2>

@@ -3,17 +3,32 @@ import { Button, Divider, List, Modal, message } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi"; // Import tiếng Việt
-import { fetchNotifications, readNotify } from "../../../services/NotifyService";
+import {
+  fetchNotifications,
+  readNotify,
+} from "../../../services/NotifyService";
 import { getOrderById } from "../../../services/OrderService";
 import OrderDetail from "../order/listOrder/orderDetail/OrderDetail";
+import { getUserInfo } from "../../../api/api";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi"); // Đặt ngôn ngữ mặc định là tiếng Việt
+
+const fetchUserInfo = async (userID) => {
+  try {
+    const response = await getUserInfo(userID);
+    return response;
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+    return null; // Return null in case of error
+  }
+};
 
 const Notification = ({ userID }) => {
   const [notifies, setNotifies] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null); // For popup
   const [modalVisible, setModalVisible] = useState(false); // For popup visibility
+  const [customer, setCustomer] = useState(null); // Customer info for popup
 
   useEffect(() => {
     if (userID) {
@@ -46,6 +61,22 @@ const Notification = ({ userID }) => {
       message.error("Không thể xử lý thông báo!");
     }
   };
+
+  const getUserInfoById = async (userID) => {
+    try {
+      const response = await fetchUserInfo(userID);
+      console.log("User info:", response);
+      return setCustomer(response);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      return null; // Return null in case of error
+    }
+  };
+  useEffect(() => {
+    if (selectedOrder) {
+      getUserInfoById(selectedOrder?.userID);
+    }
+  }, [selectedOrder]);
 
   return (
     <div className="w-[300px] h-[400px] overflow-auto">
@@ -119,7 +150,9 @@ const Notification = ({ userID }) => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         order={selectedOrder}
-        userName={selectedOrder?.userID}
+        customerName={customer?.username}
+        customerPhone={customer?.phone}
+        customerID={customer?.userID}
         orderDetails={selectedOrder?.orderDetails}
       />
     </div>

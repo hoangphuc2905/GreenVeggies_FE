@@ -9,10 +9,20 @@ import {
 } from "../../../services/NotifyService";
 import { getOrderById } from "../../../services/OrderService";
 import OrderDetail from "../order/listOrder/orderDetail/OrderDetail";
+import { getUserInfo } from "../../../api/api";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi"); // Đặt ngôn ngữ mặc định là tiếng Việt
 
+const fetchUserInfo = async (userID) => {
+  try {
+    const response = await getUserInfo(userID);
+    return response;
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+    return null; // Return null in case of error
+  }
+};
 const NotificationScreen = ({ userID }) => {
   const [notifies, setNotifies] = useState([]);
   const [filteredNotifies, setFilteredNotifies] = useState([]);
@@ -22,6 +32,7 @@ const NotificationScreen = ({ userID }) => {
   const [selectedOrder, setSelectedOrder] = useState(null); // For popup
   const [orderDetails, setOrderDetails] = useState(null); // Order details for popup
   const [modelVisible, setModalVisible] = useState(false); // For popup visibility
+  const [customer, setCustomer] = useState(null); // Customer info for popup
 
   useEffect(() => {
     if (userID) {
@@ -33,6 +44,22 @@ const NotificationScreen = ({ userID }) => {
       });
     }
   }, [userID]);
+
+  const getUserInfoById = async (userID) => {
+    try {
+      const response = await fetchUserInfo(userID);
+      console.log("User info:", response);
+      return setCustomer(response);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      return null; // Return null in case of error
+    }
+  };
+  useEffect(() => {
+    if (selectedOrder) {
+      getUserInfoById(selectedOrder?.userID);
+    }
+  }, [selectedOrder]);
 
   const handleFilterChange = (type) => {
     setFilter(type);
@@ -70,6 +97,7 @@ const NotificationScreen = ({ userID }) => {
         setOrderDetails(order);
         setSelectedOrder(order);
         setModalVisible(true);
+        console.log("Order details:", selectedOrder);
       } else {
         message.info("Thông báo không chứa thông tin đơn hàng.");
       }
@@ -198,7 +226,9 @@ const NotificationScreen = ({ userID }) => {
         visible={modelVisible}
         onClose={() => setModalVisible(false)}
         order={selectedOrder}
-        userName={selectedOrder?.userID}
+        customerName={customer?.username}
+        customerPhone={customer?.phone}
+        customerID={customer?.userID}
         orderDetails={selectedOrder?.orderDetails}
         refreshOrders={() => {
           refreshNotifications();

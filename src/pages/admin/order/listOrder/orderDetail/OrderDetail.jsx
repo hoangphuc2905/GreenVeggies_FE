@@ -3,6 +3,8 @@ import PropTypes from "prop-types";
 import logo from "../../../../../assets/pictures/Green.png";
 import { getProductById, updateOrderStatus } from "../../../../../api/api";
 import { useEffect, useState } from "react";
+import { createNotify } from "../../../../../services/NotifyService";
+import { refresh } from "@cloudinary/url-gen/qualifiers/artisticFilter";
 
 const calculateShippingFee = (
   orderTotal,
@@ -44,12 +46,14 @@ const OrderDetail = ({
   visible,
   onClose,
   order,
-  userName,
+  customerName,
+  customerPhone,
+  customerID,
   orderDetails,
   refreshOrders,
 }) => {
   const [productDetails, setProductDetails] = useState([]);
-
+  const userID = localStorage.getItem("userID");
   useEffect(() => {
     const fetchDetails = async () => {
       if (!order?.orderDetails?.length) return;
@@ -76,6 +80,28 @@ const OrderDetail = ({
     fetchDetails();
   }, [order]);
 
+  //Tạo thông báo đã duyệt đơn hàng thành công
+  const sendNotify = async (orderID) => {
+    try {
+      const formData = {
+        senderType: "admin",
+        senderUserID: userID,
+        receiverID: customerID,
+        title: "Thông báo đơn hàng",
+        message: `Đơn hàng ${orderID} của bạn đã được duyệt thành công.`,
+        type: "order",
+        orderID: orderID,
+      };
+      const response = await createNotify(formData);
+      if (response) {
+        console.log("Thông báo đã được gửi thành công:", response);
+      }
+      // Thực hiện các hành động khác nếu cần
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo:", error);
+      // Xử lý lỗi nếu cần
+    }
+  };
   //Xử lý duyệt đơn hàng
   const handleApproveOrder = async () => {
     Modal.confirm({
@@ -94,6 +120,9 @@ const OrderDetail = ({
               onClose();
             }, 1000);
             // Đóng modal sau khi duyệt đơn hàng
+          })
+          .then(() => {
+            sendNotify(order.orderID); // Gửi thông báo sau khi duyệt đơn hàng
           })
           .catch((error) => {
             Modal.error({
@@ -264,10 +293,10 @@ const OrderDetail = ({
             {order.orderID}
           </Descriptions.Item>
           <Descriptions.Item label="Tên khách hàng">
-            {userName}
+            {customerName}
           </Descriptions.Item>
           <Descriptions.Item label="Số điện thoại">
-            {order.phone}
+            {customerPhone}
           </Descriptions.Item>
           <Descriptions.Item label="Địa chỉ">{order.address}</Descriptions.Item>
           <Descriptions.Item label="Trạng thái">
@@ -347,7 +376,7 @@ const OrderDetail = ({
 OrderDetail.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  userName: PropTypes.string.isRequired,
+  customerName: PropTypes.string.isRequired,
   order: PropTypes.shape({
     orderID: PropTypes.string.isRequired,
     customerId: PropTypes.string.isRequired,
@@ -358,6 +387,7 @@ OrderDetail.propTypes = {
     createdAt: PropTypes.string.isRequired,
     paymentMethod: PropTypes.string.isRequired,
     totalAmount: PropTypes.string.isRequired,
+
     orderDetails: PropTypes.arrayOf(
       PropTypes.shape({
         item: PropTypes.string.isRequired,

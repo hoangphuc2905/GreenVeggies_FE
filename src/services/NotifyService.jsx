@@ -38,6 +38,24 @@ export const readNotify = async (notificationID) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Thêm thông báo mới
+export const createNotify = async (data) => {
+  try {
+    const response = await handleNotifyApi.createNotification(data);
+    if (response && response.data) {
+      return response.data; // Trả về thông báo đã được tạo
+    }
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API createNotify:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
 
 // Hàm tải thông báo với các tham số để tái sử dụng
 export const fetchNotifications = async (
