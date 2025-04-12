@@ -32,7 +32,7 @@ const LoginForm = ({
     e.preventDefault();
     setLoading(true);
     setErrors({}); // Reset lỗi trước khi gửi
-
+  
     try {
       const response = await fetch(`http://localhost:8001/api/auth/login`, {
         method: "POST",
@@ -44,19 +44,19 @@ const LoginForm = ({
           password: formData.password,
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         const role = data.user.role;
         setUserRole(role);
         onLoginSuccess(data);
-
+  
         // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("userID", data.user.id);
         localStorage.setItem("role", role);
-
+  
         // Hiển thị thông báo đăng nhập thành công
         notification.success({
           message: "Đăng nhập thành công",
@@ -64,8 +64,13 @@ const LoginForm = ({
           placement: "topRight",
           duration: 3,
         });
-
+  
         closeLoginForm();
+  
+        // Tải lại trang sau khi đăng nhập thành công
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000); // Đợi 1 giây để hiển thị thông báo trước khi tải lại
       } else {
         // Xử lý lỗi từ BE
         setErrors(data.errors || {});
