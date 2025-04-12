@@ -20,6 +20,7 @@ import FilterButton from "../../../../components/filter/FilterButton";
 import { getAllOrders, getUserInfo } from "../../../../api/api";
 import { render } from "react-dom";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
+import { AlignCenter } from "lucide-react";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -51,6 +52,13 @@ const fetchOrders = async () => {
         };
       })
     );
+
+    // Sắp xếp đơn hàng: Ưu tiên trạng thái "Pending", sau đó theo thời gian đặt (trễ nhất -> sớm nhất)
+    ordersWithPhone.sort((a, b) => {
+      if (a.status === "Pending" && b.status !== "Pending") return -1;
+      if (a.status !== "Pending" && b.status === "Pending") return 1;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
     return ordersWithPhone;
   } catch (error) {
@@ -383,6 +391,7 @@ const ListOrder = () => {
       key: "actions",
       ellipsis: true, // Hiển thị chữ dạng ...
       fixed: "right",
+      width: 80,
 
       render: () => (
         <div>
@@ -405,7 +414,7 @@ const ListOrder = () => {
               className="mr-1 text-white bg-[#27A743] border-none"
             />
           </ConfigProvider>
-          <ConfigProvider
+          {/* <ConfigProvider
             theme={{
               components: {
                 Button: {
@@ -423,7 +432,7 @@ const ListOrder = () => {
               className="bg-deleteColor text-white border-none"
               icon={<DeleteFilled />}
             />
-          </ConfigProvider>
+          </ConfigProvider> */}
         </div>
       ),
     },
