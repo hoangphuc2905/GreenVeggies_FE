@@ -76,7 +76,7 @@ const UserRouter = () => {
   <Route path="change-password" element={<ChangePassword />} />
   <Route path="address" element={<Address />} />
   <Route path="orders" element={<OrderProFile />} />
-  <Route path="order/:id" element={<OrderDetail />} />
+  <Route path="order/:orderID" element={<OrderDetail />} />
 </Route>
       </Routes>
 
