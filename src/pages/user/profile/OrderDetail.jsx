@@ -1,8 +1,23 @@
-import { useParams } from "react-router-dom"; // Import useParams để lấy ID từ URL
+import { useParams } from "react-router-dom";
+import { getOrderById } from "../../../services/OrderService";
+import { useEffect, useState } from "react";
 
 const OrderDetail = () => {
-  const { id } = useParams(); // Lấy ID từ URL
-  const order = getOrderById(id); // Lấy dữ liệu đơn hàng từ ID (sử dụng phương thức getOrderById để mô phỏng)
+  const { orderID } = useParams();
+  const [order, setOrder] = useState(null);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const fetchedOrder = await getOrderById(orderID); 
+        setOrder(fetchedOrder);
+        console.log("Đơn hàng:", fetchedOrder); // In ra thông tin đơn hàng
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu đơn hàng:", error);
+      }
+    };
+    fetchOrder();
+  }, [orderID]);
 
   if (!order) {
     return <p>Đơn hàng không tồn tại.</p>;
@@ -10,12 +25,12 @@ const OrderDetail = () => {
 
   // Tính tổng tiền từ các sản phẩm
   const calculateTotal = () => {
-    return order.items.reduce((total, item) => total + item.price * item.quantity, 0);
+    return (order.orderDetails || []).reduce((total, detail) => total + detail.totalAmount, 0);
   };
 
   return (
     <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
-      <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Chi tiết đơn hàng #{order.id}</h2>
+      <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">Chi tiết đơn hàng #{order.orderID}</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
@@ -35,10 +50,10 @@ const OrderDetail = () => {
           {/* Chi tiết đơn hàng */}
           <h4 className="text-lg font-semibold text-gray-700 mb-2">Đơn hàng của bạn</h4>
           <div className="space-y-2">
-            {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between">
-                <p className="text-sm text-gray-700">{item.name} - {item.quantity} x {item.price} VND</p>
-                <p className="text-sm text-gray-700">{item.quantity * item.price} VND</p>
+            {(order.orderDetails || []).map((detail) => (
+              <div key={detail._id} className="flex justify-between">
+                <p className="text-sm text-gray-700">Sản phẩm ID: {detail.productID} - {detail.quantity} x {detail.totalAmount / detail.quantity} VND</p>
+                <p className="text-sm text-gray-700">{detail.totalAmount} VND</p>
               </div>
             ))}
           </div>
@@ -74,27 +89,5 @@ const OrderDetail = () => {
     </div>
   );
 };
-
-// Hàm giả lấy đơn hàng theo ID (thực tế bạn có thể lấy từ API)
-const getOrderById = (id) => {
-    const orders = [
-      {
-        id: "1",
-        customerName: "Nguyễn Minh Thuận",
-        address: "số 15, 4, Nam Cần",
-        city: "Cà Mau",
-        phone: "0977041860",
-        email: "nguyenminhthuan250718@gmail.com",
-        note: "Không có ghi chú",
-        items: [
-          { id: 1, name: "Táo đỏ", quantity: 2, price: 100000 },
-          { id: 2, name: "Chuối", quantity: 3, price: 50000 },
-        ],
-        total: 500000,
-        paymentMethod: "Trả tiền mặt khi nhận hàng",
-      },
-    ];
-    return orders.find(order => order.id === id);
-  };
 
 export default OrderDetail;
