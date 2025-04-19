@@ -121,6 +121,7 @@ const OrderPage = () => {
     address
   ) => {
     try {
+      // Tạo dữ liệu đơn hàng
       const orderData = {
         userID,
         orderDetails: cartItems.map((item) => ({
@@ -133,6 +134,53 @@ const OrderPage = () => {
         paymentMethod,
       };
 
+      // Nếu thanh toán bằng chuyển khoản ngân hàng
+      if (paymentMethod === "BANK") {
+        // Tạo đơn hàng trước để lấy mã đơn hàng thực
+        const orderResponse = await addOrder(orderData);
+
+        if (
+          orderResponse &&
+          orderResponse.order &&
+          orderResponse.order.orderID
+        ) {
+          console.log("Order created for bank transfer:", orderResponse);
+
+          // Tạo thông báo
+          const notificationDataUser = {
+            senderType: "system",
+            receiverID: userID,
+            title: "Thông báo đơn hàng",
+            message: `Đơn hàng #${orderResponse.order.orderID} đã được tạo, chờ thanh toán.`,
+            type: "order",
+            orderID: orderResponse.order.orderID,
+          };
+
+          await createNotify(notificationDataUser);
+
+          // Chuyển đến trang thanh toán với mã đơn hàng thực
+          navigate(
+            `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
+          );
+
+          // Xóa giỏ hàng sau khi tạo đơn hàng
+          for (const item of cartItems) {
+            await deleteShoppingCartDetailById(item.shoppingCartDetailID);
+          }
+
+          return;
+        } else {
+          notification.error({
+            message: "Thất bại",
+            description: "Không thể tạo đơn hàng. Vui lòng thử lại.",
+            placement: "topRight",
+            duration: 4,
+          });
+          return;
+        }
+      }
+
+      // Xử lý thanh toán tiền mặt như bình thường
       const orderResponse = await addOrder(orderData);
 
       console.log("Order Response:", orderResponse);
@@ -380,10 +428,6 @@ const OrderPage = () => {
                 value: 2,
                 label: "Chuyển khoản ngân hàng",
               },
-              {
-                value: 3,
-                label: "Thanh toán MoMo",
-              },
             ]}
           />
           <Divider style={{ borderColor: "#7cb305" }} />
@@ -442,7 +486,7 @@ const OrderPage = () => {
                   cartItems,
                   totalQuantity,
                   totalAmount,
-                  value === 1 ? "CASH" : value === 2 ? "BANK" : "MOMO",
+                  value === 1 ? "CASH" : "BANK",
                   userAddress
                 );
               }}>

@@ -7,7 +7,6 @@ import Wishlist from "../pages/user/Wishlist/Cart/";
 import ProfilePage from "../pages/user/Profile/ProfilePage";
 import Profile from "../pages/user/Profile/Profile";
 import Address from "../pages/user/Profile/AddressForm";
-import Order from "../pages/user/Profile/OrderProFile";
 import Contact from "../pages/user/Contact/Contact";
 import News from "../pages/user/news/News";
 import NewsDetail from "../pages/user/news/NewsDetail";
@@ -21,8 +20,9 @@ import UserFooter from "../pages/user/layouts/UserFooter";
 import { App } from "antd";
 import { fetchUser } from "../redux/userSlice";
 import { getUserInfo } from "../api/api";
-import OrderPage from "../pages/user/order/OrderPage";
+import OrderPage from "../pages/user/Order/OrderPage";
 import ChangePassword from "../pages/user/profile/ChangePassword";
+import PaymentPage from "../pages/user/payment/PaymentPage";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
@@ -62,22 +62,30 @@ const UserRouter = () => {
         {/* Các route chính */}
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<Product />} />
-        <Route path="/product/:id" element={<Detail wishlist={wishlist} setWishlist={setWishlist} />} />
-        <Route path="/wishlist" element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />} />
+        <Route
+          path="/product/:id"
+          element={<Detail wishlist={wishlist} setWishlist={setWishlist} />}
+        />
+        <Route
+          path="/wishlist"
+          element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />}
+        />
         <Route path="/contact" element={<Contact />} />
         <Route path="/news" element={<News />} />
         <Route path="/news/:id" element={<NewsDetail />} />
         <Route path="/category/:id" element={<CategoryPage />} />
         <Route path="/order" element={<OrderPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
 
         {/* Các route liên quan đến user */}
         <Route path="/user" element={<ProfilePage />}>
-  <Route path="profile" element={<Profile />} />
-  <Route path="change-password" element={<ChangePassword />} />
-  <Route path="address" element={<Address />} />
-  <Route path="orders" element={<OrderProFile />} />
-  <Route path="order/:orderID" element={<OrderDetail />} />
-</Route>
+          <Route path="profile" element={<Profile />} />
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="address" element={<Address />} />
+          <Route path="orders" element={<OrderProFile />} />
+          <Route path="order/:orderID" element={<OrderDetail />} />
+          <Route path="payment" element={<PaymentPage />} />
+        </Route>
       </Routes>
 
       <UserFooter />
