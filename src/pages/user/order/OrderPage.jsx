@@ -9,7 +9,6 @@ import {
   notification,
 } from "antd";
 import { useState, useEffect } from "react";
-import QRCode from "qrcode";
 import {
   getUserInfo,
   getShoppingCartByUserId,
@@ -54,8 +53,6 @@ const OrderPage = () => {
   const [value, setValue] = useState(1);
   const navigate = useNavigate(); // Initialize navigate
   const [cartItems, setCartItems] = useState([]);
-  const [showQR, setShowQR] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
 
   useEffect(() => {
@@ -93,22 +90,8 @@ const OrderPage = () => {
     }
   }, [form]);
 
-  const onChange = async (e) => {
+  const onChange = (e) => {
     setValue(e.target.value);
-    if (e.target.value === 2 || e.target.value === 3) {
-      setShowQR(true);
-      const qrCode = await generatePaymentQR(
-        "MBB",
-        "120826121111",
-        "PHAN HOANG TAN",
-        totalPrice,
-        "Thanh toan don hang #123"
-      );
-      setQrCodeUrl(qrCode);
-    } else {
-      setShowQR(false);
-      setQrCodeUrl("");
-    }
   };
   const fetchCartItems = async (userID) => {
     try {
@@ -250,29 +233,6 @@ const OrderPage = () => {
 
   const shippingFee = calculateShippingFee(totalProductPrice);
   const totalPrice = totalProductPrice + shippingFee;
-
-  const generatePaymentQR = async (
-    bankCode,
-    accountNumber,
-    accountName,
-    amount,
-    content
-  ) => {
-    // Tạo URL VietQR chính xác
-    const qrData = `https://vietqr.net/${bankCode}/${accountNumber}?amount=${amount}&addInfo=${encodeURIComponent(
-      content
-    )}`;
-
-    try {
-      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: "H",
-      });
-      return qrCodeDataUrl;
-    } catch (err) {
-      console.error("Lỗi khi tạo QR:", err);
-      return null;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-[10%] mt-28">
@@ -426,11 +386,6 @@ const OrderPage = () => {
               },
             ]}
           />
-          {showQR && qrCodeUrl && (
-            <div className="mt-4 relative">
-              <img src={qrCodeUrl} alt="QR Code" />
-            </div>
-          )}
           <Divider style={{ borderColor: "#7cb305" }} />
           <div className="grid grid-cols-3 gap-4 mb-2">
             <p className="font-bold">Tổng tiền sản phẩm</p>
