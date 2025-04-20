@@ -169,7 +169,7 @@ const ListProductByCatelogyID = ({
                             state={{ productID: product.productID }}
                             className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
                             <EyeOutlined className="text-2xl" />
-                            <Typography.Text className="text-xs mt-2">
+                            <Typography.Text className="text-xs mt-2 text-center">
                               Xem chi tiết
                             </Typography.Text>
                           </Link>
