@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Button, Select, Spin, Table, ConfigProvider } from "antd";
+import { useState, useEffect } from "react";
+import { Button, Select, Spin, Table, ConfigProvider, Typography } from "antd";
 import { Line } from "react-chartjs-2";
 import * as XLSX from "xlsx";
-import data from "../../../../assets/objects/RevenueTrend.json";
+import moment from "moment";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { getYearlyRevenue } from "../../../../services/StatisticService";
 
 ChartJS.register(
   CategoryScale,
@@ -24,47 +25,47 @@ ChartJS.register(
   Legend
 );
 
+const { Title: AntdTitle } = Typography;
+
 const RevenueTrendChart = () => {
-  const [selectedYear, setSelectedYear] = useState("2024");
+  const [selectedYear, setSelectedYear] = useState(moment().format("YYYY")); // Mặc định là năm hiện tại (2025)
   const [chartType, setChartType] = useState("line");
+  const [revenueData, setRevenueData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const selectedData = data[selectedYear];
+  const fetchYearlyRevenue = async (year) => {
+    setLoading(true);
+    try {
+      const response = await getYearlyRevenue(year);
+      if (
+        response &&
+        response.stats &&
+        typeof response.totalRevenue === "number"
+      ) {
+        setRevenueData(response);
+      } else {
+        setRevenueData(null);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy thống kê doanh thu:", error);
+      setRevenueData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchYearlyRevenue(selectedYear);
+  }, [selectedYear]);
 
   const chartData = {
-    labels: selectedData.map((item) => item.month),
+    labels: revenueData?.stats?.map((item) => `Tháng ${item.month}`) || [],
     datasets: [
       {
-        label: "ZaloPay",
-        data: selectedData.map((item) => item.ZaloPay),
-        borderColor: "#FF5733",
-        backgroundColor: "rgba(255, 87, 51, 0.2)",
-      },
-      {
-        label: "Tiền mặt",
-        data: selectedData.map((item) => item.Cash),
-        borderColor: "#1E90FF",
-        backgroundColor: "rgba(30, 144, 255, 0.2)",
-      },
-      {
-        label: "Bank",
-        data: selectedData.map((item) => item.Bank),
-        borderColor: "#FFD700",
-        backgroundColor: "rgba(255, 215, 0, 0.2)",
-      },
-      {
-        label: "MoMo",
-        data: selectedData.map((item) => item.MoMo),
-        borderColor: "#FF1493",
-        backgroundColor: "rgba(255, 20, 147, 0.2)",
-      },
-      {
         label: "Tổng doanh thu",
-        data: selectedData.map(
-          (item) => item.ZaloPay + item.Cash + item.Bank + item.MoMo
-        ),
-        borderColor: "#000000",
-        backgroundColor: "rgba(0, 0, 0, 0.2)",
+        data: revenueData?.stats?.map((item) => item.revenue || 0) || [],
+        borderColor: "#1890ff", // Updated line color to blue
+        backgroundColor: "rgba(24, 144, 255, 0.2)", // Updated fill color to light blue
       },
     ],
   };
@@ -81,7 +82,13 @@ const RevenueTrendChart = () => {
   };
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(selectedData);
+    if (!revenueData?.stats) return;
+    const ws = XLSX.utils.json_to_sheet(
+      revenueData.stats.map((item) => ({
+        month: item.month,
+        revenue: item.revenue || 0,
+      }))
+    );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, `Doanh thu ${selectedYear}`);
     XLSX.writeFile(wb, `Doanh_thu_${selectedYear}.xlsx`);
@@ -93,42 +100,14 @@ const RevenueTrendChart = () => {
       dataIndex: "month",
       key: "month",
       sorter: (a, b) => a.month - b.month,
+      render: (month) => `Tháng ${month}`,
     },
     {
-      title: "ZaloPay",
-      dataIndex: "ZaloPay",
-      key: "ZaloPay",
-      sorter: (a, b) => a.ZaloPay - b.ZaloPay,
-    },
-    {
-      title: "Tiền mặt",
-      dataIndex: "Cash",
-      key: "Cash",
-      sorter: (a, b) => a.Cash - b.Cash,
-    },
-    {
-      title: "Bank",
-      dataIndex: "Bank",
-      key: "Bank",
-      sorter: (a, b) => a.Bank - b.Bank,
-    },
-    {
-      title: "MoMo",
-      dataIndex: "MoMo",
-      key: "MoMo",
-      sorter: (a, b) => a.MoMo - b.MoMo,
-    },
-    {
-      title: "Tổng doanh thu",
-      key: "total",
-      render: (_, record) =>
-        record.ZaloPay + record.Cash + record.Bank + record.MoMo,
-      sorter: (a, b) =>
-        a.ZaloPay +
-        a.Cash +
-        a.Bank +
-        a.MoMo -
-        (b.ZaloPay + b.Cash + b.Bank + b.MoMo),
+      title: "Doanh thu (VNĐ)",
+      dataIndex: "revenue",
+      key: "revenue",
+      sorter: (a, b) => (a.revenue || 0) - (b.revenue || 0),
+      render: (value) => (value || 0).toLocaleString("vi-VN"),
     },
   ];
 
@@ -150,6 +129,23 @@ const RevenueTrendChart = () => {
           <h2 className="font-semibold text-base">
             Doanh thu biến động theo tháng: năm {selectedYear}
           </h2>
+          <div className="mt-2">
+            {loading ? (
+              <Spin />
+            ) : revenueData && revenueData.totalRevenue !== null ? (
+              <AntdTitle
+                level={4}
+                className="text-sm font-semibold"
+                style={{ color: "#34C759" }}
+              >
+                Tổng: {revenueData.totalRevenue.toLocaleString("vi-VN")} VNĐ
+              </AntdTitle>
+            ) : (
+              <AntdTitle level={3} style={{ color: "#FF3B30" }}>
+                Không có dữ liệu
+              </AntdTitle>
+            )}
+          </div>
           <div className="flex gap-2 mt-4">
             <Select value={selectedYear} onChange={setSelectedYear}>
               <Select.Option value="2023">2023</Select.Option>
@@ -160,7 +156,11 @@ const RevenueTrendChart = () => {
               <Select.Option value="line">Biểu đồ đường</Select.Option>
               <Select.Option value="table">Bảng</Select.Option>
             </Select>
-            <Button type="primary" onClick={exportToExcel}>
+            <Button
+              type="primary"
+              onClick={exportToExcel}
+              disabled={!revenueData?.stats}
+            >
               Xuất Excel
             </Button>
           </div>
@@ -168,16 +168,20 @@ const RevenueTrendChart = () => {
         <div className="w-full flex-1 overflow-hidden">
           {loading ? (
             <Spin size="small" />
-          ) : chartType === "line" ? (
-            <Line data={chartData} options={options} size="small" />
+          ) : revenueData?.stats ? (
+            chartType === "line" ? (
+              <Line data={chartData} options={options} size="small" />
+            ) : (
+              <Table
+                columns={columns}
+                dataSource={revenueData.stats}
+                pagination={false}
+                rowKey="month"
+                scroll={{ x: "max-content", y: 150 }}
+              />
+            )
           ) : (
-            <Table
-              columns={columns}
-              dataSource={selectedData}
-              pagination={false}
-              rowKey="month"
-              scroll={{ x: "max-content", y: 150 }}
-            />
+            <p>Không có dữ liệu để hiển thị</p>
           )}
         </div>
       </div>

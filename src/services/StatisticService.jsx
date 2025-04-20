@@ -31,3 +31,30 @@ export const getOrderStatusByDate = async (date) => {
     return null;
   }
 };
+//Thống kê doanh thu theo năm
+export const getYearlyRevenue = async (year) => {
+  try {
+    const response = await handleStatisticApi.getYearlyRevenue(year);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+//Thống kê đơn hàng thành công theo tháng của năm
+
+export const getMonthlyOrderStats = async (month, year) => {
+  try {
+    console.log("Thángs:", month);
+    console.log("Năms:", year);
+    const response = await handleStatisticApi.getMonthlySuccessfulOrders(
+      month,
+      year
+    );
+    console.log("Thống kê đơn hàng s:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};

@@ -181,6 +181,17 @@ export const handleStatisticApi = {
     // statistics/order-status?date
     return await statisticAPI.get(`/statistics/order-status?date=${date}`);
   },
+  //Thống kê doanh thu theo năm
+  getYearlyRevenue: async (year) => {
+    // statistics/yearly-revenue?year=2025
+    return await statisticAPI.get(`/statistics/yearly-revenue?year=${year}`);
+  },
+  //Thống kê đơn hàng thành công theo tháng của năm
+  getMonthlySuccessfulOrders: async (month, year) => {
+    return await statisticAPI.get(
+      `/statistics/daily-orders?month=${month}&year=${year}`
+    );
+  },
 };
 // Xóa hình ảnh trên cloundary
 export const deleteImage = async (publicId) => {
