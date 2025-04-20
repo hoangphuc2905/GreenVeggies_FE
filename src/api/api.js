@@ -8,7 +8,10 @@ const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
 const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
 const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
+
 const API_URL_STATISTIC = import.meta.env.VITE_API_STATISTIC_URL;
+
+const API_PAYMENT_URL = import.meta.env.VITE_API_PAYMENT_URL;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
@@ -78,6 +81,12 @@ const notifyAPI = axios.create({
 
 const statisticAPI = axios.create({
   baseURL: API_URL_STATISTIC,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+const paymentAPI = axios.create({
+  baseURL: API_PAYMENT_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -576,6 +585,66 @@ export const getStockEntry = async (id) => {
     console.error("Lỗi khi lấy thông tin nhập hàng:", error);
     return null;
   }
+};
+
+//THANH TOÁN
+export const handlePaymentApi = {
+  // Tạo mã QR cho thanh toán
+  createPaymentQR: async (amount) => {
+    try {
+      console.log("API call: Creating payment QR for amount:", amount);
+      const response = await paymentAPI.post("/payments/create-qr", {
+        amount,
+      });
+      console.log("Payment QR API response:", response.data);
+
+      // Xử lý response từ backend theo định dạng VietQR
+      if (response.data && response.data.qrURL) {
+        return {
+          qrCodeUrl: response.data.qrURL,
+          message: response.data.message,
+          paymentId: "vietqr_" + Date.now(),
+        };
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Error details:", error.response || error);
+      console.error("Lỗi khi tạo mã QR thanh toán:", error.message);
+
+      // Fallback: Tạo URL VietQR trực tiếp nếu API không hoạt động
+      const vietQrUrl =
+        "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
+        amount +
+        "&addInfo=Thanh%20toan%20don%20hang&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
+
+      return {
+        qrCodeUrl: vietQrUrl,
+        message: "Tạo mã QR thanh toán tạm thời.",
+        paymentId: "vietqr_" + Date.now(),
+      };
+    }
+  },
+
+  // Kiểm tra trạng thái thanh toán
+  checkPaymentStatus: async (paymentId) => {
+    try {
+      console.log("API call: Checking payment status for ID:", paymentId);
+      const response = await paymentAPI.get(
+        `/api/payments/status/${paymentId}`
+      );
+      console.log("Payment status API response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error details:", error.response || error);
+      console.error("Lỗi khi kiểm tra trạng thái thanh toán:", error.message);
+
+      // Nếu API không khả dụng, giả lập response trạng thái
+      if (paymentId.startsWith("vietqr_")) {
+        return { status: "pending" };
+      }
+      throw error;
+    }
+  },
 };
 
 export default api;

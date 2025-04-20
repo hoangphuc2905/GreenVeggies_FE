@@ -9,7 +9,6 @@ import {
   notification,
 } from "antd";
 import { useState, useEffect } from "react";
-import QRCode from "qrcode";
 import {
   getUserInfo,
   getShoppingCartByUserId,
@@ -54,8 +53,6 @@ const OrderPage = () => {
   const [value, setValue] = useState(1);
   const navigate = useNavigate(); // Initialize navigate
   const [cartItems, setCartItems] = useState([]);
-  const [showQR, setShowQR] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
 
   useEffect(() => {
@@ -93,22 +90,8 @@ const OrderPage = () => {
     }
   }, [form]);
 
-  const onChange = async (e) => {
+  const onChange = (e) => {
     setValue(e.target.value);
-    if (e.target.value === 2 || e.target.value === 3) {
-      setShowQR(true);
-      const qrCode = await generatePaymentQR(
-        "MBB",
-        "120826121111",
-        "PHAN HOANG TAN",
-        totalPrice,
-        "Thanh toan don hang #123"
-      );
-      setQrCodeUrl(qrCode);
-    } else {
-      setShowQR(false);
-      setQrCodeUrl("");
-    }
   };
   const fetchCartItems = async (userID) => {
     try {
@@ -138,6 +121,7 @@ const OrderPage = () => {
     address
   ) => {
     try {
+      // Tạo dữ liệu đơn hàng
       const orderData = {
         userID,
         orderDetails: cartItems.map((item) => ({
@@ -150,6 +134,53 @@ const OrderPage = () => {
         paymentMethod,
       };
 
+      // Nếu thanh toán bằng chuyển khoản ngân hàng
+      if (paymentMethod === "BANK") {
+        // Tạo đơn hàng trước để lấy mã đơn hàng thực
+        const orderResponse = await addOrder(orderData);
+
+        if (
+          orderResponse &&
+          orderResponse.order &&
+          orderResponse.order.orderID
+        ) {
+          console.log("Order created for bank transfer:", orderResponse);
+
+          // Tạo thông báo
+          const notificationDataUser = {
+            senderType: "system",
+            receiverID: userID,
+            title: "Thông báo đơn hàng",
+            message: `Đơn hàng #${orderResponse.order.orderID} đã được tạo, chờ thanh toán.`,
+            type: "order",
+            orderID: orderResponse.order.orderID,
+          };
+
+          await createNotify(notificationDataUser);
+
+          // Chuyển đến trang thanh toán với mã đơn hàng thực
+          navigate(
+            `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
+          );
+
+          // Xóa giỏ hàng sau khi tạo đơn hàng
+          for (const item of cartItems) {
+            await deleteShoppingCartDetailById(item.shoppingCartDetailID);
+          }
+
+          return;
+        } else {
+          notification.error({
+            message: "Thất bại",
+            description: "Không thể tạo đơn hàng. Vui lòng thử lại.",
+            placement: "topRight",
+            duration: 4,
+          });
+          return;
+        }
+      }
+
+      // Xử lý thanh toán tiền mặt như bình thường
       const orderResponse = await addOrder(orderData);
 
       console.log("Order Response:", orderResponse);
@@ -250,29 +281,6 @@ const OrderPage = () => {
 
   const shippingFee = calculateShippingFee(totalProductPrice);
   const totalPrice = totalProductPrice + shippingFee;
-
-  const generatePaymentQR = async (
-    bankCode,
-    accountNumber,
-    accountName,
-    amount,
-    content
-  ) => {
-    // Tạo URL VietQR chính xác
-    const qrData = `https://vietqr.net/${bankCode}/${accountNumber}?amount=${amount}&addInfo=${encodeURIComponent(
-      content
-    )}`;
-
-    try {
-      const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
-        errorCorrectionLevel: "H",
-      });
-      return qrCodeDataUrl;
-    } catch (err) {
-      console.error("Lỗi khi tạo QR:", err);
-      return null;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-[10%] mt-28">
@@ -420,17 +428,8 @@ const OrderPage = () => {
                 value: 2,
                 label: "Chuyển khoản ngân hàng",
               },
-              {
-                value: 3,
-                label: "Thanh toán MoMo",
-              },
             ]}
           />
-          {showQR && qrCodeUrl && (
-            <div className="mt-4 relative">
-              <img src={qrCodeUrl} alt="QR Code" />
-            </div>
-          )}
           <Divider style={{ borderColor: "#7cb305" }} />
           <div className="grid grid-cols-3 gap-4 mb-2">
             <p className="font-bold">Tổng tiền sản phẩm</p>
@@ -487,7 +486,7 @@ const OrderPage = () => {
                   cartItems,
                   totalQuantity,
                   totalAmount,
-                  value === 1 ? "CASH" : value === 2 ? "BANK" : "MOMO",
+                  value === 1 ? "CASH" : "BANK",
                   userAddress
                 );
               }}>
