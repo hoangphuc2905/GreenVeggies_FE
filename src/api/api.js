@@ -8,6 +8,9 @@ const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
 const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
 const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
+
+const API_URL_STATISTIC = import.meta.env.VITE_API_STATISTIC_URL;
+
 const API_PAYMENT_URL = import.meta.env.VITE_API_PAYMENT_URL;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
@@ -76,6 +79,12 @@ const notifyAPI = axios.create({
   },
 });
 
+const statisticAPI = axios.create({
+  baseURL: API_URL_STATISTIC,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 const paymentAPI = axios.create({
   baseURL: API_PAYMENT_URL,
   headers: {
@@ -155,6 +164,24 @@ export const handleOrderApi = {
   },
 };
 
+//THỐNG KÊ
+export const handleStatisticApi = {
+  // Thống kê doanh thu hàng ngày
+  getDailyRevenue: async (date) => {
+    return await statisticAPI.get(`/statistics/daily?date=${date}`);
+  },
+  //Tình trạng doanh thu theo ngày
+  getRevenueByPaymentMethod: async (date) => {
+    return await statisticAPI.get(
+      `/statistics/revenue-by-payment-method?date=${date}`
+    );
+  },
+  //Thống kê đơn hàng theo trạng thái
+  getOrderStatsByStatus: async (date) => {
+    // statistics/order-status?date
+    return await statisticAPI.get(`/statistics/order-status?date=${date}`);
+  },
+};
 // Xóa hình ảnh trên cloundary
 export const deleteImage = async (publicId) => {
   const response = await productAPI.post("/products/delete-image", {

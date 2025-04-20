@@ -2,7 +2,7 @@ import { Breadcrumb } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import { useLocation, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { getProductDetail } from "../../../api/api"; // Giả sử có API lấy sản phẩm theo ID
+import { getProductById } from "../../../services/ProductService";
 
 const breadcrumbItems = {
   "/admin/products": [
@@ -57,7 +57,7 @@ const BreadcrumbNav = () => {
     const fetchProductDetail = async () => {
       if (id) {
         try {
-          const response = await getProductDetail(id);
+          const response = await getProductById(id);
           console.log(response);
           setProductName(response?.name || "Chi tiết sản phẩm");
         } catch (error) {

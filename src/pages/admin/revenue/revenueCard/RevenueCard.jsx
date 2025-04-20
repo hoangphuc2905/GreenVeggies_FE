@@ -26,6 +26,7 @@ const RevenueCard = ({ title, value, growth, unit, color }) => {
           format={() => (
             <span
               style={{
+                fontSize: 12,
                 color: color, // Sửa lại cách đặt màu
                 fontWeight: "bold",
               }}
