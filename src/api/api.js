@@ -167,6 +167,11 @@ export const handleStatisticApi = {
       `/statistics/revenue-by-payment-method?date=${date}`
     );
   },
+  //Thống kê đơn hàng theo trạng thái
+  getOrderStatsByStatus: async (date) => {
+    // statistics/order-status?date
+    return await statisticAPI.get(`/statistics/order-status?date=${date}`);
+  },
 };
 // Xóa hình ảnh trên cloundary
 export const deleteImage = async (publicId) => {
