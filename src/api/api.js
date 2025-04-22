@@ -8,9 +8,6 @@ const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
 const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
 const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
 const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
-
-const API_URL_STATISTIC = import.meta.env.VITE_API_STATISTIC_URL;
-
 const API_PAYMENT_URL = import.meta.env.VITE_API_PAYMENT_URL;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
@@ -79,12 +76,6 @@ const notifyAPI = axios.create({
   },
 });
 
-const statisticAPI = axios.create({
-  baseURL: API_URL_STATISTIC,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 const paymentAPI = axios.create({
   baseURL: API_PAYMENT_URL,
   headers: {
@@ -117,9 +108,14 @@ export const handleProductApi = {
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
-    return await productAPI.get(`/products/${id}`);
+    try {
+      const response = await productAPI.get(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin sản phẩm:", error);
+      return null;
+    }
   },
-
   //Thêm sản phẩm mới
   addProduct: async (data) => {
     return await productAPI.post("/products", data);
@@ -131,9 +127,73 @@ export const handleProductApi = {
     return await productAPI.put(`/products/${id}`, data);
   },
   //Thêm phiếu nhập kho
-
   insertStockEntry: async (data) => {
     return await productAPI.post("/stock-entries", data);
+  },
+  // Lấy tất cả sản phẩm
+  getAllProducts: async () => {
+    try {
+      const response = await productAPI.get("/products");
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách tất cả sản phẩm:", error);
+      return [];
+    }
+  },
+  // Lấy thông tin sản phẩm chi tiết
+  getProductDetail: async (id) => {
+    try {
+      const response = await productAPI.get(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+      return null;
+    }
+  },
+  // Lấy danh sách danh mục
+  getCategories: async () => {
+    try {
+      const response = await productAPI.get("/categories");
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách danh mục:", error);
+      return [];
+    }
+  },
+  // Lấy danh sách danh mục từ sản phẩm
+  getCategoriesFromProducts: async () => {
+    try {
+      const products = await this.getAllProducts();
+      const categories = [
+        ...new Set(products.map((product) => product.category)),
+      ];
+      return categories;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
+      return [];
+    }
+  },
+  // Lấy thông tin nhập hàng
+  getStockEntry: async (id) => {
+    try {
+      const response = await productAPI.get(`/stock-entries/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin nhập hàng:", error);
+      return null;
+    }
+  },
+  // Xóa hình ảnh trên cloundary
+  deleteImage: async (publicId) => {
+    try {
+      const response = await productAPI.post("/products/delete-image", {
+        publicId,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi xóa hình ảnh:", error);
+      return null;
+    }
   },
 };
 
@@ -162,43 +222,6 @@ export const handleOrderApi = {
   getOrdersByUserId: async (userID) => {
     return await orderAPI.get(`/orders/user/${userID}`);
   },
-};
-
-//THỐNG KÊ
-export const handleStatisticApi = {
-  // Thống kê doanh thu hàng ngày
-  getDailyRevenue: async (date) => {
-    return await statisticAPI.get(`/statistics/daily?date=${date}`);
-  },
-  //Tình trạng doanh thu theo ngày
-  getRevenueByPaymentMethod: async (date) => {
-    return await statisticAPI.get(
-      `/statistics/revenue-by-payment-method?date=${date}`
-    );
-  },
-  //Thống kê đơn hàng theo trạng thái
-  getOrderStatsByStatus: async (date) => {
-    // statistics/order-status?date
-    return await statisticAPI.get(`/statistics/order-status?date=${date}`);
-  },
-  //Thống kê doanh thu theo năm
-  getYearlyRevenue: async (year) => {
-    // statistics/yearly-revenue?year=2025
-    return await statisticAPI.get(`/statistics/yearly-revenue?year=${year}`);
-  },
-  //Thống kê đơn hàng thành công theo tháng của năm
-  getMonthlySuccessfulOrders: async (month, year) => {
-    return await statisticAPI.get(
-      `/statistics/daily-orders?month=${month}&year=${year}`
-    );
-  },
-};
-// Xóa hình ảnh trên cloundary
-export const deleteImage = async (publicId) => {
-  const response = await productAPI.post("/products/delete-image", {
-    publicId,
-  });
-  return response.data;
 };
 
 // 🟢 Lưu thông tin sản phẩm vào order

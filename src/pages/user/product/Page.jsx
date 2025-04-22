@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 
 import Menu from "../layouts/Menu";
@@ -7,7 +6,8 @@ import bgImage from "../../../assets/pictures/bg_1.png";
 
 import Favourite from "../layouts/Favourite";
 import ListProduct from "../layouts/ListProduct";
-import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
+import FilterPrice from "../layouts/FilterPrice";
+import { getAllProducts } from "../../../services/ProductService"; // Import từ ProductService
 
 const Page = () => {
   const [minPrice, setMinPrice] = useState(0);
@@ -18,19 +18,24 @@ const Page = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
-
-  const API_URL = import.meta.env.VITE_API_PRODUCT_URL;
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`${API_URL}/products`)
-      .then(() => {
-        // Xử lý dữ liệu sản phẩm nếu cần thiết
-      })
-      .catch((error) => {
-        console.error("Lỗi khi lấy dữ liệu!", error);
-      });
-  }, [API_URL]);
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const productsData = await getAllProducts();
+        setProducts(productsData);
+      } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu sản phẩm:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleFilter = () => {
     const newMinPrice = tempMinPrice ? Number(tempMinPrice) : 0;
@@ -75,13 +80,20 @@ const Page = () => {
               />
               <Favourite />
             </div>
-            <ListProduct
-              minPrice={minPrice}
-              maxPrice={maxPrice}
-              searchQuery={searchQuery}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-            />
+            {loading ? (
+              <div className="flex justify-center items-center w-full">
+                <p>Đang tải...</p>
+              </div>
+            ) : (
+              <ListProduct
+                allProducts={products}
+                minPrice={minPrice}
+                maxPrice={maxPrice}
+                searchQuery={searchQuery}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+              />
+            )}
           </div>
         </div>
       </div>

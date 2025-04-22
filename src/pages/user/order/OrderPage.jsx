@@ -12,12 +12,14 @@ import { useState, useEffect } from "react";
 import {
   getUserInfo,
   getShoppingCartByUserId,
-  getProductById,
   deleteShoppingCartDetailById,
   addOrder,
 } from "../../../api/api";
 import { useNavigate } from "react-router-dom";
-import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import {
+  getProductById,
+  calcSoldPrice,
+} from "../../../services/ProductService"; // Sử dụng ProductService
 import { createNotify } from "../../../services/NotifyService";
 const style = {
   display: "flex",
@@ -102,7 +104,7 @@ const OrderPage = () => {
           return {
             ...item,
             name: product.name,
-            price: CalcPrice(product.price),
+            price: calcSoldPrice(product.price), // Use calcSoldPrice from ProductService
           };
         })
       );

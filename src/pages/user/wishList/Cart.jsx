@@ -7,11 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   getShoppingCartByUserId,
-  getProductById,
   deleteShoppingCartDetailById,
   updateCartQuantity,
-} from "../../../api/api"; // Import the API functions
+} from "../../../api/api"; // Giữ lại các API liên quan đến giỏ hàng
+import { getProductById } from "../../../services/ProductService"; // Sử dụng ProductService cho việc lấy thông tin sản phẩm
+import { calcSoldPrice } from "../../../services/ProductService"; // Import hàm tính giá từ ProductService
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
@@ -37,7 +39,7 @@ const Cart = () => {
                   quantity: item.quantity || 1, // Ensure quantity is set
                   totalAmount:
                     (item.quantity || 1) *
-                    (CalcPrice(productDetails.price) || 0), // Calculate totalAmount
+                    (calcSoldPrice(productDetails.price) || 0), // Calculate totalAmount using calcSoldPrice
                 };
               })
             );
@@ -203,8 +205,7 @@ const Cart = () => {
 
                   <div
                     className="col-span-2 flex items-center gap-4 "
-                    onClick={() => handleProductClick(item)}
-                  >
+                    onClick={() => handleProductClick(item)}>
                     <img
                       src={
                         Array.isArray(item.imageUrl) && item.imageUrl.length > 0
@@ -220,7 +221,7 @@ const Cart = () => {
                   </div>
 
                   <div className="col-span-1 text-center">
-                    {(CalcPrice(item.price) || 0).toLocaleString()} VND
+                    {(calcSoldPrice(item.price) || 0).toLocaleString()} VND
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber
@@ -248,7 +249,7 @@ const Cart = () => {
                   </div>
                   <div className="col-span-1 text-center">
                     {(
-                      (CalcPrice(item.price) || 0) * item.quantity
+                      (calcSoldPrice(item.price) || 0) * item.quantity
                     ).toLocaleString()}{" "}
                     VND
                   </div>
@@ -284,8 +285,7 @@ const Cart = () => {
             <div className="col-span-2 col-start-5 flex justify-end mt-4">
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
-                onClick={handleCheckout}
-              >
+                onClick={handleCheckout}>
                 Tiến hành thanh toán
               </button>
             </div>
