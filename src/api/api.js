@@ -108,14 +108,9 @@ export const handleProductApi = {
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
-    try {
-      const response = await productAPI.get(`/products/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin sản phẩm:", error);
-      return null;
-    }
+    return await productAPI.get(`/products/${id}`);
   },
+
   //Thêm sản phẩm mới
   addProduct: async (data) => {
     return await productAPI.post("/products", data);
@@ -127,73 +122,9 @@ export const handleProductApi = {
     return await productAPI.put(`/products/${id}`, data);
   },
   //Thêm phiếu nhập kho
+
   insertStockEntry: async (data) => {
     return await productAPI.post("/stock-entries", data);
-  },
-  // Lấy tất cả sản phẩm
-  getAllProducts: async () => {
-    try {
-      const response = await productAPI.get("/products");
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách tất cả sản phẩm:", error);
-      return [];
-    }
-  },
-  // Lấy thông tin sản phẩm chi tiết
-  getProductDetail: async (id) => {
-    try {
-      const response = await productAPI.get(`/products/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
-      return null;
-    }
-  },
-  // Lấy danh sách danh mục
-  getCategories: async () => {
-    try {
-      const response = await productAPI.get("/categories");
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách danh mục:", error);
-      return [];
-    }
-  },
-  // Lấy danh sách danh mục từ sản phẩm
-  getCategoriesFromProducts: async () => {
-    try {
-      const products = await this.getAllProducts();
-      const categories = [
-        ...new Set(products.map((product) => product.category)),
-      ];
-      return categories;
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
-      return [];
-    }
-  },
-  // Lấy thông tin nhập hàng
-  getStockEntry: async (id) => {
-    try {
-      const response = await productAPI.get(`/stock-entries/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy thông tin nhập hàng:", error);
-      return null;
-    }
-  },
-  // Xóa hình ảnh trên cloundary
-  deleteImage: async (publicId) => {
-    try {
-      const response = await productAPI.post("/products/delete-image", {
-        publicId,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi xóa hình ảnh:", error);
-      return null;
-    }
   },
 };
 
@@ -222,6 +153,14 @@ export const handleOrderApi = {
   getOrdersByUserId: async (userID) => {
     return await orderAPI.get(`/orders/user/${userID}`);
   },
+};
+
+// Xóa hình ảnh trên cloundary
+export const deleteImage = async (publicId) => {
+  const response = await productAPI.post("/products/delete-image", {
+    publicId,
+  });
+  return response.data;
 };
 
 // 🟢 Lưu thông tin sản phẩm vào order

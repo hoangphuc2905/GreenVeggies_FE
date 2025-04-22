@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAllReviews } from "../../api/api";
-import { getProducts, formatPrice } from "../../services/ProductService";
+import { getProducts, getAllReviews } from "../../api/api";
 
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
@@ -24,6 +23,7 @@ import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
 import { Carousel } from "antd";
 import Favourite from "./layouts/Favourite";
+import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
 
 const images = [
   {
@@ -254,7 +254,8 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product)}>
+                  onClick={() => handleProductClick(product)}
+                >
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -279,7 +280,7 @@ const Home = () => {
                       <span className="line-through">{product.oldPrice}đ</span>
                     )}{" "}
                     <span className="text-gray-700">
-                      {formatPrice(product.price)}
+                      {formattedPrice(product.price)}
                     </span>
                   </p>
                 </div>
@@ -376,7 +377,8 @@ const Home = () => {
             dots={true}
             className="mt-10"
             slidesToShow={3}
-            slidesToScroll={3}>
+            slidesToScroll={3}
+          >
             {reviews
               .filter((review) => review.rating === 5)
               .map((review, index) => {

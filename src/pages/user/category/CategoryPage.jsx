@@ -5,9 +5,9 @@ import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/pictures/bg_1.png";
 
 import Favourite from "../layouts/Favourite";
-import FilterPrice from "../layouts/FilterPrice";
-import ProductList from "../layouts/ListProductByCatelogyID";
-import { getAllProducts } from "../../../services/ProductService"; // Import từ ProductService
+import { getAllProducts } from "../../../api/api"; // Import hàm API để lấy tất cả sản phẩm
+import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
+import ProductList from "../layouts/ListProductByCatelogyID"; // Import ProductList từ layout
 
 const CategoryPage = () => {
   const { id } = useParams(); // Lấy ID danh mục từ URL
