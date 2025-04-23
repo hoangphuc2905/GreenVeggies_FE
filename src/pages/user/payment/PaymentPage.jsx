@@ -86,7 +86,7 @@ const PaymentPage = () => {
               duration: 4,
             });
 
-            // Navigate to order list page
+            // Navigate to order confirmation or order detail page
             setTimeout(() => {
               navigate("/user/orders");
             }, 2000);
@@ -103,7 +103,7 @@ const PaymentPage = () => {
   }, [paymentId, paymentStatus, navigate]);
 
   const handleCancel = () => {
-    navigate("/product");
+    navigate("/");
   };
 
   if (loading) {
