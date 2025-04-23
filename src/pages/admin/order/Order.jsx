@@ -32,7 +32,7 @@ const Order = () => {
           <OrderList selectedDate={selectedDate} />
         </div>
       </div>
-      <ListOrder />
+      {/* <ListOrder /> */}
     </div>
   );
 };

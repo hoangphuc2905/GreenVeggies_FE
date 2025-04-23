@@ -5,6 +5,10 @@ import { getProductById, updateOrderStatus } from "../../../../../api/api";
 import { useEffect, useState } from "react";
 import { createNotify } from "../../../../../services/NotifyService";
 import { refresh } from "@cloudinary/url-gen/qualifiers/artisticFilter";
+import {
+  getPaymentByOrderId,
+  checkPaymentStatus,
+} from "../../../../../services/PaymentService";
 
 const calculateShippingFee = (
   orderTotal,
@@ -53,6 +57,7 @@ const OrderDetail = ({
   refreshOrders,
 }) => {
   const [productDetails, setProductDetails] = useState([]);
+  const [paymentDetails, setPaymentDetails] = useState(null); // State for payment details
   const userID = localStorage.getItem("userID");
   useEffect(() => {
     const fetchDetails = async () => {
@@ -77,7 +82,17 @@ const OrderDetail = ({
       }
     };
 
+    const fetchPaymentDetails = async () => {
+      try {
+        const paymentData = await getPaymentByOrderId(order.orderID);
+        setPaymentDetails(paymentData.payment);
+      } catch (error) {
+        console.error("Error fetching payment details:", error);
+      }
+    };
+
     fetchDetails();
+    fetchPaymentDetails();
   }, [order]);
 
   //Tạo thông báo đã duyệt đơn hàng thành công
@@ -133,7 +148,44 @@ const OrderDetail = ({
       },
     });
   };
-  // Gửi yêu cầu duyệt đơn hàng đến API
+
+  const handleConfirmPaymentAndApprove = async () => {
+    Modal.confirm({
+      title: "Xác nhận đã nhận được tiền?",
+      content: "Hệ thống sẽ kiểm tra trạng thái thanh toán và duyệt đơn hàng.",
+      okText: "Xác nhận",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          const paymentStatus = await checkPaymentStatus({
+            paymentID: paymentDetails?.paymentID,
+            newStatus: "Completed",
+          });
+
+          if (paymentStatus?.data.payment.paymentStatus === "Completed") {
+            await updateOrderStatus(order.orderID, "Shipped");
+            Modal.success({
+              content: "Đã nhận được tiền và đơn hàng đã được duyệt.",
+            });
+            sendNotify(order.orderID); // Gửi thông báo sau khi duyệt đơn hàng
+            setTimeout(() => {
+              refreshOrders();
+              onClose();
+            }, 1000);
+          } else {
+            Modal.error({
+              content: "Thanh toán chưa hoàn tất. Không thể duyệt đơn hàng.",
+            });
+          }
+        } catch (error) {
+          Modal.error({
+            content: "Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán.",
+          });
+          console.error("Error confirming payment and approving order:", error);
+        }
+      },
+    });
+  };
 
   if (!order) return null;
 
@@ -204,8 +256,17 @@ const OrderDetail = ({
         width={"70%"}
         centered
         footer={[
-          order.status === "Pending" && (
-            <>
+          order.status === "Pending" &&
+            (order.paymentMethod.toLowerCase() === "bank" ? (
+              <Button
+                className="bg-primary text-white"
+                key="confirm-payment"
+                type="primary"
+                onClick={handleConfirmPaymentAndApprove}
+              >
+                Đã thanh toán
+              </Button>
+            ) : (
               <Button
                 className="bg-primary text-white"
                 key="approve"
@@ -214,15 +275,7 @@ const OrderDetail = ({
               >
                 Duyệt đơn
               </Button>
-              <Button
-                className="bg-primary text-white"
-                key="complete"
-                type="default"
-              >
-                In hóa đơn
-              </Button>
-            </>
-          ),
+            )),
           order.status === "Shipped" && (
             <Button className="bg-primary text-white" key="ship" type="default">
               Xác nhận giao hàng
@@ -316,8 +369,15 @@ const OrderDetail = ({
               ? "Thanh toán khi nhận hàng"
               : order.paymentMethod === "MOMO"
               ? "Ví Momo"
-              : "Chuyển khoản ngân hàng"}
+              : `Chuyển khoản, nội dung: ${
+                  paymentDetails?.content || "Không có nội dung"
+                }`}
           </Descriptions.Item>
+          {paymentDetails?.paymentID && (
+            <Descriptions.Item label="Mã thanh toán">
+              {paymentDetails.paymentID}
+            </Descriptions.Item>
+          )}
           <Descriptions.Item label="Chi tiết">
             <ConfigProvider
               theme={{

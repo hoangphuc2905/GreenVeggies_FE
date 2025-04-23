@@ -9,6 +9,7 @@ import AdminHeader from "../pages/admin/layout/AdminHeader";
 import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
 import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct";
 import Order from "../pages/admin/order/Order";
+import ListOrder from "../pages/admin/order/listOrder/ListOrder";
 import Page from "../pages/admin/product/Page";
 import AdminSidebar from "../pages/admin/layout/AdminSidebar";
 import { useDispatch } from "react-redux";
@@ -83,6 +84,8 @@ const AdminRouter = () => {
                 />
                 <Route path="/dashboard/revenue" element={<Revenue />} />
                 <Route path="/dashboard/orders" element={<Order />} />
+                {/* // /admin/dashboard/orders/list */}
+                <Route path="/dashboard/orders/list" element={<ListOrder />} />
                 <Route
                   path="/notifications"
                   element={<NotificationScreen userID={userInfo.userID} />}

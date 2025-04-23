@@ -11,7 +11,6 @@ const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
 const API_PAYMENT_URL = import.meta.env.VITE_API_PAYMENT_URL;
 const API_URL_STATISTIC = import.meta.env.VITE_API_STATISTIC_URL;
 
-
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
 export const cloundinaryName = import.meta.env.VITE_CLOUDINARY_NAME;
@@ -84,7 +83,6 @@ const paymentAPI = axios.create({
     "Content-Type": "application/json",
   },
 });
-
 
 const statisticAPI = axios.create({
   baseURL: API_URL_STATISTIC,
@@ -637,24 +635,12 @@ export const handlePaymentApi = {
   },
 
   // Kiểm tra trạng thái thanh toán
-  checkPaymentStatus: async (paymentId) => {
-    try {
-      console.log("API call: Checking payment status for ID:", paymentId);
-      const response = await paymentAPI.get(
-        `/api/payments/status/${paymentId}`
-      );
-      console.log("Payment status API response:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error details:", error.response || error);
-      console.error("Lỗi khi kiểm tra trạng thái thanh toán:", error.message);
-
-      // Nếu API không khả dụng, giả lập response trạng thái
-      if (paymentId.startsWith("vietqr_")) {
-        return { status: "pending" };
-      }
-      throw error;
-    }
+  checkPaymentStatus: async (data) => {
+    return await paymentAPI.post("/payments/update-status", data);
+  },
+  // Lấy danh sách thanh toán theo orderID
+  getPaymentByOrderId: async (orderID) => {
+    return await paymentAPI.get(`/payments/${orderID}`);
   },
 };
 

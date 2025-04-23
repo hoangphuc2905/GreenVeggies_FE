@@ -19,11 +19,21 @@ export const createPaymentQR = async (amount) => {
  * @param {string} paymentId - The ID of the payment to check
  * @returns {Promise<Object>} - The payment status data
  */
-export const checkPaymentStatus = async (paymentId) => {
+export const checkPaymentStatus = async (data) => {
   try {
-    return await handlePaymentApi.checkPaymentStatus(paymentId);
+    return await handlePaymentApi.checkPaymentStatus(data);
   } catch (error) {
     console.error("Error checking payment status:", error);
+    throw error;
+  }
+};
+
+export const getPaymentByOrderId = async (orderID) => {
+  try {
+    const response = await handlePaymentApi.getPaymentByOrderId(orderID);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching payment by order ID:", error);
     throw error;
   }
 };
