@@ -38,4 +38,22 @@ export const getOrdersByUserId=  async (userID) => {
         throw new Error("Lỗi kết nối đến máy chủ!");
     }
 }
- 
+export const updateStatus = async (orderID, newStatus) => {
+    try {
+        const response = await handleOrderApi.updateStatus(orderID, newStatus);
+        if (response && response.data) {
+            console.log("Cập nhật trạng thái thành công:", response.data); // In ra thông báo thành công
+            return response.data; // Trả về dữ liệu cập nhật
+        }
+        console.error("API không trả về dữ liệu hợp lệ:", response);
+        return null;
+    } catch (error) {
+        if (error.response && error.response.data) {
+            // Ném lỗi chứa danh sách lỗi từ BE
+            throw error.response.data.errors;
+        }
+        console.error("Lỗi khi gọi API updateStatus:", error);
+        throw new Error("Lỗi kết nối đến máy chủ!");
+    }
+}
+
