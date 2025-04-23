@@ -161,6 +161,9 @@ export const handleOrderApi = {
   getOrdersByUserId: async (userID) => {
     return await orderAPI.get(`/orders/user/${userID}`);
   },
+  updateStatus: async (orderID, status) => {
+    return await orderAPI.put(`/orders/${orderID}`, {status});
+  }
 };
 //THỐNG KÊ
 export const handleStatisticApi = {

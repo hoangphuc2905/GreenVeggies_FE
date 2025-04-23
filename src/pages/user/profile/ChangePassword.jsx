@@ -26,27 +26,34 @@ const ChangePassword = () => {
     setIsLoading(true);
     setErrorMessage(""); // Reset lỗi
     setSuccessMessage(""); // Reset thông báo thành công
-
-    // Kiểm tra mật khẩu mới và nhập lại mật khẩu mới có khớp không
+  
+    // ✅ Kiểm tra độ dài mật khẩu mới
+    if (newPassword.length < 6) {
+      setErrorMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      setIsLoading(false);
+      return;
+    }
+  
+    // ✅ Kiểm tra mật khẩu xác nhận
     if (newPassword !== confirmNewPassword) {
       setErrorMessage("Mật khẩu mới và nhập lại không khớp.");
       setIsLoading(false);
       return;
     }
-
+  
     try {
       const apiUrl = `http://localhost:8001/api/auth/change-password?email=${encodeURIComponent(email)}&oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`;
-
+  
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
-          "Accept": "*/*", // Đảm bảo API nhận đúng kiểu dữ liệu
-          "Authorization": `Bearer ${token}`, // Nếu API cần xác thực
+          "Accept": "*/*",
+          "Authorization": `Bearer ${token}`,
         },
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         setSuccessMessage("Đổi mật khẩu thành công!");
         setOldPassword("");
