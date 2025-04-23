@@ -7,6 +7,7 @@ import {
   DollarOutlined,
   ShoppingCartOutlined,
   BellOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
@@ -37,6 +38,13 @@ const AdminSidebar = ({ colorBgContainer }) => {
           label: "Thống kê đơn hàng",
           icon: <ShoppingCartOutlined />,
           onClick: () => navigate("/admin/dashboard/orders"),
+        },
+        {
+          key: "/admin/dashboard/orders/list",
+          label: "Danh sách đơn hàng",
+          icon: <FileTextOutlined />,
+
+          onClick: () => navigate("/admin/dashboard/orders/list"),
         },
       ],
     },

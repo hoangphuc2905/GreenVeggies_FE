@@ -18,6 +18,7 @@ import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
 import FilterButton from "../../../../components/filter/FilterButton";
 import { getAllOrders, getUserInfo } from "../../../../api/api";
+import { getPaymentByOrderId } from "../../../../services/PaymentService";
 import { render } from "react-dom";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 import { AlignCenter } from "lucide-react";
@@ -88,6 +89,7 @@ const ListOrder = () => {
     status: true,
     createdAt: true,
     paymentMethod: true,
+    paymentContent: true,
     actions: true,
   });
   const [searchText, setSearchText] = useState("");
@@ -100,7 +102,7 @@ const ListOrder = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [orders, setOrders] = useState([]);
   const [customer, setCustomer] = useState("");
-
+  const [paymentContents, setPaymentContents] = useState({}); // Store payment content by order ID
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -108,6 +110,41 @@ const ListOrder = () => {
       setLoading(true);
       const data = await fetchOrders();
       setOrders(data);
+
+      // Fetch payment content for orders with "Chuyển khoản"
+      const paymentData = await Promise.all(
+        data
+          .filter(
+            (order) =>
+              (order.paymentMethod &&
+                order.paymentMethod.toLowerCase() === "bank") ||
+              "string" // Normalize to lowercase
+          )
+          .map(async (order) => {
+            try {
+              const paymentDetails = await getPaymentByOrderId(order.orderID);
+              return {
+                orderID: order.orderID,
+                content:
+                  paymentDetails?.payment?.content || "Không có nội dung",
+              };
+            } catch (error) {
+              console.error(
+                `Error fetching payment content for order ${order.orderID}:`,
+                error
+              );
+              return { orderID: order.orderID, content: "Không có nội dung" };
+            }
+          })
+      );
+
+      // Map payment content to order IDs
+      const paymentContentMap = paymentData.reduce((acc, item) => {
+        acc[item.orderID] = item.content;
+        return acc;
+      }, {});
+      setPaymentContents(paymentContentMap);
+
       setLoading(false);
     };
     fetchData();
@@ -138,6 +175,7 @@ const ListOrder = () => {
       status: true,
       createdAt: true,
       paymentMethod: true,
+      paymentContent: true,
       actions: true,
     });
   };
@@ -231,11 +269,19 @@ const ListOrder = () => {
     filterIcon: (filtered) => (
       <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
     ),
-    onFilter: (value, record) =>
-      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilter: (value, record) => {
+      if (dataIndex === "paymentContent") {
+        const content = paymentContents[record.orderID];
+        return content?.toLowerCase().includes(value.toLowerCase());
+      }
+      return record[dataIndex]
+        ?.toString()
+        .toLowerCase()
+        .includes(value.toLowerCase());
+    },
     sorter: sortable
       ? (a, b) =>
-          a[dataIndex].toString().localeCompare(b[dataIndex].toString(), "vi")
+          a[dataIndex]?.toString().localeCompare(b[dataIndex]?.toString(), "vi")
       : undefined,
     render: (text) =>
       searchedColumn === dataIndex ? (
@@ -387,6 +433,23 @@ const ListOrder = () => {
       },
     },
     {
+      title: "Nội dung thanh toán",
+      dataIndex: "orderID",
+      key: "paymentContent",
+      ellipsis: true,
+      ...getColumnSearchProps("paymentContent"), // Enable search for payment content
+      render: (orderID) => {
+        const content = paymentContents[orderID];
+        return content ? (
+          <Tooltip placement="topLeft" title={content}>
+            {content}
+          </Tooltip>
+        ) : (
+          "Không áp dụng"
+        );
+      },
+    },
+    {
       title: "Tác vụ",
       key: "actions",
       ellipsis: true, // Hiển thị chữ dạng ...
@@ -462,7 +525,7 @@ const ListOrder = () => {
         size="small"
         columns={filteredColumns}
         dataSource={orders}
-        pagination={{ pageSize: 5 }}
+        pagination={{ pageSize: 10 }}
         // tableLayout="auto"
         scroll={{ x: filteredColumns.length * 150 }}
         onChange={(pagination, filters, sorter) => {
