@@ -39,13 +39,13 @@ const Detail = () => {
 
   const carouselRef = useRef(null); // thêm dòng này
   const navigate = useNavigate();
-  const [showDescription, setShowDescription] = useState(false);
+  const [showDescription, setShowDescription] = useState(true);
   const [showReviews, setShowReviews] = useState(false);
   const [showInformations, setShowInformations] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showSeeMore, setShowSeeMore] = useState(false);
   const descriptionRef = useRef(null);
-  const [selectedTab, setSelectedTab] = useState(null);
+  const fullDescriptionRef = useRef(null);
+  const [selectedTab, setSelectedTab] = useState("description");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
@@ -59,6 +59,8 @@ const Detail = () => {
             ? productData.imageUrl[0]
             : productData.imageUrl
         );
+        // Scroll to top when product data is loaded
+        window.scrollTo(0, 0);
       } catch (error) {
         console.error("Failed to fetch product:", error);
       }
@@ -128,7 +130,6 @@ const Detail = () => {
 
   // Đặt lại trạng thái khi sản phẩm thay đổi
   useEffect(() => {
-    setIsExpanded(false);
     setShowSeeMore(false);
   }, [id]);
 
@@ -368,13 +369,37 @@ const Detail = () => {
               <div className="mt-4">
                 <Typography.Paragraph
                   ref={descriptionRef}
-                  ellipsis={!isExpanded ? { rows: 3 } : false}>
+                  ellipsis={{ rows: 3 }}>
                   {product.description}
                 </Typography.Paragraph>
-                {showSeeMore && !isExpanded && (
+                {showSeeMore && (
                   <Button
                     type="link"
-                    onClick={() => setIsExpanded(true)}
+                    onClick={() => {
+                      // Make sure description tab is selected
+                      setSelectedTab("description");
+                      setShowDescription(true);
+                      setShowReviews(false);
+                      setShowInformations(false);
+
+                      // Scroll to a position slightly above the description section
+                      setTimeout(() => {
+                        if (fullDescriptionRef.current) {
+                          // Get position of the element
+                          const yOffset = -80; // Add a 80px offset to scroll a bit higher
+                          const element = fullDescriptionRef.current;
+                          const y =
+                            element.getBoundingClientRect().top +
+                            window.pageYOffset +
+                            yOffset;
+
+                          window.scrollTo({
+                            top: y,
+                            behavior: "smooth",
+                          });
+                        }
+                      }, 100);
+                    }}
                     className="text-[#82AE46]">
                     Xem thêm
                   </Button>
@@ -492,7 +517,9 @@ const Detail = () => {
           </Button>
         </div>
         {showDescription && (
-          <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
+          <div
+            ref={fullDescriptionRef}
+            className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
             <Typography.Title level={2}>Mô tả sản phẩm</Typography.Title>
             <Typography.Paragraph className="whitespace-pre-line">
               {product.description}
@@ -531,6 +558,8 @@ const Detail = () => {
             <Typography.Title level={2}>Đánh giá sản phẩm</Typography.Title>
 
             {product.reviews
+              // Sort by date, newest first
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .slice((currentPage - 1) * pageSize, currentPage * pageSize)
               .map((review, index) => (
                 <div key={index} className="mt-4">
@@ -540,7 +569,14 @@ const Detail = () => {
                         {userData[review.userID] || "Người dùng ẩn danh"}
                       </Typography.Text>
                       <Typography.Text type="secondary">
-                        {new Date(review.createdAt).toLocaleDateString()}
+                        {new Date(review.createdAt).toLocaleDateString(
+                          "vi-VN",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          }
+                        )}
                       </Typography.Text>
                     </Space>
                     <Rate disabled defaultValue={review.rating} />

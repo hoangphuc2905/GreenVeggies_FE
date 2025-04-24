@@ -397,7 +397,20 @@ const Home = () => {
                     <p className="mt-4 font-semibold text-black">
                       Khách hàng : {review.user?.username || "Khách hàng"}
                     </p>
-                    <p className="mt-4 font-semibold text-black">
+                    <p
+                      className="mt-4 font-semibold text-black cursor-pointer hover:text-[#82AE46] transition-colors"
+                      onClick={() => {
+                        if (review.product?.productID) {
+                          navigate(
+                            `/product/${
+                              review.product._id || review.product.id
+                            }`,
+                            {
+                              state: { productID: review.product.productID },
+                            }
+                          );
+                        }
+                      }}>
                       Tên sản phẩm : {review.product?.name || "Sản phẩm"}
                     </p>
                     <h3 className="text-xl font-semibold mt-4">
