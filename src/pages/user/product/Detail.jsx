@@ -531,6 +531,8 @@ const Detail = () => {
             <Typography.Title level={2}>Đánh giá sản phẩm</Typography.Title>
 
             {product.reviews
+              // Sort by date, newest first
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .slice((currentPage - 1) * pageSize, currentPage * pageSize)
               .map((review, index) => (
                 <div key={index} className="mt-4">
@@ -540,7 +542,14 @@ const Detail = () => {
                         {userData[review.userID] || "Người dùng ẩn danh"}
                       </Typography.Text>
                       <Typography.Text type="secondary">
-                        {new Date(review.createdAt).toLocaleDateString()}
+                        {new Date(review.createdAt).toLocaleDateString(
+                          "vi-VN",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          }
+                        )}
                       </Typography.Text>
                     </Space>
                     <Rate disabled defaultValue={review.rating} />
