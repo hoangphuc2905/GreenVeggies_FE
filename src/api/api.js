@@ -162,8 +162,8 @@ export const handleOrderApi = {
     return await orderAPI.get(`/orders/user/${userID}`);
   },
   updateStatus: async (orderID, status) => {
-    return await orderAPI.put(`/orders/${orderID}`, {status});
-  }
+    return await orderAPI.put(`/orders/${orderID}`, { status });
+  },
 };
 //THỐNG KÊ
 export const handleStatisticApi = {
@@ -192,6 +192,13 @@ export const handleStatisticApi = {
     return await statisticAPI.get(
       `/statistics/daily-orders?month=${month}&year=${year}`
     );
+  },
+};
+// ĐÁNH GIÁ
+export const handleReviewApi = {
+  // Hàm tạo đánh giá
+  createReview: async (data) => {
+    return await reviewAPI.post("/reviews", data);
   },
 };
 // Xóa hình ảnh trên cloundary
