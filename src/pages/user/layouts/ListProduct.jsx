@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Pagination, notification, Card, List, Badge, Typography } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Pagination,
+  notification,
+  Card,
+  List,
+  Badge,
+  Typography,
+  Button,
+} from "antd";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
@@ -10,6 +18,49 @@ import {
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 
+// Custom style for notifications
+const customNotificationStyle = `
+  .custom-notification {
+    margin-top: 50px !important;
+  }
+  .custom-notification .ant-notification-notice-message {
+    margin-bottom: 4px !important;
+    font-size: 18px !important;
+    font-weight: 500 !important;
+  }
+  .custom-notification .ant-notification-notice-description {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    font-size: 18px !important;
+  }
+  .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-message, 
+  .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-description {
+    margin-left: 24px !important;
+  }
+  .custom-notification .ant-notification-notice-icon {
+    margin-left: 8px !important;
+    font-size: 18px !important;
+  }
+  .custom-notification .ant-notification-notice-close {
+    top: 6px !important;
+    right: 6px !important;
+  }
+  .custom-notification .ant-notification-notice {
+    padding: 8px !important;
+    width: 260px !important; /* Giảm từ 280px xuống 260px */
+    max-width: 260px !important; /* Giảm từ 280px xuống 260px */
+    margin-right: 8px !important;
+  }
+  .custom-notification img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .custom-notification .ant-btn-sm {
+    font-size: 14px !important;
+    height: 24px !important;
+    padding: 0px 8px !important;
+  }
+`;
 const ListProduct = ({
   minPrice,
   maxPrice,
@@ -19,6 +70,15 @@ const ListProduct = ({
 }) => {
   const [products, setProducts] = useState([]);
   const [pageSize] = useState(24);
+  const navigate = useNavigate();
+
+  // Configure notification globally
+  useEffect(() => {
+    notification.config({
+      top: 100,
+      duration: 4,
+    });
+  }, []);
 
   const API_URL = import.meta.env.VITE_API_PRODUCT_URL;
 
@@ -106,11 +166,44 @@ const ListProduct = ({
       window.dispatchEvent(event);
 
       // Add notification
+      const key = `open${Date.now()}`;
       notification.success({
         message: "Thêm vào giỏ hàng thành công",
-        description: `Đã thêm ${product.name} với số lượng 1 vào giỏ hàng`,
-        duration: 4,
+        description: (
+          <div className="flex items-center space-x-2">
+            <img
+              src={imageUrl}
+              alt={product.name}
+              className="w-9 h-9 object-cover rounded"
+            />
+            <div className="text-xs">
+              <div className="font-medium">{product.name}</div>
+              <div>Số lượng: 1</div>
+            </div>
+          </div>
+        ),
+        duration: 3,
+        key,
         placement: "topRight",
+        className: "custom-notification",
+        style: { padding: "6px" },
+        btn: (
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => {
+              // Close all notifications then navigate
+              notification.destroy();
+              navigate("/wishlist");
+            }}
+            style={{
+              background: "linear-gradient(to right, #82AE46, #5A8E1B)",
+              color: "white",
+              marginTop: "2px",
+            }}>
+            Đi đến giỏ hàng
+          </Button>
+        ),
       });
     } catch (error) {
       console.error("Failed to save order:", error);
@@ -118,11 +211,12 @@ const ListProduct = ({
       notification.error({
         message: "Lỗi",
         description: "Không thể thêm sản phẩm vào giỏ hàng",
-        duration: 4,
+        duration: 3,
         placement: "topRight",
       });
     }
   };
+
   return (
     <div className="flex flex-col w-full">
       <List
@@ -239,5 +333,11 @@ ListProduct.propTypes = {
   currentPage: PropTypes.number.isRequired,
   setCurrentPage: PropTypes.func.isRequired,
 };
+
+// Add the style tag to the document
+document.head.insertAdjacentHTML(
+  "beforeend",
+  `<style>${customNotificationStyle}</style>`
+);
 
 export default ListProduct;

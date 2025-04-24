@@ -10,6 +10,7 @@ import {
   Rate,
   Space,
   Typography,
+  Image,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
@@ -18,7 +19,6 @@ import {
   getUserInfo,
   saveShoppingCarts,
 } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
-import { Image } from "antd"; // Add this import at the top
 
 // Change this import
 import {
@@ -547,6 +547,38 @@ const Detail = () => {
                     <Typography.Paragraph>
                       {review.comment}
                     </Typography.Paragraph>
+
+                    {/* Display review images if available */}
+                    {review.imageUrl && review.imageUrl.length > 0 && (
+                      <div className="mt-2">
+                        <Typography.Text className="text-sm mb-1 block text-gray-500">
+                          Hình ảnh đánh giá:
+                        </Typography.Text>
+                        <Image.PreviewGroup>
+                          <div className="flex flex-wrap gap-2">
+                            {review.imageUrl.map((img, imgIndex) => (
+                              <div
+                                key={imgIndex}
+                                className="w-16 h-16 rounded overflow-hidden border border-gray-200">
+                                <Image
+                                  src={img}
+                                  alt={`Review image ${imgIndex + 1}`}
+                                  className="w-full h-full object-cover"
+                                  preview={{
+                                    mask: (
+                                      <div className="flex items-center justify-center w-full h-full bg-black bg-opacity-20 group hover:bg-opacity-40 transition-all duration-300">
+                                        <ZoomInOutlined className="text-white text-lg" />
+                                      </div>
+                                    ),
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </Image.PreviewGroup>
+                      </div>
+                    )}
+
                     <Divider style={{ margin: "12px 0" }} />
                   </Space>
                 </div>

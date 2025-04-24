@@ -609,20 +609,33 @@ export const getStockEntry = async (id) => {
 //THANH TOÁN
 export const handlePaymentApi = {
   // Tạo mã QR cho thanh toán
-  createPaymentQR: async (amount) => {
+  createPaymentQR: async (amount, orderID, paymentMethod) => {
     try {
-      console.log("API call: Creating payment QR for amount:", amount);
+      console.log(
+        "API call: Creating payment QR for amount:",
+        amount,
+        "orderID:",
+        orderID,
+        "method:",
+        paymentMethod
+      );
       const response = await paymentAPI.post("/payments/create-qr", {
         amount,
+        orderID,
+        paymentMethod,
       });
       console.log("Payment QR API response:", response.data);
 
-      // Xử lý response từ backend theo định dạng VietQR
-      if (response.data && response.data.qrURL) {
+      if (response.data) {
         return {
           qrCodeUrl: response.data.qrURL,
           message: response.data.message,
-          paymentId: "vietqr_" + Date.now(),
+          paymentId: response.data.paymentID,
+          orderID: response.data.orderID,
+          paymentMethod: response.data.paymentMethod,
+          paymentStatus: response.data.paymentStatus,
+          amount: response.data.amount,
+          content: response.data.content,
         };
       }
       return response.data;
@@ -640,17 +653,35 @@ export const handlePaymentApi = {
         qrCodeUrl: vietQrUrl,
         message: "Tạo mã QR thanh toán tạm thời.",
         paymentId: "vietqr_" + Date.now(),
+        paymentMethod: paymentMethod || "Bank Transfer",
+        content: "TT" + Math.floor(100000 + Math.random() * 900000), // Add random payment content like backend
       };
     }
   },
 
   // Kiểm tra trạng thái thanh toán
   checkPaymentStatus: async (data) => {
-    return await paymentAPI.post("/payments/update-status", data);
+    try {
+      const response = await paymentAPI.post("/payments/update-status", {
+        paymentID: data,
+        newStatus: "Completed",
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      throw error;
+    }
   },
+
   // Lấy danh sách thanh toán theo orderID
   getPaymentByOrderId: async (orderID) => {
-    return await paymentAPI.get(`/payments/${orderID}`);
+    try {
+      const response = await paymentAPI.get(`/payments/${orderID}`);
+      return response;
+    } catch (error) {
+      console.error("Error fetching payment by order ID:", error);
+      throw error;
+    }
   },
 };
 

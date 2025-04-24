@@ -21,9 +21,10 @@ import bg3Image from "../../../src/assets/pictures/bg_3_1.png";
 
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
-import { Carousel } from "antd";
+import { Carousel, Image, Rate } from "antd";
 import Favourite from "./layouts/Favourite";
 import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
+import { ZoomInOutlined } from "@ant-design/icons";
 
 const images = [
   {
@@ -254,8 +255,7 @@ const Home = () => {
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product)}
-                >
+                  onClick={() => handleProductClick(product)}>
                   {product.discount && (
                     <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
                       {product.discount}%
@@ -377,8 +377,7 @@ const Home = () => {
             dots={true}
             className="mt-10"
             slidesToShow={3}
-            slidesToScroll={3}
-          >
+            slidesToScroll={3}>
             {reviews
               .filter((review) => review.rating === 5)
               .map((review, index) => {
@@ -387,9 +386,11 @@ const Home = () => {
                     <div className="mx-auto relative h-[200px] w-[200px]">
                       <img
                         src={
-                          Array.isArray(review.imageUrl)
+                          Array.isArray(review.imageUrl) &&
+                          review.imageUrl.length > 0
                             ? review.imageUrl[0]
-                            : review.imageUrl
+                            : review.user?.avatar ||
+                              "https://via.placeholder.com/200"
                         }
                         alt={`Ảnh của ${review.user?.username || "Khách hàng"}`}
                         className="w-full h-full object-cover rounded-full"
@@ -399,12 +400,54 @@ const Home = () => {
                       Khách hàng : {review.user?.username || "Khách hàng"}
                     </p>
                     <p className="mt-4 font-semibold text-black">
-                      Tên sản phẩm : {review.product?.name || "Khách hàng"}
+                      Tên sản phẩm : {review.product?.name || "Sản phẩm"}
                     </p>
                     <h3 className="text-xl font-semibold mt-4">
                       Nhận xét : {review.comment}
                     </h3>
-                    <p className="text-sm">Đánh giá : {review.rating}</p>
+                    <div className="mt-2 flex justify-center">
+                      <Rate disabled defaultValue={review.rating} />
+                    </div>
+
+                    {/* Display review images if available */}
+                    {review.imageUrl && review.imageUrl.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium mb-2">
+                          Hình ảnh đánh giá:
+                        </p>
+                        <div className="flex justify-center gap-2">
+                          <Image.PreviewGroup>
+                            {review.imageUrl
+                              .slice(0, 3)
+                              .map((img, imgIndex) => (
+                                <div
+                                  key={imgIndex}
+                                  className="w-16 h-16 rounded overflow-hidden">
+                                  <Image
+                                    src={img}
+                                    alt={`Ảnh đánh giá ${imgIndex + 1}`}
+                                    className="w-full h-full object-cover"
+                                    preview={{
+                                      mask: (
+                                        <div className="flex items-center justify-center">
+                                          <ZoomInOutlined className="text-white" />
+                                        </div>
+                                      ),
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            {review.imageUrl.length > 3 && (
+                              <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                                <span className="text-gray-500">
+                                  +{review.imageUrl.length - 3}
+                                </span>
+                              </div>
+                            )}
+                          </Image.PreviewGroup>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
