@@ -1,11 +1,13 @@
-import  { useEffect, useState } from "react";
-import { Button, Divider, List, } from "antd";
+import { useEffect, useState } from "react";
+import { Button, Divider, List, message } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi"; // Import tiếng Việt
+import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 import {
   fetchNotifications,
-  // readNotify,
+  readNotify,
 } from "../../../services/NotifyService";
 // import { getOrderById } from "../../../services/OrderService";
 // import OrderDetail from "../order/listOrder/orderDetail/OrderDetail";
@@ -13,41 +15,77 @@ import {
 dayjs.extend(relativeTime);
 dayjs.locale("vi"); // Đặt ngôn ngữ mặc định là tiếng Việt
 
-const Notification = ({ userID }) => {
+const Notification = ({ userID, onNotificationRead }) => {
   const [notifies, setNotifies] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
+  const loadNotifications = async (pageNum) => {
+    if (!userID || loading) return;
+
+    setLoading(true);
+    try {
+      await fetchNotifications(userID, pageNum, (data) => {
+        if (data.length > 0) {
+          if (pageNum === 1) {
+            setNotifies(data);
+          } else {
+            setNotifies((prev) => [...prev, ...data]);
+          }
+          setHasMore(true);
+        } else {
+          setHasMore(false);
+        }
+      });
+    } catch {
+      message.error("Không thể tải thông báo!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (userID) {
-      fetchNotifications(userID, 1, (data) => {
-        setNotifies(data.slice(0, 5)); // Lấy 5 thông báo mới nhất
-      });
-    }
+    loadNotifications(1);
   }, [userID]);
 
-  // const handleNotificationClick = async (notification) => {
-  //   try {
-  //     await readNotify(notification._id);
+  const handleNotificationClick = async (notification) => {
+    try {
+      // Mark notification as read
+      if (!notification.isRead) {
+        await readNotify(notification._id);
 
-  //     // Update local state to mark this notification as read
-  //     const updatedNotifies = notifies.map((n) =>
-  //       n._id === notification._id ? { ...n, isRead: true } : n
-  //     );
-  //     setNotifies(updatedNotifies);
+        // Update local state to mark this notification as read
+        const updatedNotifies = notifies.map((n) =>
+          n._id === notification._id ? { ...n, isRead: true } : n
+        );
+        setNotifies(updatedNotifies);
 
-  //     // Fetch order details if applicable
-  //     const orderID = notification.orderID;
-  //     if (orderID) {
-  //       const order = await getOrderById(orderID);
-  //       setSelectedOrder(order);
-  //       setModalVisible(true);
-  //     } else {
-  //       message.info("Thông báo không chứa thông tin đơn hàng.");
-  //     }
-  //   } catch (error) {
-  //     message.error("Không thể xử lý thông báo!");
-  //   }
-  // };
+        // Notify parent component to update notification count
+        if (onNotificationRead) {
+          onNotificationRead();
+        }
+      }
+
+      // Navigate to order details if the notification has an orderID
+      if (notification.orderID) {
+        navigate(`/user/order/${notification.orderID}`);
+      } else {
+        message.info("Thông báo không chứa thông tin đơn hàng.");
+      }
+    } catch {
+      message.error("Không thể xử lý thông báo!");
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadNotifications(nextPage);
+    }
+  };
 
   return (
     <div className="w-[300px] h-[400px] overflow-auto">
@@ -64,7 +102,7 @@ const Notification = ({ userID }) => {
                 paddingRight: "24px",
                 cursor: "pointer",
               }}
-              // onClick={() => handleNotificationClick(item)}
+              onClick={() => handleNotificationClick(item)}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.backgroundColor = "#f5f5f5")
               }
@@ -105,12 +143,11 @@ const Notification = ({ userID }) => {
       />
       <Divider plain />
       <div className="text-center">
-        <Button
-          type="link"
-          // onClick={() => (window.location.href = "/admin/notifications")}
-        >
-          Xem thêm 
-        </Button>
+        {hasMore && (
+          <Button type="link" onClick={handleLoadMore} loading={loading}>
+            Xem thêm
+          </Button>
+        )}
       </div>
 
       {/* Popup for order details */}
@@ -123,6 +160,11 @@ const Notification = ({ userID }) => {
       /> */}
     </div>
   );
+};
+
+Notification.propTypes = {
+  userID: PropTypes.string.isRequired,
+  onNotificationRead: PropTypes.func.isRequired,
 };
 
 export default Notification;
