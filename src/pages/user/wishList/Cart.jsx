@@ -108,7 +108,25 @@ const Cart = () => {
       return;
     }
 
-    if (value === null || value < 1) {
+    // If value is 0, remove the item from cart
+    if (value === 0) {
+      // Find the item to get its shoppingCartDetailID
+      const itemToRemove = wishlist.find(
+        (item) => item.productID === productID
+      );
+      if (itemToRemove && itemToRemove.shoppingCartDetailID) {
+        removeFromWishlist(itemToRemove.shoppingCartDetailID);
+        notification.success({
+          message: "Đã xóa sản phẩm",
+          description: "Sản phẩm đã được xóa khỏi giỏ hàng",
+          placement: "topRight",
+          duration: 3,
+        });
+      }
+      return;
+    }
+
+    if (value === null || value < 0) {
       console.error("Invalid value:", value);
       return;
     }
@@ -203,8 +221,7 @@ const Cart = () => {
 
                   <div
                     className="col-span-2 flex items-center gap-4 "
-                    onClick={() => handleProductClick(item)}
-                  >
+                    onClick={() => handleProductClick(item)}>
                     <img
                       src={
                         Array.isArray(item.imageUrl) && item.imageUrl.length > 0
@@ -224,10 +241,10 @@ const Cart = () => {
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber
-                      min={1}
+                      min={0}
                       value={item.quantity}
                       onChange={(value) => {
-                        if (value === null || value < 1) {
+                        if (value === null || value < 0) {
                           console.error("Invalid value:", value);
                           return;
                         }
@@ -284,8 +301,7 @@ const Cart = () => {
             <div className="col-span-2 col-start-5 flex justify-end mt-4">
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
-                onClick={handleCheckout}
-              >
+                onClick={handleCheckout}>
                 Tiến hành thanh toán
               </button>
             </div>
