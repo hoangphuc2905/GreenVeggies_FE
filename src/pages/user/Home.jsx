@@ -375,6 +375,7 @@ const Home = () => {
           <Carousel
             autoplay
             dots={true}
+            infinite={true}
             className="mt-10"
             slidesToShow={3}
             slidesToScroll={3}>
@@ -386,11 +387,8 @@ const Home = () => {
                     <div className="mx-auto relative h-[200px] w-[200px]">
                       <img
                         src={
-                          Array.isArray(review.imageUrl) &&
-                          review.imageUrl.length > 0
-                            ? review.imageUrl[0]
-                            : review.user?.avatar ||
-                              "https://via.placeholder.com/200"
+                          review.user?.avatar ||
+                          "https://via.placeholder.com/200?text=User"
                         }
                         alt={`Ảnh của ${review.user?.username || "Khách hàng"}`}
                         className="w-full h-full object-cover rounded-full"
