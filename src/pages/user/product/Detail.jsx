@@ -39,13 +39,13 @@ const Detail = () => {
 
   const carouselRef = useRef(null); // thêm dòng này
   const navigate = useNavigate();
-  const [showDescription, setShowDescription] = useState(false);
+  const [showDescription, setShowDescription] = useState(true);
   const [showReviews, setShowReviews] = useState(false);
   const [showInformations, setShowInformations] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSeeMore, setShowSeeMore] = useState(false);
   const descriptionRef = useRef(null);
-  const [selectedTab, setSelectedTab] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("description");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
@@ -59,6 +59,8 @@ const Detail = () => {
             ? productData.imageUrl[0]
             : productData.imageUrl
         );
+        // Scroll to top when product data is loaded
+        window.scrollTo(0, 0);
       } catch (error) {
         console.error("Failed to fetch product:", error);
       }
