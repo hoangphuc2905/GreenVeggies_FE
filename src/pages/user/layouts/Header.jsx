@@ -7,7 +7,7 @@ import useLogout from "../../../components/logout/Logout";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
-import { Badge, Menu, Popover, Space } from "antd";
+import { Badge, Popover, Space } from "antd";
 import { useState, useEffect } from "react";
 import RegisterForm from "../../../components/register/register";
 import LoginForm from "../../../components/login/login";
@@ -28,21 +28,14 @@ import {
 } from "@ant-design/icons";
 import { Dropdown } from "antd";
 
-import { getUserInfo } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lấy thông tin người dùng
-import {
-  fetchNotifications,
-  getNotify,
-  readNotify,
-} from "../../../services/NotifyService";
+import { getUserInfo } from "../../../api/api";
+import { fetchNotifications } from "../../../services/NotifyService";
 import Notification from "../notification/Notification";
 
 const Header = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const notificationCount = notifications.length;
-
-
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
@@ -55,7 +48,6 @@ const Header = () => {
 
   const [emailqmk, setEmailqmk] = useState("");
   const [otpqmk, setOtpqmk] = useState("");
-  const [unreadCount, setUnreadCount] = useState(0); // Số lượng thông báo chưa đọc
 
   const closeLoginForm = () => setShowLoginForm(false);
   const closeResetPasswordForm = () => setShowResetPasswordForm(false);
@@ -63,7 +55,6 @@ const Header = () => {
   const closeOtpFormdk = () => setShowOtpFormdk(false);
   const closeForgotPasswordForm = () => setShowForgotPasswordForm(false);
   const closeRegisterForm = () => setShowRegisterForm(false);
-  const closeSignupForm = () => setShowSignupForm(false);
 
   // Hàm quay lại trang đăng nhập
   const goBack = () => {
@@ -121,6 +112,10 @@ const Header = () => {
     }
   };
 
+  const handleNotificationRead = () => {
+    setNotificationCount((prevCount) => Math.max(0, prevCount - 1));
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userID = localStorage.getItem("userID");
@@ -141,8 +136,7 @@ const Header = () => {
         });
       fetchNotifications(userID, 1, (notifies) => {
         const unread = notifies.filter((notify) => !notify.isRead).length;
-        setUnreadCount(unread); // Cập nhật số lượng thông báo chưa 
-        setNotifications(notifies); // Cập nhật danh sách thông báo
+        setNotificationCount(unread);
       });
     }
   }, []);
@@ -209,16 +203,16 @@ const Header = () => {
           {user ? (
             <div className="text-white text-l font-bold flex items-center space-x-2">
               <Space size="small">
-                {/* <Dropdown overlay={notificationMenu} trigger={["click"]}>
-                  
-                </Dropdown> */}
                 <Popover
-                  content={<Notification userID={user.userID} />}
+                  content={
+                    <Notification
+                      userID={user.userID}
+                      onNotificationRead={handleNotificationRead}
+                    />
+                  }
                   trigger="hover"
                   placement="bottomRight">
-                  <Badge
-                  count={notificationCount}
-                  >
+                  <Badge count={notificationCount}>
                     <BellOutlined style={{ fontSize: "24px", color: "#fff" }} />
                   </Badge>
                 </Popover>
