@@ -1,7 +1,14 @@
-import { Modal, Descriptions, Button, Table, ConfigProvider } from "antd";
+import {
+  Modal,
+  Descriptions,
+  Button,
+  Table,
+  ConfigProvider,
+  Select,
+  Input,
+} from "antd";
 import PropTypes from "prop-types";
 import logo from "../../../../../assets/pictures/Green.png";
-import { getProductById, updateOrderStatus } from "../../../../../api/api";
 import { useEffect, useState } from "react";
 import { createNotify } from "../../../../../services/NotifyService";
 import { refresh } from "@cloudinary/url-gen/qualifiers/artisticFilter";
@@ -9,6 +16,8 @@ import {
   getPaymentByOrderId,
   checkPaymentStatus,
 } from "../../../../../services/PaymentService";
+import { updateStatus } from "../../../../../services/OrderService";
+import { getProductById } from "../../../../../services/ProductService";
 
 const calculateShippingFee = (
   orderTotal,
@@ -40,7 +49,7 @@ const formattedDate = (dateString) => {
   const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
   const year = date.getFullYear();
 
-  const hours = String(date.getHours()).padStart(2, "0");
+  const hours = String;
   const minutes = String(date.getMinutes()).padStart(2, "0");
   const seconds = String(date.getSeconds()).padStart(2, "0");
 
@@ -58,7 +67,17 @@ const OrderDetail = ({
 }) => {
   const [productDetails, setProductDetails] = useState([]);
   const [paymentDetails, setPaymentDetails] = useState(null); // State for payment details
+  const [cancelReason, setCancelReason] = useState(""); // State for cancellation reason
+  const [customReason, setCustomReason] = useState(""); // State for custom reason input
   const userID = localStorage.getItem("userID");
+
+  const cancellationOptions = [
+    "Khách hàng yêu cầu hủy",
+    "Hết hàng",
+    "Thông tin giao hàng không chính xác",
+    "Lý do khác",
+  ];
+
   useEffect(() => {
     const fetchDetails = async () => {
       if (!order?.orderDetails?.length) return;
@@ -70,6 +89,7 @@ const OrderDetail = ({
             return {
               ...item,
               item: response?.name || "Sản phẩm không tồn tại",
+              status: response?.status || "Không xác định", // Add product status
               unit: response?.unit || "N/A",
               price: item.totalAmount / item.quantity,
               totalAmount: item.totalAmount,
@@ -82,17 +102,7 @@ const OrderDetail = ({
       }
     };
 
-    const fetchPaymentDetails = async () => {
-      try {
-        const paymentData = await getPaymentByOrderId(order.orderID);
-        setPaymentDetails(paymentData.payment);
-      } catch (error) {
-        console.error("Error fetching payment details:", error);
-      }
-    };
-
     fetchDetails();
-    fetchPaymentDetails();
   }, [order]);
 
   //Tạo thông báo đã duyệt đơn hàng thành công
@@ -117,6 +127,24 @@ const OrderDetail = ({
       // Xử lý lỗi nếu cần
     }
   };
+  //Kiểm tra tình trạng sản phẩm
+  const checkProductAvailability = async (orderDetails) => {
+    try {
+      for (const item of orderDetails) {
+        const product = await getProductById(item.productID);
+        if (!product || product.status === "unavailable") {
+          return {
+            isAvailable: false,
+            productName: product?.name || "Không xác định",
+          }; // Return product name if unavailable
+        }
+      }
+      return { isAvailable: true }; // All products are available
+    } catch (error) {
+      console.error("Error checking product availability:", error);
+      return { isAvailable: false, productName: "Không xác định" }; // Assume unavailable if there's an error
+    }
+  };
   //Xử lý duyệt đơn hàng
   const handleApproveOrder = async () => {
     Modal.confirm({
@@ -124,27 +152,33 @@ const OrderDetail = ({
       content: "Đơn hàng sẽ được chuyển sang trạng thái đã duyệt.",
       okText: "Duyệt",
       cancelText: "Hủy",
-      onOk() {
-        updateOrderStatus(order.orderID, "Shipped")
-          .then(() => {
-            Modal.success({
-              content: "Đơn hàng đã được duyệt thành công.",
-            });
-            setTimeout(() => {
-              refreshOrders();
-              onClose();
-            }, 1000);
-            // Đóng modal sau khi duyệt đơn hàng
-          })
-          .then(() => {
-            sendNotify(order.orderID); // Gửi thông báo sau khi duyệt đơn hàng
-          })
-          .catch((error) => {
+      onOk: async () => {
+        try {
+          const { isAvailable, productName } = await checkProductAvailability(
+            order.orderDetails
+          );
+          if (!isAvailable) {
             Modal.error({
-              content: "Đã xảy ra lỗi khi duyệt đơn hàng.",
+              content: `Không thể duyệt đơn hàng vì sản phẩm "${productName}" đã ngưng bán.`,
             });
-            console.error("Error approving order:", error);
+            return;
+          }
+
+          await updateStatus(order.orderID, "Shipped");
+          Modal.success({
+            content: "Đơn hàng đã được duyệt thành công.",
           });
+          sendNotify(order.orderID); // Gửi thông báo sau khi duyệt đơn hàng
+          setTimeout(() => {
+            refreshOrders();
+            onClose();
+          }, 1000);
+        } catch (error) {
+          Modal.error({
+            content: "Đã xảy ra lỗi khi duyệt đơn hàng.",
+          });
+          console.error("Error approving order:", error);
+        }
       },
     });
   };
@@ -161,9 +195,10 @@ const OrderDetail = ({
             paymentID: paymentDetails?.paymentID,
             newStatus: "Completed",
           });
+          console.log("Payment status:", paymentStatus);
 
           if (paymentStatus?.data.payment.paymentStatus === "Completed") {
-            await updateOrderStatus(order.orderID, "Shipped");
+            await updateStatus(order.orderID, "Shipped");
             Modal.success({
               content: "Đã nhận được tiền và đơn hàng đã được duyệt.",
             });
@@ -182,6 +217,71 @@ const OrderDetail = ({
             content: "Đã xảy ra lỗi khi kiểm tra trạng thái thanh toán.",
           });
           console.error("Error confirming payment and approving order:", error);
+        }
+      },
+    });
+  };
+
+  const handleCancelOrder = () => {
+    let selectedReason = cancelReason;
+    let enteredReason = customReason;
+
+    Modal.confirm({
+      title: "Xác nhận hủy đơn hàng",
+      content: (
+        <div>
+          <p>Vui lòng chọn hoặc nhập lý do hủy đơn hàng:</p>
+          <Select
+            style={{ width: "100%", marginBottom: "10px" }}
+            placeholder="Chọn lý do hủy (không bắt buộc)"
+            defaultValue={selectedReason || undefined}
+            onChange={(value) => {
+              selectedReason = value;
+              enteredReason = ""; // Clear custom reason when a predefined reason is selected
+            }}
+          >
+            {cancellationOptions.map((option) => (
+              <Select.Option key={option} value={option}>
+                {option}
+              </Select.Option>
+            ))}
+          </Select>
+          <Input
+            placeholder="Hoặc nhập lý do hủy"
+            defaultValue={enteredReason}
+            onChange={(e) => {
+              enteredReason = e.target.value;
+              selectedReason = ""; // Clear predefined reason when custom reason is entered
+            }}
+          />
+        </div>
+      ),
+      okText: "Hủy đơn",
+      cancelText: "Đóng",
+      onOk: async () => {
+        const reason = enteredReason || selectedReason;
+
+        if (!reason) {
+          Modal.error({
+            content: "Vui lòng chọn hoặc nhập lý do hủy đơn hàng.",
+          });
+          return Promise.reject(); // Prevent modal from closing
+        }
+
+        try {
+          await updateStatus(order.orderID, "Cancelled", { reason });
+          Modal.success({
+            content: "Đơn hàng đã được hủy thành công.",
+          });
+          setTimeout(() => {
+            refreshOrders();
+            onClose();
+          }, 1000);
+        } catch (error) {
+          Modal.error({
+            content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+          });
+          console.error("Error cancelling order:", error);
         }
       },
     });
@@ -214,7 +314,21 @@ const OrderDetail = ({
       width: 50,
     },
     { title: "Sản phẩm", dataIndex: "productID", key: "productID", width: 80 },
-    { title: "Tên sản phẩm", dataIndex: "item", key: "item" },
+    {
+      title: "Tên sản phẩm",
+      dataIndex: "item",
+      key: "item",
+      render: (text, record) => (
+        <span>
+          {text}{" "}
+          {record.status === "unavailable" && (
+            <span style={{ color: "red" }}>
+              ({record.status === "unavailable" ? "Ngưng bán" : ""})
+            </span>
+          )}
+        </span>
+      ),
+    },
     { title: "SL", dataIndex: "quantity", key: "quantity", width: 50 },
     { title: "Đơn vị", dataIndex: "unit", key: "unit", width: 80 },
     {
@@ -256,6 +370,16 @@ const OrderDetail = ({
         width={"70%"}
         centered
         footer={[
+          order.status === "Pending" && (
+            <Button
+              className="bg-red-500 text-white"
+              key="cancel"
+              type="default"
+              onClick={handleCancelOrder}
+            >
+              Hủy đơn
+            </Button>
+          ),
           order.status === "Pending" &&
             (order.paymentMethod.toLowerCase() === "bank" ? (
               <Button

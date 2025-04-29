@@ -1,27 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  SearchOutlined,
-  DownloadOutlined,
-  DeleteFilled,
-} from "@ant-design/icons";
-import {
-  Button,
-  ConfigProvider,
-  Input,
-  Space,
-  Table,
-  Tag,
-  Tooltip,
-} from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal } from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
 import FilterButton from "../../../../components/filter/FilterButton";
 import { getAllOrders, getUserInfo } from "../../../../api/api";
 import { getPaymentByOrderId } from "../../../../services/PaymentService";
-import { render } from "react-dom";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
-import { AlignCenter } from "lucide-react";
+import { createNotify } from "../../../../services/NotifyService";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -40,6 +27,7 @@ const useStyle = createStyles(({ css, token }) => {
 });
 
 const fetchOrders = async () => {
+  // Hàm lấy danh sách đơn hàng từ API
   try {
     const orders = await getAllOrders();
 
@@ -69,16 +57,44 @@ const fetchOrders = async () => {
 };
 
 const fetchUserInfo = async (userID) => {
+  // Hàm lấy thông tin người dùng dựa trên userID
   try {
     const response = await getUserInfo(userID);
     return response;
   } catch (error) {
     console.error("Error fetching user info:", error);
-    return null; // Return null in case of error
+    return null; // Trả về null nếu có lỗi
   }
 };
 
 const ListOrder = () => {
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 }); // Initialize pagination state
+
+  useEffect(() => {
+    // Hàm tính toán số lượng dòng hiển thị dựa trên chiều cao màn hình
+    const calculatePageSize = () => {
+      const screenHeight = window.innerHeight;
+      if (screenHeight > 1200) return 20; // Màn hình lớn
+      if (screenHeight > 800) return 10; // Màn hình trung bình
+      return 5; // Màn hình nhỏ
+    };
+
+    // Cập nhật pageSize khi tải trang hoặc thay đổi kích thước màn hình
+    const updatePageSize = () => {
+      setPagination((prev) => ({
+        ...prev,
+        pageSize: calculatePageSize(),
+      }));
+    };
+
+    updatePageSize();
+    window.addEventListener("resize", updatePageSize);
+
+    return () => {
+      window.removeEventListener("resize", updatePageSize);
+    };
+  }, []);
+
   const [visibleColumns, setVisibleColumns] = useState({
     key: true,
     orderID: true,
@@ -104,6 +120,7 @@ const ListOrder = () => {
   const [customer, setCustomer] = useState("");
   const [paymentContents, setPaymentContents] = useState({}); // Store payment content by order ID
   const [loading, setLoading] = useState(true);
+  const [cancelReason, setCancelReason] = useState(""); // State to hold cancellation reason
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,10 +140,11 @@ const ListOrder = () => {
           .map(async (order) => {
             try {
               const paymentDetails = await getPaymentByOrderId(order.orderID);
+              console.log("Thông tin thanh toán", paymentDetails);
+
               return {
                 orderID: order.orderID,
-                content:
-                  paymentDetails?.payment?.content || "Không có nội dung",
+                content: paymentDetails?.content || "Không có nội dung",
               };
             } catch (error) {
               console.error(
@@ -151,17 +169,20 @@ const ListOrder = () => {
   }, []);
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    // Hàm xử lý tìm kiếm trong bảng
     confirm();
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
 
   const handleReset = (clearFilters) => {
+    // Hàm đặt lại bộ lọc tìm kiếm
     clearFilters();
     setSearchText("");
   };
 
   const handleCancelFilters = () => {
+    // Hàm hủy tất cả bộ lọc và sắp xếp
     setSearchText("");
     setSearchedColumn("");
     setFilteredInfo({});
@@ -181,17 +202,19 @@ const ListOrder = () => {
   };
 
   const showOrderDetail = (order) => {
+    // Hàm hiển thị chi tiết đơn hàng
     setSelectedOrder(order);
     setIsModalVisible(true);
   };
 
   const getUserInfoById = async (userID) => {
+    // Hàm lấy thông tin người dùng dựa trên userID và cập nhật state
     try {
       const response = await fetchUserInfo(userID);
       return setCustomer(response || "Không có tên");
     } catch (error) {
       console.error("Error fetching user info:", error);
-      return null; // Return null in case of error
+      return null; // Trả về null nếu có lỗi
     }
   };
 
@@ -206,6 +229,7 @@ const ListOrder = () => {
   };
 
   const refreshOrders = async () => {
+    // Hàm làm mới danh sách đơn hàng
     setLoading(true);
     const data = await fetchOrders();
     setOrders(data);
@@ -213,6 +237,7 @@ const ListOrder = () => {
   };
 
   const formattedDate = (dateString) => {
+    // Hàm định dạng ngày tháng từ chuỗi
     const date = new Date(dateString);
 
     const day = String(date.getDate()).padStart(2, "0");
@@ -227,6 +252,7 @@ const ListOrder = () => {
   };
 
   const getColumnSearchProps = (dataIndex, sortable = false) => ({
+    // Hàm hỗ trợ tìm kiếm và sắp xếp cho các cột trong bảng
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
@@ -296,6 +322,42 @@ const ListOrder = () => {
       ),
   });
 
+  const sendCancelNotification = async (orderID, customerID, reason) => {
+    try {
+      const formData = {
+        senderType: "admin",
+        senderUserID: localStorage.getItem("userID"),
+        receiverID: customerID,
+        title: "Thông báo hủy đơn hàng",
+        message: `Đơn hàng ${orderID} của bạn đã bị hủy. Lý do: ${reason}`,
+        type: "order",
+        orderID: orderID,
+      };
+      const response = await createNotify(formData);
+      if (response) {
+        console.log("Thông báo hủy đơn hàng đã được gửi thành công:", response);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo hủy đơn hàng:", error);
+    }
+  };
+
+  const handleCancelOrder = async (order, reason) => {
+    try {
+      // ...existing logic to cancel the order...
+      await sendCancelNotification(order.orderID, order.userID, reason); // Send notification after canceling
+      Modal.success({
+        content: "Đơn hàng đã được hủy thành công và thông báo đã được gửi.",
+      });
+      refreshOrders();
+    } catch (error) {
+      Modal.error({
+        content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+      });
+      console.error("Error cancelling order:", error);
+    }
+  };
+
   const columns = [
     {
       title: "STT",
@@ -303,7 +365,7 @@ const ListOrder = () => {
       key: "key",
       width: 50,
       render: (text, record, index) => {
-        return index + 1;
+        return (pagination.current - 1) * pagination.pageSize + index + 1; // Adjust STT based on pagination
       },
     },
     {
@@ -436,6 +498,7 @@ const ListOrder = () => {
       title: "Nội dung thanh toán",
       dataIndex: "orderID",
       key: "paymentContent",
+      width: 180,
       ellipsis: true,
       ...getColumnSearchProps("paymentContent"), // Enable search for payment content
       render: (orderID) => {
@@ -452,51 +515,30 @@ const ListOrder = () => {
     {
       title: "Tác vụ",
       key: "actions",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       fixed: "right",
-      width: 80,
-
-      render: () => (
-        <div>
-          <ConfigProvider
-            theme={{
-              components: {
-                Button: {
-                  defaultHoverBg: "#1e8736", // Darker green for download button
-                  defaultHoverColor: "white",
-                  defaultHoverBorderColor: "none",
-                },
-              },
-            }}
-          >
-            <Button
-              type="default"
-              size="small"
-              shape="default"
-              icon={<DownloadOutlined />}
-              className="mr-1 text-white bg-[#27A743] border-none"
-            />
-          </ConfigProvider>
-          {/* <ConfigProvider
-            theme={{
-              components: {
-                Button: {
-                  defaultHoverBg: "#d9363e", // Darker red for delete button
-                  defaultHoverColor: "white",
-                  defaultHoverBorderColor: "none",
-                },
-              },
-            }}
-          >
-            <Button
-              type="default"
-              size="small"
-              shape="default"
-              className="bg-deleteColor text-white border-none"
-              icon={<DeleteFilled />}
-            />
-          </ConfigProvider> */}
-        </div>
+      width: 100,
+      render: (text, record) => (
+        <Button
+          type="default"
+          size="small"
+          onClick={() => {
+            Modal.confirm({
+              title: "Xác nhận hủy đơn hàng",
+              content: (
+                <Input.TextArea
+                  placeholder="Nhập lý do hủy đơn hàng"
+                  onChange={(e) => setCancelReason(e.target.value)}
+                />
+              ),
+              okText: "Hủy đơn",
+              cancelText: "Đóng",
+              onOk: () => handleCancelOrder(record, cancelReason),
+            });
+          }}
+        >
+          Hủy đơn
+        </Button>
       ),
     },
   ];
@@ -520,24 +562,31 @@ const ListOrder = () => {
           />
         </Space>
       </div>
-      <Table
-        className={styles.customTable + " hover:cursor-pointer"}
-        size="small"
-        columns={filteredColumns}
-        dataSource={orders}
-        pagination={{ pageSize: 10 }}
-        // tableLayout="auto"
-        scroll={{ x: filteredColumns.length * 150 }}
-        onChange={(pagination, filters, sorter) => {
-          setFilteredInfo(filters);
-          setSortedInfo(sorter);
-        }}
-        onRow={(record) => ({
-          onClick: () => showOrderDetail(record),
-        })}
-        filteredInfo={filteredInfo}
-        sortedInfo={sortedInfo}
-      />
+      <Spin spinning={loading} tip="Đang tải dữ liệu...">
+        <Table
+          className={styles.customTable + " hover:cursor-pointer"}
+          size="small"
+          columns={filteredColumns}
+          dataSource={orders}
+          pagination={{
+            pageSize: pagination.pageSize,
+            current: pagination.current,
+            onChange: (page, pageSize) => {
+              setPagination({ current: page, pageSize }); // Update pagination state
+            },
+          }}
+          scroll={{ x: filteredColumns.length * 150 }}
+          onChange={(pagination, filters, sorter) => {
+            setFilteredInfo(filters);
+            setSortedInfo(sorter);
+          }}
+          onRow={(record) => ({
+            onClick: () => showOrderDetail(record),
+          })}
+          filteredInfo={filteredInfo}
+          sortedInfo={sortedInfo}
+        />
+      </Spin>
       <OrderDetail
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}

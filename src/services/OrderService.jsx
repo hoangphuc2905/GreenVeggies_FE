@@ -38,6 +38,7 @@ export const getOrdersByUserId=  async (userID) => {
         throw new Error("Lỗi kết nối đến máy chủ!");
     }
 }
+// Cập nhật trạng thái đơn hàng
 export const updateStatus = async (orderID, newStatus) => {
     try {
         const response = await handleOrderApi.updateStatus(orderID, newStatus);

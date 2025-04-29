@@ -104,15 +104,7 @@ export const handleProductApi = {
   },
   //Cập nhật trạng thái sản phẩm
   updateProductStatus: async (productID, status) => {
-    try {
-      const response = await productAPI.put(`/products/status/${productID}`, {
-        status,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái sản phẩm:", error);
-      return null;
-    }
+    return await productAPI.put(`/products/status/${productID}`, { status });
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {

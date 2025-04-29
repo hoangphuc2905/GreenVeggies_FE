@@ -43,7 +43,10 @@ export const getProducts = async () => {
 //Cập nhật trạng thái sản phẩm
 export const updateProductStatus = async (productID, status) => {
   try {
-    const response = await handleProductApi.updateStatus(productID, status);
+    const response = await handleProductApi.updateProductStatus(
+      productID,
+      status
+    );
     if (response && response.data) {
       return response.data; // Trả về dữ liệu sản phẩm vừa cập nhật
     }
