@@ -5,10 +5,11 @@ import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
 import FilterButton from "../../../../components/filter/FilterButton";
-import { getAllOrders, getUserInfo } from "../../../../api/api";
 import { getPaymentByOrderId } from "../../../../services/PaymentService";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 import { createNotify } from "../../../../services/NotifyService";
+import { getUserInfo } from "../../../../services/UserService";
+import { getOrders } from "../../../../services/OrderService";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -29,7 +30,7 @@ const useStyle = createStyles(({ css, token }) => {
 const fetchOrders = async () => {
   // Hàm lấy danh sách đơn hàng từ API
   try {
-    const orders = await getAllOrders();
+    const orders = await getOrders();
 
     // Lấy thông tin người dùng (số điện thoại) cho từng đơn hàng
     const ordersWithPhone = await Promise.all(

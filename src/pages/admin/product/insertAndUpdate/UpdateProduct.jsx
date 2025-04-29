@@ -14,7 +14,6 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { getListProducts } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
 import UploadPicture from "../../../../components/uploadPicture/UploadPicture.jsx";
@@ -23,7 +22,10 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../../components/calcSoldPrice/CalcPrice.jsx";
-import { updateProduct } from "../../../../services/ProductService.jsx";
+import {
+  getCategories,
+  updateProduct,
+} from "../../../../services/ProductService.jsx";
 
 const { TextArea } = Input;
 
@@ -63,7 +65,7 @@ const UpdateProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await getListProducts("categories");
+      const response = await getCategories();
       setCategories(response);
     } catch (error) {
       message.error("Lỗi tải danh mục!" + error);

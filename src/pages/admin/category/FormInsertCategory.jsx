@@ -13,15 +13,12 @@ import logo from "../../../assets/pictures/Green.png";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { getListProducts } from "../../../api/api";
 import { ReloadOutlined, SaveFilled } from "@ant-design/icons";
-import { addCategory } from "../../../services/ProductService";
+import { addCategory, getCategories } from "../../../services/ProductService";
 
 const fetchCategories = async (page, limit) => {
   try {
-    const response = await getListProducts(
-      `categories?page=${page}&limit=${limit}`
-    );
+    const response = await getCategories();
     return response;
   } catch (error) {
     console.error(error);
