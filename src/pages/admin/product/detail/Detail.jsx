@@ -10,7 +10,6 @@ import {
 } from "antd";
 import { PlusCircleFilled, TagOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion"; // Import Framer Motion
-// import { getProductDetail } from "../../../../api/api";
 import Description from "./Description";
 import Rating from "./Rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";

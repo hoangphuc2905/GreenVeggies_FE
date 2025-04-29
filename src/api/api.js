@@ -104,15 +104,7 @@ export const handleProductApi = {
   },
   //Cập nhật trạng thái sản phẩm
   updateProductStatus: async (productID, status) => {
-    try {
-      const response = await productAPI.put(`/products/status/${productID}`, {
-        status,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái sản phẩm:", error);
-      return null;
-    }
+    return await productAPI.put(`/products/status/${productID}`, { status });
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
@@ -133,6 +125,22 @@ export const handleProductApi = {
 
   insertStockEntry: async (data) => {
     return await productAPI.post("/stock-entries", data);
+  },
+  //Lấy thông tin nhập hàng
+  getStockEntry: async (stockID) => {
+    return await productAPI.get(`/stock-entries/${stockID}`);
+  },
+};
+
+//NGƯỜI DUNG
+export const handleUserApi = {
+  //Lấy thông tin của người dùng
+  getUserInfo: async (userID) => {
+    return await userAPI.get(`/user/${userID}`);
+  },
+  //Lấy danh sách người dùng
+  getUsers: async () => {
+    return await userAPI.get("/user");
   },
 };
 
@@ -163,6 +171,10 @@ export const handleOrderApi = {
   },
   updateStatus: async (orderID, status) => {
     return await orderAPI.put(`/orders/${orderID}`, { status });
+  },
+  //Lấy danh sách tất cva3 đơn hàng
+  getAllOrders: async () => {
+    return await orderAPI.get("/orders");
   },
 };
 //THỐNG KÊ

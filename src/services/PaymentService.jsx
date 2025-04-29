@@ -30,7 +30,7 @@ export const checkPaymentStatus = async (paymentID) => {
   try {
     return await handlePaymentApi.checkPaymentStatus(paymentID);
   } catch (error) {
-    console.error("Error checking payment status:", error);
+    console.error("Error checking payment status at service:", error);
     throw error;
   }
 };

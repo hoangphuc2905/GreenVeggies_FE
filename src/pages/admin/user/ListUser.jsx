@@ -9,13 +9,13 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import UserDetailModal from "./UserDetailModal";
-import { getListUsers } from "../../../api/api";
+import { getListUsers } from "../../../services/UserService";
 
 const { Search } = Input;
 
-const getUsers = async (key) => {
+const getUsers = async () => {
   try {
-    const response = await getListUsers(key);
+    const response = await getListUsers();
     return response;
   } catch (error) {
     console.error(error);
@@ -35,7 +35,7 @@ const ListUser = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const data = await getUsers("user");
+      const data = await getUsers();
       setUsers(data);
       setOriginalUsers(data);
       console.log("User: " + data);

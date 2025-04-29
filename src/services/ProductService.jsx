@@ -43,7 +43,10 @@ export const getProducts = async () => {
 //Cập nhật trạng thái sản phẩm
 export const updateProductStatus = async (productID, status) => {
   try {
-    const response = await handleProductApi.updateStatus(productID, status);
+    const response = await handleProductApi.updateProductStatus(
+      productID,
+      status
+    );
     if (response && response.data) {
       return response.data; // Trả về dữ liệu sản phẩm vừa cập nhật
     }
@@ -206,6 +209,25 @@ export const insertStockEntry = async (values) => {
       throw error.response.data.errors;
     }
     console.error("Lỗi khi gọi API insertStockEntry:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
+//Lấy thông tin phiếu nhập hàng
+export const getStockEntry = async (stockID) => {
+  try {
+    const response = await handleProductApi.getStockEntry(stockID);
+    if (response && response.data) {
+      return response.data; // Trả về danh sách phiếu nhập hàng
+    }
+
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API getStockEntries:", error);
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };

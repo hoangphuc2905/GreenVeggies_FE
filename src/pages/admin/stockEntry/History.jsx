@@ -1,9 +1,11 @@
 import { ConfigProvider, Table, message, Button, Space } from "antd";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { getProductDetail, getStockEntry } from "../../../api/api";
 import { formattedPrice } from "../../../components/calcSoldPrice/CalcPrice";
-import { render } from "react-dom";
+import {
+  getProductById,
+  getStockEntry,
+} from "../../../services/ProductService";
 
 const History = () => {
   const location = useLocation();
@@ -17,7 +19,7 @@ const History = () => {
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
-        const response = await getProductDetail(id);
+        const response = await getProductById(id);
         if (response?.stockEntries) {
           setStocks(response.stockEntries);
         } else {
