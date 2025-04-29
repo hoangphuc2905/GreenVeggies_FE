@@ -30,7 +30,6 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
-import updateStatus from "../../../components/updateProduct/updateStatus";
 import {
   getProducts,
   getCategories,
