@@ -130,6 +130,10 @@ export const handleProductApi = {
   getStockEntry: async (stockID) => {
     return await productAPI.get(`/stock-entries/${stockID}`);
   },
+  //Xóa hình ảnh trên cloud
+  deleteImage: async (publicId) => {
+    return await productAPI.post("/products/delete-image", { publicId });
+  },
 };
 
 //NGƯỜI DUNG
@@ -212,13 +216,6 @@ export const handleReviewApi = {
   createReview: async (data) => {
     return await reviewAPI.post("/reviews", data);
   },
-};
-// Xóa hình ảnh trên cloundary
-export const deleteImage = async (publicId) => {
-  const response = await productAPI.post("/products/delete-image", {
-    publicId,
-  });
-  return response.data;
 };
 
 // 🟢 Lưu thông tin sản phẩm vào order
@@ -511,34 +508,6 @@ export const updateOrderStatus = async (orderID, status) => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
-    return null;
-  }
-};
-// 🟢 Cập nhật sản phẩm theo ID
-export const updateProduct = async (id, data) => {
-  try {
-    if (data.productID) {
-      throw new Error("Không thể chỉnh sửa mã sản phẩm!");
-    }
-
-    const formattedData = {
-      name: data.name,
-      description: data.description,
-      origin: data.origin,
-      imageUrl: data.imageUrl,
-      import: data.import,
-      category: data.category,
-      unit: data.unit,
-      status: data.status,
-      price: data.price,
-    };
-
-    const response = await productAPI.put(`/products/${id}`, formattedData, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật sản phẩm:", error);
     return null;
   }
 };

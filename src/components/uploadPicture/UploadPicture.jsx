@@ -1,11 +1,8 @@
 import { message, Modal, Upload } from "antd";
-import {
-  cloundinaryPreset,
-  cloundinaryURL,
-  deleteImage,
-} from "../../api/api.js";
+import { cloundinaryPreset, cloundinaryURL } from "../../api/api.js";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
+import { deleteImage } from "../../services/ProductService.jsx";
 
 export const handlerBeforeUpload = (file) => {
   const isImage = file.type.startsWith("image/");

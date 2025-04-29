@@ -231,3 +231,12 @@ export const getStockEntry = async (stockID) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Xóa hình ảnh trên cloud
+export const deleteImage = async (publicId) => {
+  try {
+    return await handleProductApi.deleteImage(publicId);
+  } catch (error) {
+    console.error("Lỗi khi xóa hình ảnh:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
