@@ -372,16 +372,6 @@ export const insertProduct = async (data) => {
   }
 };
 
-//Lấy danh sách tất cả đơn hàng
-export const getAllOrders = async () => {
-  try {
-    const response = await orderAPI.get("/orders");
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách đơn hàng:", error);
-    return null;
-  }
-};
 
 //Cập nhật trạng thái đơn hàng
 export const updateOrderStatus = async (orderID, status) => {
