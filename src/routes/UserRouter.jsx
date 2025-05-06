@@ -20,7 +20,7 @@ import UserFooter from "../pages/user/layouts/UserFooter";
 import { App } from "antd";
 import { fetchUser } from "../redux/userSlice";
 import { getUserInfo } from "../services/UserService";
-import OrderPage from "../pages/user/Order/OrderPage";
+import OrderPage from "../pages/user/order/OrderPage";
 import ChangePassword from "../pages/user/profile/ChangePassword";
 import PaymentPage from "../pages/user/payment/PaymentPage";
 
