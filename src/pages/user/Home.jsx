@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import {  getAllReviews } from "../../api/api";
+import { getAllReviews } from "../../services/ReviewService";
 
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược

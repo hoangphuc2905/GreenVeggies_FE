@@ -225,6 +225,10 @@ export const handleReviewApi = {
   createReview: async (data) => {
     return await reviewAPI.post("/reviews", data);
   },
+  // Lấy tất cả đánh giá sản phẩm
+  getAllReviews: async () => {
+    return await reviewAPI.get("/reviews");
+  },
 };
 
 //GIỎ HÀNG
@@ -372,7 +376,6 @@ export const insertProduct = async (data) => {
   }
 };
 
-
 //Cập nhật trạng thái đơn hàng
 export const updateOrderStatus = async (orderID, status) => {
   try {
@@ -381,44 +384,6 @@ export const updateOrderStatus = async (orderID, status) => {
   } catch (error) {
     console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
     return null;
-  }
-};
-
-// 🟢 Lấy tất cả đánh giá sản phẩm
-export const getAllReviews = async () => {
-  try {
-    const response = await reviewAPI.get("/reviews");
-    const reviews = response.data;
-
-    // Fetch both user and product information for each review
-    const reviewsWithInfo = await Promise.all(
-      reviews.map(async (review) => {
-        try {
-          const [userResponse, productResponse] = await Promise.all([
-            userAPI.get(`/user/${review.userID}`),
-            productAPI.get(`/products/${review.productID}`),
-          ]);
-
-          return {
-            ...review,
-            user: userResponse.data,
-            product: productResponse.data,
-          };
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          return {
-            ...review,
-            user: null,
-            product: null,
-          };
-        }
-      })
-    );
-
-    return reviewsWithInfo;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách đánh giá:", error);
-    return [];
   }
 };
 
