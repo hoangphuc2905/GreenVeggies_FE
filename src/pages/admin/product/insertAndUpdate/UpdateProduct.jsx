@@ -14,7 +14,6 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
-import { getListProducts } from "../../../../api/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import FormInsertCategory from "../../category/FormInsertCategory";
 import UploadPicture from "../../../../components/uploadPicture/UploadPicture.jsx";
@@ -23,7 +22,10 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../../components/calcSoldPrice/CalcPrice.jsx";
-import { updateProduct } from "../../../../services/ProductService.jsx";
+import {
+  getCategories,
+  updateProduct,
+} from "../../../../services/ProductService.jsx";
 
 const { TextArea } = Input;
 
@@ -52,7 +54,6 @@ const UpdateProduct = () => {
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
   const [product, setProduct] = useState(null);
-
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -64,7 +65,7 @@ const UpdateProduct = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await getListProducts("categories");
+      const response = await getCategories();
       setCategories(response);
     } catch (error) {
       message.error("Lỗi tải danh mục!" + error);
@@ -85,7 +86,6 @@ const UpdateProduct = () => {
   };
 
   const openInsertCategory = () => {
-    console.log("Open modal");
     setIsModalOpen(true);
   };
 
@@ -118,6 +118,16 @@ const UpdateProduct = () => {
     }
   }, [getProduct, categories]); // Chạy lại khi product hoặc categories thay đổi
 
+  const clearFieldError = (fieldName) => {
+    // Hàm xóa lỗi của trường khi người dùng bắt đầu nhập
+    form.setFields([
+      {
+        name: fieldName,
+        errors: [],
+      },
+    ]);
+  };
+
   const handlerUpdateProduct = async (values) => {
     try {
       setLoading(true);
@@ -127,7 +137,6 @@ const UpdateProduct = () => {
 
       if (response) {
         message.success("Cập nhật sản phẩm thành công!");
-        console.log("Cập nhật sản phẩm thành công!", values);
         setTimeout(() => navigate("/admin/products"), 1000);
       }
     } catch (errors) {
@@ -138,7 +147,6 @@ const UpdateProduct = () => {
           name: field,
           errors: [errors[field]],
         }));
-        console.error("Có lỗi xảy ra khi cập nhật sản phẩm:", errors);
         form.setFields(fieldErrors);
       } else {
         message.error("Lỗi hệ thống ở service, vui lòng thử lại sau! ⚠️");
@@ -221,7 +229,9 @@ const UpdateProduct = () => {
                   name="name"
                   // rules={[{ required: true }]}
                 >
-                  <Input />
+                  <Input
+                    onChange={() => clearFieldError("name")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
                 <Form.Item label="Loại danh mục" name="category">
                   <div className="flex items-center gap-2">
@@ -230,6 +240,7 @@ const UpdateProduct = () => {
                       placeholder="Chọn danh mục"
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
+                        clearFieldError("category"); // Xóa lỗi khi chọn
                       }}
                     >
                       {categories.map((cat) => (
@@ -253,10 +264,15 @@ const UpdateProduct = () => {
                   name="origin"
                   // rules={[{ required: true }]}
                 >
-                  <Input />
+                  <Input
+                    onChange={() => clearFieldError("origin")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">
-                  <TextArea rows={6} />
+                  <TextArea
+                    rows={6}
+                    onChange={() => clearFieldError("description")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -265,7 +281,9 @@ const UpdateProduct = () => {
                   name="unit"
                   // rules={[{ required: true }]}
                 >
-                  <Select>
+                  <Select
+                    onChange={() => clearFieldError("unit")} // Xóa lỗi khi chọn
+                  >
                     <Select.Option value="piece">Cái</Select.Option>
                     <Select.Option value="kg">Kg</Select.Option>
                     <Select.Option value="gram">Gram</Select.Option>
@@ -291,6 +309,7 @@ const UpdateProduct = () => {
                       form.setFieldsValue({
                         entryPrice: formattedPrice(CalcPrice(value)),
                       });
+                      clearFieldError("price"); // Xóa lỗi khi nhập
                     }}
                   />
                 </Form.Item>
@@ -299,7 +318,10 @@ const UpdateProduct = () => {
                   <InputNumber className="w-full" disabled={true} />
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">
-                  <Select className="w-full">
+                  <Select
+                    className="w-full"
+                    onChange={() => clearFieldError("status")} // Xóa lỗi khi chọn
+                  >
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Option key={option.value} value={option.value}>
                         <div className="flex items-center gap-2 font-bold">
@@ -320,9 +342,10 @@ const UpdateProduct = () => {
                 >
                   <UploadPicture
                     fileList={form.getFieldValue("imageUrl")}
-                    onFileListChange={(newFileList) =>
-                      form.setFieldsValue({ imageUrl: newFileList })
-                    }
+                    onFileListChange={(newFileList) => {
+                      form.setFieldsValue({ imageUrl: newFileList });
+                      clearFieldError("imageUrl"); // Xóa lỗi khi thay đổi hình ảnh
+                    }}
                   />
                 </Form.Item>
               </Col>

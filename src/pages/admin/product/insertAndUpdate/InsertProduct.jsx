@@ -74,6 +74,7 @@ const InsertProduct = () => {
   const openInsertCategory = () => {
     setIsModalOpen(true);
   };
+
   const handlerInsertProduct = async (values) => {
     try {
       setLoading(true);
@@ -105,6 +106,17 @@ const InsertProduct = () => {
       setLoading(false);
     }
   };
+
+  const clearFieldError = (fieldName) => {
+    // Hàm xóa lỗi của trường khi người dùng bắt đầu nhập
+    form.setFields([
+      {
+        name: fieldName,
+        errors: [],
+      },
+    ]);
+  };
+
   return (
     <Layout className="h-full">
       <div className="w-full bg-white rounded-md px-[2%] py-[1%] shadow-md">
@@ -171,7 +183,9 @@ const InsertProduct = () => {
                   //   { required: true, message: "Vui lòng nhập tên sản phẩm." },
                   // ]}
                 >
-                  <Input />
+                  <Input
+                    onChange={() => clearFieldError("name")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Loại danh mục"
@@ -185,6 +199,7 @@ const InsertProduct = () => {
                       className="flex-1"
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
+                        clearFieldError("category"); // Xóa lỗi khi chọn
                       }}
                     >
                       {categories.map((cat) => (
@@ -212,7 +227,9 @@ const InsertProduct = () => {
                   //   ]
                   // }
                 >
-                  <Input />
+                  <Input
+                    onChange={() => clearFieldError("origin")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Mô tả"
@@ -224,7 +241,10 @@ const InsertProduct = () => {
                   //   },
                   // ]}
                 >
-                  <TextArea rows={6} />
+                  <TextArea
+                    rows={6}
+                    onChange={() => clearFieldError("description")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Hình minh họa"
@@ -240,9 +260,10 @@ const InsertProduct = () => {
                 >
                   <UploadPicture
                     fileList={form.getFieldValue("imageUrl")}
-                    onFileListChange={(newFileList) =>
-                      form.setFieldsValue({ imageUrl: newFileList })
-                    }
+                    onFileListChange={(newFileList) => {
+                      form.setFieldsValue({ imageUrl: newFileList });
+                      clearFieldError("imageUrl"); // Xóa lỗi khi thay đổi hình ảnh
+                    }}
                   />
                 </Form.Item>
               </Col>
@@ -268,11 +289,12 @@ const InsertProduct = () => {
                         entryPrice: calculatedPrice, // Lưu giá trị chưa định dạng
                         formattedEntryPrice: formattedPrice(calculatedPrice), // Hiển thị giá trị đã định dạng
                       });
+                      clearFieldError("price"); // Xóa lỗi khi nhập
                     }}
                   />
                 </Form.Item>
                 <Form.Item
-                  label="Giá bán"
+                  label="Giá bán (1.5 lần giá trị giá nhập)"
                   name="formattedEntryPrice"
                   rules={[{ type: "string" }]}
                 >
@@ -290,14 +312,19 @@ const InsertProduct = () => {
                     },
                   ]}
                 >
-                  <InputNumber className="w-full" />
+                  <InputNumber
+                    className="w-full"
+                    onChange={() => clearFieldError("import")} // Xóa lỗi khi nhập
+                  />
                 </Form.Item>
                 <Form.Item
                   label="Đơn vị"
                   name="unit"
                   // rules={[{ required: true, message: "Vui lòng chọn đơn vị." }]}
                 >
-                  <Select>
+                  <Select
+                    onChange={() => clearFieldError("unit")} // Xóa lỗi khi chọn
+                  >
                     <Select.Option value="piece">Cái</Select.Option>
                     <Select.Option value="kg">Kg</Select.Option>
                     <Select.Option value="gram">Gram</Select.Option>

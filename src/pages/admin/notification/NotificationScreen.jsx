@@ -9,7 +9,7 @@ import {
 } from "../../../services/NotifyService";
 import { getOrderById } from "../../../services/OrderService";
 import OrderDetail from "../order/listOrder/orderDetail/OrderDetail";
-import { getUserInfo } from "../../../api/api";
+import { getUserInfo } from "../../../services/UserService";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi"); // Đặt ngôn ngữ mặc định là tiếng Việt

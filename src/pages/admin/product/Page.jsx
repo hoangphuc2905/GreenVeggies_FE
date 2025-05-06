@@ -11,6 +11,7 @@ import {
   ConfigProvider,
   message,
   Modal,
+  Spin,
 } from "antd";
 import Column from "antd/es/table/Column";
 import { useEffect, useState } from "react";
@@ -29,12 +30,16 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
-import updateStatus from "../../../components/updateProduct/updateStatus";
-import { getProducts, getCategories } from "../../../services/ProductService";
+import {
+  getProducts,
+  getCategories,
+  updateProductStatus,
+} from "../../../services/ProductService";
 
 const { Search } = Input;
 
 const Page = () => {
+  const [loading, setLoading] = useState(true); // Trạng thái loading
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
@@ -46,7 +51,30 @@ const Page = () => {
     { value: "out_of_stock", label: "Hết hàng" },
   ]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10); // Số lượng sản phẩm trên mỗi trang
+
+  useEffect(() => {
+    // Hàm tính toán số lượng dòng hiển thị dựa trên chiều cao màn hình
+    const calculatePageSize = () => {
+      const screenHeight = window.innerHeight;
+      if (screenHeight > 1200) return 15; // Màn hình lớn
+      if (screenHeight > 800) return 10; // Màn hình trung bình
+      return 5; // Màn hình nhỏ
+    };
+
+    // Cập nhật pageSize khi tải trang hoặc thay đổi kích thước màn hình
+    const updatePageSize = () => {
+      setPageSize(calculatePageSize());
+    };
+
+    updatePageSize();
+    window.addEventListener("resize", updatePageSize);
+
+    return () => {
+      window.removeEventListener("resize", updatePageSize);
+    };
+  }, []);
+
   const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -111,10 +139,13 @@ const Page = () => {
   };
 
   useEffect(() => {
+    // Hàm lấy danh sách sản phẩm và danh mục từ API
     const fetchAndSetProducts = async () => {
+      setLoading(true); // Bắt đầu loading
       const data = (await getProducts()).reverse(); // Lấy danh sách sản phẩm từ API
       setProducts(data);
       setFilteredProducts(data);
+      setLoading(false); // Kết thúc loading
     };
 
     const fetchAndSetCategories = async () => {
@@ -237,7 +268,10 @@ const Page = () => {
         cancelText: "Hủy",
         onOk: async () => {
           try {
-            const response = updateStatus(value.productID, "unavailable"); // Cập nhật trạng thái sản phẩm
+            const response = updateProductStatus(
+              value.productID,
+              "unavailable"
+            ); // Cập nhật trạng thái sản phẩm
 
             if (response) {
               setSuccessMessage("Đã ngừng bán sản phẩm thành công!");
@@ -339,265 +373,271 @@ const Page = () => {
               typeFilter="filter"
             /> */}
           </Flex>
-          <Table
-            size="small"
-            scroll={{ x: "max-content" }}
-            dataSource={filteredProducts}
-            rowKey="productID"
-            className="text-sm font-thin hover:cursor-pointer"
-            pagination={{
-              pageSize,
-              current: currentPage,
-              onChange: (page, pageSize) => {
-                setCurrentPage(page);
-                setPageSize(pageSize);
-              },
-            }}
-            rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
-            onRow={(record) => ({
-              onClick: () => handlerClickProduct(record),
-            })}
-            onChange={(pagination, filters, sorter) => {
-              const { order, columnKey } = sorter;
-              const sortedData = [...filteredProducts];
+          <Spin spinning={loading} tip="Đang tải dữ liệu...">
+            <Table
+              size="small"
+              scroll={{ x: "max-content" }}
+              dataSource={filteredProducts}
+              rowKey="productID"
+              className="text-sm font-thin hover:cursor-pointer"
+              pagination={{
+                pageSize, // Số lượng sản phẩm trên mỗi trang
+                current: currentPage, // Trang hiện tại
+                onChange: (page, pageSize) => {
+                  setCurrentPage(page);
+                  setPageSize(pageSize);
+                },
+              }}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: setSelectedRowKeys,
+              }}
+              onRow={(record) => ({
+                onClick: () => handlerClickProduct(record),
+              })}
+              onChange={(pagination, filters, sorter) => {
+                const { order, columnKey } = sorter;
+                const sortedData = [...filteredProducts];
 
-              if (order === "ascend") {
-                sortedData.sort((a, b) =>
-                  a[columnKey] > b[columnKey] ? 1 : -1
-                );
-              } else if (order === "descend") {
-                sortedData.sort((a, b) =>
-                  a[columnKey] < b[columnKey] ? 1 : -1
-                );
-              }
-
-              setFilteredProducts(sortedData);
-            }}
-          >
-            <Column
-              title="#"
-              key="index"
-              align="center"
-              render={(_, __, index) =>
-                (currentPage - 1) * pageSize + index + 1
-              }
-            />
-            {columnsVisibility.productID && (
-              <Column
-                title="Mã sản phẩm"
-                dataIndex="productID"
-                key="productID"
-                align="center"
-                sorter={(a, b) => a.productID.localeCompare(b.productID)}
-              />
-            )}
-            {columnsVisibility.name && (
-              <Column
-                title="Tên sản phẩm"
-                dataIndex="name"
-                ellipsis={true}
-                key="name"
-                align="center"
-                fixed="left"
-                sorter={(a, b) => a.name.localeCompare(b.name)}
-              />
-            )}
-            {columnsVisibility.imageUrl && (
-              <Column
-                title="Hình ảnh"
-                dataIndex="imageUrl"
-                key="imageUrl"
-                align="center"
-                onClick={(e) => e.stopPropagation()}
-                render={(imageUrl) => {
-                  const firstImage = Array.isArray(imageUrl)
-                    ? imageUrl[0]
-                    : imageUrl;
-                  return (
-                    <div className="flex justify-center items-center">
-                      {firstImage ? (
-                        <Image
-                          width={50}
-                          height={50}
-                          src={firstImage}
-                          alt="product"
-                          className="object-cover"
-                          style={{ borderRadius: "50%" }}
-                        />
-                      ) : (
-                        <span>Không có ảnh</span>
-                      )}
-                    </div>
+                if (order === "ascend") {
+                  sortedData.sort((a, b) =>
+                    a[columnKey] > b[columnKey] ? 1 : -1
                   );
-                }}
-              />
-            )}
-            {columnsVisibility.category && (
-              <Column
-                title="Danh mục"
-                dataIndex="category"
-                key="category"
-                align="center"
-                render={(category) => category?.name || "--|--"}
-                sorter={(a, b) =>
-                  a.category?.name.localeCompare(b.category?.name)
+                } else if (order === "descend") {
+                  sortedData.sort((a, b) =>
+                    a[columnKey] < b[columnKey] ? 1 : -1
+                  );
                 }
-              />
-            )}
-            {columnsVisibility.price && (
-              <Column
-                title="Giá (VNĐ)"
-                dataIndex="price"
-                key="price"
-                align="center"
-                render={(text, record) =>
-                  `${formattedPrice(CalcPrice(record.price))} / ${record.unit}`
-                }
-                sorter={(a, b) => a.price - b.price}
-              />
-            )}
-            {columnsVisibility.origin && (
-              <Column
-                title="Xuất xứ"
-                dataIndex="origin"
-                key="origin"
-                align="center"
-                render={(origin) => origin || "--|--"}
-              />
-            )}
-            {columnsVisibility.quantity && (
-              <Column
-                title="SL còn lại"
-                dataIndex="quantity"
-                key="quantity"
-                align="center"
-                render={(text, record) =>
-                  `${text.toLocaleString()} ${record.unit}`
-                }
-                sorter={(a, b) => a.quantity - b.quantity}
-              />
-            )}
-            {columnsVisibility.sold && (
-              <Column
-                title="Đã bán"
-                dataIndex="sold"
-                key="sold"
-                align="center"
-                render={(text, record) =>
-                  `${text.toLocaleString()} ${record.unit}`
-                }
-                sorter={(a, b) => a.sold - b.sold}
-              />
-            )}
-            {columnsVisibility.reviews && (
-              <Column
-                title="Đánh giá"
-                dataIndex="reviews"
-                key="reviews"
-                align="center"
-                render={(reviews) => (
-                  <div>{calculateAverageRating(reviews)}</div>
-                )}
-                sorter={(a, b) =>
-                  calculateAverageRating(a.reviews) -
-                  calculateAverageRating(b.reviews)
-                }
-              />
-            )}
-            {columnsVisibility.status && (
-              <Column
-                title="Tình trạng"
-                dataIndex="status"
-                key="status"
-                align="center"
-                render={(status) => (
-                  <Tag color={statusMapping[status]?.color}>
-                    {statusMapping[status]?.text}
-                  </Tag>
-                )}
-                filters={productStatuses.map((status) => ({
-                  text: status.label,
-                  value: status.value,
-                }))}
-                onFilter={(value, record) => record.status === value}
-              />
-            )}
 
-            {columnsVisibility.action && (
+                setFilteredProducts(sortedData);
+              }}
+            >
               <Column
-                title="Tác vụ"
-                key="action"
+                title="#"
+                key="index"
                 align="center"
-                fixed="right"
-                render={(text, record) => (
-                  <Space size="small">
-                    <ConfigProvider
-                      theme={{
-                        components: {
-                          Button: {
-                            defaultHoverBg: "bg-opacity",
-                            defaultHoverColor: "white",
-                            defaultHoverBorderColor: "none",
-                            onlyIconSize: "8px",
+                render={(_, __, index) =>
+                  (currentPage - 1) * pageSize + index + 1
+                }
+              />
+              {columnsVisibility.productID && (
+                <Column
+                  title="Mã sản phẩm"
+                  dataIndex="productID"
+                  key="productID"
+                  align="center"
+                  sorter={(a, b) => a.productID.localeCompare(b.productID)}
+                />
+              )}
+              {columnsVisibility.name && (
+                <Column
+                  title="Tên sản phẩm"
+                  dataIndex="name"
+                  ellipsis={true}
+                  key="name"
+                  align="center"
+                  fixed="left"
+                  sorter={(a, b) => a.name.localeCompare(b.name)}
+                />
+              )}
+              {columnsVisibility.imageUrl && (
+                <Column
+                  title="Hình ảnh"
+                  dataIndex="imageUrl"
+                  key="imageUrl"
+                  align="center"
+                  onClick={(e) => e.stopPropagation()}
+                  render={(imageUrl) => {
+                    const firstImage = Array.isArray(imageUrl)
+                      ? imageUrl[0]
+                      : imageUrl;
+                    return (
+                      <div className="flex justify-center items-center">
+                        {firstImage ? (
+                          <Image
+                            width={50}
+                            height={50}
+                            src={firstImage}
+                            alt="product"
+                            className="object-cover"
+                            style={{ borderRadius: "50%" }}
+                          />
+                        ) : (
+                          <span>Không có ảnh</span>
+                        )}
+                      </div>
+                    );
+                  }}
+                />
+              )}
+              {columnsVisibility.category && (
+                <Column
+                  title="Danh mục"
+                  dataIndex="category"
+                  key="category"
+                  align="center"
+                  render={(category) => category?.name || "--|--"}
+                  sorter={(a, b) =>
+                    a.category?.name.localeCompare(b.category?.name)
+                  }
+                />
+              )}
+              {columnsVisibility.price && (
+                <Column
+                  title="Giá (VNĐ)"
+                  dataIndex="price"
+                  key="price"
+                  align="center"
+                  render={(text, record) =>
+                    `${formattedPrice(CalcPrice(record.price))} / ${
+                      record.unit
+                    }`
+                  }
+                  sorter={(a, b) => a.price - b.price}
+                />
+              )}
+              {columnsVisibility.origin && (
+                <Column
+                  title="Xuất xứ"
+                  dataIndex="origin"
+                  key="origin"
+                  align="center"
+                  render={(origin) => origin || "--|--"}
+                />
+              )}
+              {columnsVisibility.quantity && (
+                <Column
+                  title="SL còn lại"
+                  dataIndex="quantity"
+                  key="quantity"
+                  align="center"
+                  render={(text, record) =>
+                    `${text.toLocaleString()} ${record.unit}`
+                  }
+                  sorter={(a, b) => a.quantity - b.quantity}
+                />
+              )}
+              {columnsVisibility.sold && (
+                <Column
+                  title="Đã bán"
+                  dataIndex="sold"
+                  key="sold"
+                  align="center"
+                  render={(text, record) =>
+                    `${text.toLocaleString()} ${record.unit}`
+                  }
+                  sorter={(a, b) => a.sold - b.sold}
+                />
+              )}
+              {columnsVisibility.reviews && (
+                <Column
+                  title="Đánh giá"
+                  dataIndex="reviews"
+                  key="reviews"
+                  align="center"
+                  render={(reviews) => (
+                    <div>{calculateAverageRating(reviews)}</div>
+                  )}
+                  sorter={(a, b) =>
+                    calculateAverageRating(a.reviews) -
+                    calculateAverageRating(b.reviews)
+                  }
+                />
+              )}
+              {columnsVisibility.status && (
+                <Column
+                  title="Tình trạng"
+                  dataIndex="status"
+                  key="status"
+                  align="center"
+                  render={(status) => (
+                    <Tag color={statusMapping[status]?.color}>
+                      {statusMapping[status]?.text}
+                    </Tag>
+                  )}
+                  filters={productStatuses.map((status) => ({
+                    text: status.label,
+                    value: status.value,
+                  }))}
+                  onFilter={(value, record) => record.status === value}
+                />
+              )}
+
+              {columnsVisibility.action && (
+                <Column
+                  title="Tác vụ"
+                  key="action"
+                  align="center"
+                  fixed="right"
+                  render={(text, record) => (
+                    <Space size="small">
+                      <ConfigProvider
+                        theme={{
+                          components: {
+                            Button: {
+                              defaultHoverBg: "bg-opacity",
+                              defaultHoverColor: "white",
+                              defaultHoverBorderColor: "none",
+                              onlyIconSize: "8px",
+                            },
                           },
-                        },
-                      }}
-                    >
-                      <Button
-                        size="small"
-                        type="default"
-                        icon={<EditFilled />}
-                        className="bg-[#27A743] text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlerClickUpdate(record);
                         }}
-                        onMouseEnter={(e) =>
-                          (e.target.style.backgroundColor = "#15803d")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.target.style.backgroundColor = "#15803d")
-                        }
-                      />
-                      <Button
-                        size="small"
-                        type="default"
-                        icon={<TagFilled />}
-                        className="bg-[#138cff] text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openInsertStockEntry(record);
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.target.style.backgroundColor = "#107bff")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.target.style.backgroundColor = "#138cff")
-                        }
-                      />
-                      <Button
-                        size="small"
-                        type="default"
-                        icon={<DeleteFilled />}
-                        className="bg-red-500 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlerStopSell(record);
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.target.style.backgroundColor = "#991b1b")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.target.style.backgroundColor = "#dc2626")
-                        }
-                      />
-                    </ConfigProvider>
-                  </Space>
-                )}
-              />
-            )}
-          </Table>
-
+                      >
+                        <Button
+                          size="small"
+                          type="default"
+                          icon={<EditFilled />}
+                          className="bg-[#27A743] text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlerClickUpdate(record);
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.target.style.backgroundColor = "#15803d")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.target.style.backgroundColor = "#15803d")
+                          }
+                        />
+                        <Button
+                          size="small"
+                          type="default"
+                          icon={<TagFilled />}
+                          className="bg-[#138cff] text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openInsertStockEntry(record);
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.target.style.backgroundColor = "#107bff")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.target.style.backgroundColor = "#138cff")
+                          }
+                        />
+                        <Button
+                          size="small"
+                          type="default"
+                          icon={<DeleteFilled />}
+                          className="bg-red-500 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlerStopSell(record);
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.target.style.backgroundColor = "#991b1b")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.target.style.backgroundColor = "#dc2626")
+                          }
+                        />
+                      </ConfigProvider>
+                    </Space>
+                  )}
+                />
+              )}
+            </Table>
+          </Spin>
           <InsertStockEntry
             isOpen={isStockEntryOpen}
             onClose={() => setIsStockEntryOpen(false)}

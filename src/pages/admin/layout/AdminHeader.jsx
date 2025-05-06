@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { fetchUser } from "../../../redux/userSlice";
-import { getUserInfo } from "../../../api/api";
 import {
   LogoutOutlined,
   SettingOutlined,
@@ -16,6 +15,7 @@ import Profile from "../../user/Profile/Profile";
 import Notification from "../notification/Notification";
 import ChangePassword from "../../user/profile/ChangePassword";
 import { fetchNotifications } from "../../../services/NotifyService";
+import { getUserInfo } from "../../../services/UserService";
 
 const AdminHeader = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -30,7 +30,7 @@ const AdminHeader = () => {
     const userID = localStorage.getItem("userID");
     if (token && userID) {
       dispatch(fetchUser({ userID, token }));
-      getUserInfo(userID, token).then((userInfo) => {
+      getUserInfo(userID).then((userInfo) => {
         setUserInfo(userInfo);
       });
 
