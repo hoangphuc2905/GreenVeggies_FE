@@ -118,6 +118,10 @@ export const handleProductApi = {
   addCategory: async (data) => {
     return await productAPI.post("/categories", data);
   },
+  //Lấy danh sách danh mục
+  getCategories: async () => {
+    return await productAPI.get("/categories");
+  },
   updateProduct: async (id, data) => {
     return await productAPI.put(`/products/${id}`, data);
   },
@@ -218,93 +222,30 @@ export const handleReviewApi = {
   },
 };
 
-
-
-// 🟢 Lưu thông tin sản phẩm vào order
-export const saveShoppingCarts = async (orderData) => {
-  try {
-    const response = await shoppingCartAPI.post("/shopping-carts", orderData);
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      // In ra phản hồi từ máy chủ nếu có
-      console.error("API response error:", error.response.data);
-    }
-    console.error("Lỗi khi lưu thông tin sản phẩm vào giỏ hàng:", error);
-    return null;
-  }
-};
-
-
-
-// 🟢 Lấy giỏ hàng theo userID
-export const getShoppingCartByUserId = async (userID) => {
-  try {
-    const response = await shoppingCartAPI.get(
-      `/shopping-carts/user/${userID}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy giỏ hàng theo userID:", error);
-    return null;
-  }
-};
-
-// 🟢 Cập nhật số lượng sản phẩm trong giỏ hàng
-export const updateCartQuantity = async (
-  shoppingCartID,
-  productID,
-  quantity
-) => {
-  try {
-    console.log(
-      "Request URL:",
-      shoppingCartAPI.defaults.baseURL + "/shopping-carts/update-quantity"
-    );
-    console.log("Payload:", { shoppingCartID, productID, quantity });
-
-    const response = await shoppingCartAPI.patch(
-      "/shopping-carts/update-quantity",
-      {
-        shoppingCartID,
-        productID,
-        quantity,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      console.error("API Error Response:", error.response.data);
-    }
-    console.error("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng:", error);
-    return null;
-  }
-};
-// 🟢 Xóa chi tiết giỏ hàng theo shoppingCartDetailID
-export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
-  try {
-    const response = await shoppingCartAPI.delete(
+//GIỎ HÀNG
+export const handleShoppingCartApi = {
+  // Lưu thông tin sản phẩm vào giỏ hàng
+  saveShoppingCarts: async (orderData) => {
+    return await shoppingCartAPI.post("/shopping-carts", orderData);
+  },
+  // Lấy giỏ hàng theo userID
+  getShoppingCartByUserId: async (userID) => {
+    return await shoppingCartAPI.get(`/shopping-carts/user/${userID}`);
+  },
+  // Cập nhật số lượng sản phẩm trong giỏ hàng
+  updateCartQuantity: async (shoppingCartID, productID, quantity) => {
+    return await shoppingCartAPI.patch("/shopping-carts/update-quantity", {
+      shoppingCartID,
+      productID,
+      quantity,
+    });
+  },
+  // Xóa chi tiết giỏ hàng theo shoppingCartDetailID
+  deleteShoppingCartDetailById: async (shoppingCartDetailID) => {
+    return await shoppingCartAPI.delete(
       `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`
     );
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Lỗi khi xóa chi tiết giỏ hàng theo shoppingCartDetailID:",
-      error
-    );
-    return null;
-  }
-};
-
-// 🟢 Lấy danh sách sản phẩm theo khóa
-export const getListProducts = async (key) => {
-  try {
-    const response = await productAPI.get(`/${key}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-    return [];
-  }
+  },
 };
 
 // 🟢 Lấy danh sách sản phẩm theo Category

@@ -17,7 +17,6 @@ import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
 import Navbar from "./Navbar";
-import { getShoppingCartByUserId } from "../../../api/api";
 import {
   SettingOutlined,
   ShoppingOutlined,
@@ -31,6 +30,7 @@ import { Dropdown } from "antd";
 import { getUserInfo } from "../../../api/api";
 import { fetchNotifications } from "../../../services/NotifyService";
 import Notification from "../notification/Notification";
+import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
 
 const Header = () => {
   const navigate = useNavigate();

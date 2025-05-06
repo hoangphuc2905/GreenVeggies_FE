@@ -16,10 +16,10 @@ import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
 import {
   getUserInfo,
-  saveShoppingCarts,
+  
 } from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 import { getProductById } from "../../../services/ProductService";
-
+import { saveShoppingCarts } from "../../../services/ShoppingCartService";
 // Change this import
 import {
   formattedPrice,

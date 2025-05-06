@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 import PropTypes from "prop-types";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
-import { saveShoppingCarts } from "../../../api/api";
+import { saveShoppingCarts } from "../../../services/ShoppingCartService";
 import {
   formattedPrice,
   CalcPrice,

@@ -8,7 +8,7 @@ import {
   faCartShopping,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
-import { getShoppingCartByUserId } from "../../../api/api";
+import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
 
 const Navbar = () => {
   const scrollToTop = () => {

@@ -5,13 +5,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import {
-  getShoppingCartByUserId,
-  deleteShoppingCartDetailById,
-  updateCartQuantity,
-} from "../../../api/api"; // Import the API functions
 import { getProductById } from "../../../services/ProductService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { deleteShoppingCartDetailById,
+  getShoppingCartByUserId,
+  updateCartQuantity,
+ } from "../../../services/ShoppingCartService";
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);

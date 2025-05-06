@@ -10,12 +10,13 @@ import {
   Empty,
 } from "antd";
 import PropTypes from "prop-types";
-import { saveShoppingCarts } from "../../../api/api";
+
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
+import { saveShoppingCarts } from "../../../services/ShoppingCartService";
 
 const ListProductByCatelogyID = ({
   allProducts,
