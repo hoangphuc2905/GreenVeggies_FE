@@ -218,6 +218,8 @@ export const handleReviewApi = {
   },
 };
 
+
+
 // 🟢 Lưu thông tin sản phẩm vào order
 export const saveShoppingCarts = async (orderData) => {
   try {
@@ -233,16 +235,6 @@ export const saveShoppingCarts = async (orderData) => {
   }
 };
 
-// 🟢 Lấy danh sách sản phẩm
-export const getProducts = async () => {
-  try {
-    const response = await api.get("/products");
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-    return [];
-  }
-};
 
 
 // 🟢 Lấy giỏ hàng theo userID

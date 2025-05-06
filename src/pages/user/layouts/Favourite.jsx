@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProducts } from "../../../api/api";
+
 import { List, Avatar } from "antd";
 import { formattedPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { getProducts } from "../../../services/ProductService";
 
 const Favourite = () => {
   const [products, setProducts] = useState([]);
