@@ -11,13 +11,13 @@ import {
 import { useState, useEffect } from "react";
 import {
   getUserInfo,
-  addOrder,
 } from "../../../api/api";
 import { deleteShoppingCartDetailById,getShoppingCartByUserId } from "../../../services/ShoppingCartService";
 import { getProductById } from "../../../services/ProductService";
 import { useNavigate } from "react-router-dom";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 import { createNotify } from "../../../services/NotifyService";
+import { addOrder } from "../../../services/OrderService";
 const style = {
   display: "flex",
   flexDirection: "column",

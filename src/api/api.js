@@ -120,10 +120,8 @@ export const handleProductApi = {
   },
   //Lấy danh sách danh mục
   getCategories: async () => {
-    
-      const response = await productAPI.get("/categories");
-      return response.data;
-   
+    const response = await productAPI.get("/categories");
+    return response.data;
   },
   updateProduct: async (id, data) => {
     return await productAPI.put(`/products/${id}`, data);
@@ -186,6 +184,10 @@ export const handleOrderApi = {
   //Lấy danh sách tất cva3 đơn hàng
   getAllOrders: async () => {
     return await orderAPI.get("/orders");
+  },
+  // 🟢 Thêm đơn đặt hàng mới
+  addOrder: async (orderData) => {
+    return await orderAPI.post("/orders", orderData);
   },
 };
 //THỐNG KÊ
@@ -261,17 +263,6 @@ export const getListUsers = async (key) => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách người dùng:", error);
     return [];
-  }
-};
-
-// 🟢 Lấy thông tin sản phẩm chi tiết theo ID
-export const getProductDetail = async (id) => {
-  try {
-    const response = await productAPI.get(`products/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
-    return null;
   }
 };
 
@@ -380,20 +371,7 @@ export const insertProduct = async (data) => {
     return null;
   }
 };
-// 🟢 Thêm đơn đặt hàng mới
-export const addOrder = async (orderData) => {
-  try {
-    const response = await orderAPI.post("/orders", orderData);
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      // In ra phản hồi từ máy chủ nếu có
-      console.error("API response error:", error.response.data);
-    }
-    console.error("Lỗi khi thêm đơn đặt hàng:", error);
-    return null;
-  }
-};
+
 //Lấy danh sách tất cả đơn hàng
 export const getAllOrders = async () => {
   try {
