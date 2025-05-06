@@ -6,9 +6,7 @@ import Favourite from "../layouts/Favourite";
 import ListProduct from "../layouts/ListProduct";
 import FilterPrice from "../layouts/FilterPrice";
 import { getProducts } from "../../../services/ProductService";
-import { Card, Typography } from "antd";
-import { Link } from "react-router-dom";
-import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+
 
 const Page = () => {
   const [minPrice, setMinPrice] = useState(0);
