@@ -14,6 +14,7 @@ import { deleteShoppingCartDetailById } from "../../../services/ShoppingCartServ
 import { useNavigate, useLocation } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";
 import { addOrder } from "../../../services/OrderService";
+import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 const style = {
   display: "flex",
   flexDirection: "column",
@@ -224,7 +225,7 @@ const OrderPage = () => {
 
   // Tính tổng tiền sản phẩm và phí vận chuyển
   const totalProductPrice = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + CalcPrice(item.price) * item.quantity,
     0
   );
 
@@ -368,7 +369,7 @@ const OrderPage = () => {
                 <p>{item.name}</p>
                 <p className="text-center">{item.quantity}</p>
                 <p className="text-right">
-                  {(item.price * item.quantity).toLocaleString()} VND
+                  {(CalcPrice(item.price) * item.quantity).toLocaleString()} VND
                 </p>
               </div>
             ))
