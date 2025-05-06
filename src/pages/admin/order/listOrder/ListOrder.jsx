@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal } from "antd";
+import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal, Checkbox } from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
@@ -70,6 +70,8 @@ const fetchUserInfo = async (userID) => {
 
 const ListOrder = () => {
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 }); // Initialize pagination state
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]); // State for selected rows
+  const [selectedOrders, setSelectedOrders] = useState([]); // State for selected orders
 
   useEffect(() => {
     // Hàm tính toán số lượng dòng hiển thị dựa trên chiều cao màn hình
@@ -359,6 +361,40 @@ const ListOrder = () => {
     }
   };
 
+  const handleApproveSelectedOrders = async () => {
+    try {
+      const approvedOrders = [];
+      for (const order of selectedOrders) {
+        if (order.status === "Pending") {
+          await updateStatus(order.orderID, "Shipped"); // Approve the order
+          approvedOrders.push(order.orderID);
+        }
+      }
+      Modal.success({
+        content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+      });
+      setSelectedRowKeys([]); // Clear selected rows
+      setSelectedOrders([]); // Clear selected orders
+      refreshOrders(); // Refresh the order list
+    } catch (error) {
+      Modal.error({
+        content: "Đã xảy ra lỗi khi duyệt các đơn hàng.",
+      });
+      console.error("Error approving selected orders:", error);
+    }
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedKeys, selectedRows) => {
+      setSelectedRowKeys(selectedKeys);
+      setSelectedOrders(selectedRows);
+    },
+    getCheckboxProps: (record) => ({
+      disabled: record.status !== "Pending", // Disable checkbox for non-pending orders
+    }),
+  };
+
   const columns = [
     {
       title: "STT",
@@ -553,6 +589,15 @@ const ListOrder = () => {
       <div className="text-lg font-semibold mb-4 flex justify-between">
         <span>Danh sách đơn hàng</span>
         <Space>
+          {selectedRowKeys.length > 0 && (
+            <Button
+              type="primary"
+              onClick={handleApproveSelectedOrders}
+              className="bg-green-500 text-white"
+            >
+              Duyệt các đơn đã chọn
+            </Button>
+          )}
           <Button onClick={handleCancelFilters}>Hủy lọc</Button>
           <FilterButton
             columnsVisibility={visibleColumns}
@@ -569,6 +614,7 @@ const ListOrder = () => {
           size="small"
           columns={filteredColumns}
           dataSource={orders || []} // Ensure dataSource is always an array
+          rowSelection={rowSelection} // Add row selection
           pagination={{
             pageSize: pagination.pageSize,
             current: pagination.current,

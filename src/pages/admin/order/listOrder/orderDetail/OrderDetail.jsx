@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { createNotify } from "../../../../../services/NotifyService";
 import {
   checkPaymentStatus,
+  getPaymentByOrderId,
 } from "../../../../../services/PaymentService";
 import { updateStatus } from "../../../../../services/OrderService";
 import { getProductById } from "../../../../../services/ProductService";
@@ -100,8 +101,24 @@ const OrderDetail = ({
         console.error("Error fetching product details:", error);
       }
     };
+    const fetchPaymentDetails = async () => {
+      try {
+        const paymentDetails = await getPaymentByOrderId(order.orderID);
+        if (paymentDetails) {
+          setPaymentDetails(paymentDetails); // Set payment details state
+          console.log("Payment details:", paymentDetails);
+        } else {
+          console.error(
+            "Không tìm thấy thông tin thanh toán cho đơn hàng này."
+          );
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin thanh toán:", error);
+      }
+    };
 
     fetchDetails();
+    fetchPaymentDetails(); // Fetch payment details when order changes
   }, [order]);
 
   //Tạo thông báo đã duyệt đơn hàng thành công
