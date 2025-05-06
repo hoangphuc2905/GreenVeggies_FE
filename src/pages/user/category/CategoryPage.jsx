@@ -5,10 +5,10 @@ import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/pictures/bg_1.png";
 
 import Favourite from "../layouts/Favourite";
-import { getAllProducts } from "../../../api/api"; // Import hàm API để lấy tất cả sản phẩm
+
 import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
 import ProductList from "../layouts/ListProductByCatelogyID"; // Import ProductList từ layout
-
+import { getProducts } from "../../../services/ProductService";
 const CategoryPage = () => {
   const { id } = useParams(); // Lấy ID danh mục từ URL
   const [allProducts, setAllProducts] = useState([]); // Tất cả sản phẩm
@@ -25,7 +25,7 @@ const CategoryPage = () => {
     const fetchAllProducts = async () => {
       try {
         setLoading(true);
-        const productsData = await getAllProducts();
+        const productsData = await getProducts();
         console.log("Danh sách tất cả sản phẩm:", productsData);
         setAllProducts(Array.isArray(productsData) ? productsData : []);
       } catch (error) {

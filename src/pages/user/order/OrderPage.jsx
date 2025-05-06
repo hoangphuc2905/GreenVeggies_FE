@@ -9,16 +9,11 @@ import {
   notification,
 } from "antd";
 import { useState, useEffect } from "react";
-import {
-  getUserInfo,
-  getShoppingCartByUserId,
-  getProductById,
-  deleteShoppingCartDetailById,
-  addOrder,
-} from "../../../api/api";
-import { useNavigate } from "react-router-dom";
-import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { getUserInfo } from "../../../services/UserService";
+import { deleteShoppingCartDetailById } from "../../../services/ShoppingCartService";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";
+import { addOrder } from "../../../services/OrderService";
 const style = {
   display: "flex",
   flexDirection: "column",
@@ -51,22 +46,21 @@ const onFinish = (values) => {
 
 const OrderPage = () => {
   const [value, setValue] = useState(1);
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
-  const [form] = Form.useForm(); // Sử dụng hook form của Ant Design
+  const [form] = Form.useForm();
+  const location = useLocation();
 
   useEffect(() => {
-    const userID = localStorage.getItem("userID"); // Giả sử userID được lưu trong localStorage
+    const userID = localStorage.getItem("userID");
     if (userID) {
       getUserInfo(userID)
         .then((userInfo) => {
           console.log("User Info:", userInfo);
 
-          // Lấy thông tin địa chỉ từ mảng address
           const address = userInfo.address[0];
           const fullAddress = `${address.street}, ${address.ward}, ${address.district}`;
 
-          // Điền thông tin người dùng vào form
           form.setFieldsValue({
             user: {
               firstName: userInfo.username,
@@ -78,8 +72,20 @@ const OrderPage = () => {
             },
           });
 
-          // Gọi hàm để lấy danh sách sản phẩm trong giỏ hàng
-          fetchCartItems(userID);
+          // Lấy danh sách sản phẩm được chọn từ state
+          const selectedProducts = location.state?.selectedProducts;
+          if (selectedProducts && selectedProducts.length > 0) {
+            setCartItems(selectedProducts);
+          } else {
+            // Nếu không có sản phẩm được chọn, chuyển về trang giỏ hàng
+            notification.warning({
+              message: "Chưa chọn sản phẩm",
+              description: "Vui lòng chọn sản phẩm từ giỏ hàng",
+              placement: "top",
+              duration: 3,
+            });
+            navigate("/wishlist");
+          }
         })
         .catch((error) => {
           console.error("Failed to fetch user info:", error);
@@ -88,30 +94,12 @@ const OrderPage = () => {
     } else {
       message.error("User ID không tồn tại. Vui lòng đăng nhập lại.");
     }
-  }, [form]);
+  }, [form, location.state, navigate]);
 
   const onChange = (e) => {
     setValue(e.target.value);
   };
-  const fetchCartItems = async (userID) => {
-    try {
-      const shoppingCart = await getShoppingCartByUserId(userID);
-      const detailedCartItems = await Promise.all(
-        shoppingCart.shoppingCartDetails.map(async (item) => {
-          const product = await getProductById(item.productID);
-          return {
-            ...item,
-            name: product.name,
-            price: CalcPrice(product.price),
-          };
-        })
-      );
-      setCartItems(detailedCartItems);
-    } catch (error) {
-      console.error("Failed to fetch shopping cart or product details:", error);
-      message.error("Không thể lấy giỏ hàng hoặc chi tiết sản phẩm");
-    }
-  };
+
   const handlePlaceOrder = async (
     userID,
     cartItems,
@@ -121,7 +109,6 @@ const OrderPage = () => {
     address
   ) => {
     try {
-      // Tạo dữ liệu đơn hàng
       const orderData = {
         userID,
         orderDetails: cartItems.map((item) => ({
@@ -134,9 +121,7 @@ const OrderPage = () => {
         paymentMethod,
       };
 
-      // Nếu thanh toán bằng chuyển khoản ngân hàng
       if (paymentMethod === "BANK") {
-        // Tạo đơn hàng trước để lấy mã đơn hàng thực
         const orderResponse = await addOrder(orderData);
 
         if (
@@ -146,28 +131,20 @@ const OrderPage = () => {
         ) {
           console.log("Order created for bank transfer:", orderResponse);
 
-          // Tạo thông báo
-          const notificationDataUser = {
-            senderType: "system",
-            receiverID: userID,
-            title: "Thông báo đơn hàng",
-            message: `Đơn hàng #${orderResponse.order.orderID} đã được tạo, chờ thanh toán.`,
-            type: "order",
-            orderID: orderResponse.order.orderID,
-          };
-
-          await createNotify(notificationDataUser);
-
-          // Chuyển đến trang thanh toán với mã đơn hàng thực
-          navigate(
-            `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
-          );
-
-          // Xóa giỏ hàng sau khi tạo đơn hàng
+          // Xóa các sản phẩm đã chọn khỏi giỏ hàng
           for (const item of cartItems) {
             await deleteShoppingCartDetailById(item.shoppingCartDetailID);
           }
 
+          // Chỉ phát sự kiện cập nhật giỏ hàng
+          window.dispatchEvent(new Event("cartUpdated"));
+
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: "smooth" });
+
+          navigate(
+            `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
+          );
           return;
         } else {
           notification.error({
@@ -180,17 +157,14 @@ const OrderPage = () => {
         }
       }
 
-      // Xử lý thanh toán tiền mặt như bình thường
       const orderResponse = await addOrder(orderData);
 
-      console.log("Order Response:", orderResponse);
       if (orderResponse) {
         console.log("Order placed successfully:", orderResponse);
 
-        // Create a notification for the successful order
         const notificationDataUser = {
           senderType: "system",
-          receiverID: userID, // Assuming the receiver is the same user
+          receiverID: userID,
           title: "Thông báo đơn hàng",
           message: `Đơn hàng #${orderResponse.order.orderID} đã được đặt thành công.`,
           type: "order",
@@ -209,10 +183,17 @@ const OrderPage = () => {
         await createNotify(notificationDataUser);
         await createNotify(notificationDataAdmin);
 
-        // Clear the cart
+        // Xóa các sản phẩm đã chọn khỏi giỏ hàng
         for (const item of cartItems) {
           await deleteShoppingCartDetailById(item.shoppingCartDetailID);
         }
+
+        // Phát sự kiện cập nhật giỏ hàng và thông báo
+        window.dispatchEvent(new Event("cartUpdated"));
+        window.dispatchEvent(new Event("orderSuccess"));
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: "smooth" });
 
         notification.success({
           message: "Thành công",
@@ -221,11 +202,7 @@ const OrderPage = () => {
           duration: 4,
         });
 
-        // Cập nhật giỏ hàng sau khi đặt hàng thành công
-        await fetchCartItems(userID);
         navigate("/user/orders");
-        // Refresh the page
-        window.location.reload();
       } else {
         notification.error({
           message: "Thất bại",
@@ -243,11 +220,6 @@ const OrderPage = () => {
         duration: 4,
       });
     }
-    const updatedCartItemCount = cartItems.length; // Hoặc tính toán số lượng mới
-    const event = new CustomEvent("wishlistUpdated", {
-      detail: updatedCartItemCount,
-    });
-    window.dispatchEvent(event);
   };
 
   // Tính tổng tiền sản phẩm và phí vận chuyển

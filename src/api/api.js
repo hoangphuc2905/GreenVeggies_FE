@@ -118,6 +118,11 @@ export const handleProductApi = {
   addCategory: async (data) => {
     return await productAPI.post("/categories", data);
   },
+  //Lấy danh sách danh mục
+  getCategories: async () => {
+    const response = await productAPI.get("/categories");
+    return response.data;
+  },
   updateProduct: async (id, data) => {
     return await productAPI.put(`/products/${id}`, data);
   },
@@ -180,6 +185,10 @@ export const handleOrderApi = {
   getAllOrders: async () => {
     return await orderAPI.get("/orders");
   },
+  // 🟢 Thêm đơn đặt hàng mới
+  addOrder: async (orderData) => {
+    return await orderAPI.post("/orders", orderData);
+  },
 };
 //THỐNG KÊ
 export const handleStatisticApi = {
@@ -216,137 +225,64 @@ export const handleReviewApi = {
   createReview: async (data) => {
     return await reviewAPI.post("/reviews", data);
   },
+  // Lấy tất cả đánh giá sản phẩm
+  getAllReviews: async () => {
+    return await reviewAPI.get("/reviews");
+  },
 };
 
-// 🟢 Lưu thông tin sản phẩm vào order
-export const saveShoppingCarts = async (orderData) => {
-  try {
-    const response = await shoppingCartAPI.post("/shopping-carts", orderData);
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      // In ra phản hồi từ máy chủ nếu có
-      console.error("API response error:", error.response.data);
-    }
-    console.error("Lỗi khi lưu thông tin sản phẩm vào giỏ hàng:", error);
-    return null;
-  }
-};
-
-// 🟢 Lấy danh sách sản phẩm
-export const getProducts = async () => {
-  try {
-    const response = await api.get("/products");
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-    return [];
-  }
-};
-
-// 🟢 Lấy thông tin sản phẩm theo ID
-export const getProductById = async (id) => {
-  try {
-    const response = await api.get(`/products/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin sản phẩm:", error);
-    return null;
-  }
-};
-
-// Hàm lấy thông tin sản phẩm cụ thể theo id
-export const getUserById = async (userID) => {
-  try {
-    const response = await userAPI.get(`/users/${userID}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin người dùng:", error);
-    return null;
-  }
-};
-
-// 🟢 Lấy giỏ hàng theo userID
-export const getShoppingCartByUserId = async (userID) => {
-  try {
-    const response = await shoppingCartAPI.get(
-      `/shopping-carts/user/${userID}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy giỏ hàng theo userID:", error);
-    return null;
-  }
-};
-
-// 🟢 Cập nhật số lượng sản phẩm trong giỏ hàng
-export const updateCartQuantity = async (
-  shoppingCartID,
-  productID,
-  quantity
-) => {
-  try {
-    console.log(
-      "Request URL:",
-      shoppingCartAPI.defaults.baseURL + "/shopping-carts/update-quantity"
-    );
-    console.log("Payload:", { shoppingCartID, productID, quantity });
-
-    const response = await shoppingCartAPI.patch(
-      "/shopping-carts/update-quantity",
-      {
-        shoppingCartID,
-        productID,
-        quantity,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      console.error("API Error Response:", error.response.data);
-    }
-    console.error("Lỗi khi cập nhật số lượng sản phẩm trong giỏ hàng:", error);
-    return null;
-  }
-};
-// 🟢 Xóa chi tiết giỏ hàng theo shoppingCartDetailID
-export const deleteShoppingCartDetailById = async (shoppingCartDetailID) => {
-  try {
-    const response = await shoppingCartAPI.delete(
+//GIỎ HÀNG
+export const handleShoppingCartApi = {
+  // Lưu thông tin sản phẩm vào giỏ hàng
+  saveShoppingCarts: async (orderData) => {
+    return await shoppingCartAPI.post("/shopping-carts", orderData);
+  },
+  // Lấy giỏ hàng theo userID
+  getShoppingCartByUserId: async (userID) => {
+    return await shoppingCartAPI.get(`/shopping-carts/user/${userID}`);
+  },
+  // Cập nhật số lượng sản phẩm trong giỏ hàng
+  updateCartQuantity: async (shoppingCartID, productID, quantity) => {
+    return await shoppingCartAPI.patch("/shopping-carts/update-quantity", {
+      shoppingCartID,
+      productID,
+      quantity,
+    });
+  },
+  // Xóa chi tiết giỏ hàng theo shoppingCartDetailID
+  deleteShoppingCartDetailById: async (shoppingCartDetailID) => {
+    return await shoppingCartAPI.delete(
       `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`
     );
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Lỗi khi xóa chi tiết giỏ hàng theo shoppingCartDetailID:",
-      error
-    );
-    return null;
-  }
+  },
 };
-
-// 🟢 Lấy danh sách sản phẩm theo khóa
-export const getListProducts = async (key) => {
-  try {
-    const response = await productAPI.get(`/${key}`);
+//THANH TOÁN
+export const handlePaymentApi = {
+  // Tạo mã QR cho thanh toán
+  createPaymentQR: async (amount, orderID, paymentMethod) => {
+    const response = await paymentAPI.post("/payments/create-qr", {
+      amount,
+      orderID,
+      paymentMethod,
+    });
     return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách sản phẩm:", error);
-    return [];
-  }
-};
+  },
 
-// 🟢 Lấy danh sách sản phẩm theo Category
-export const getCategories = async () => {
-  try {
-    const response = await api.get("/categories");
+  // Kiểm tra trạng thái thanh toán
+  checkPaymentStatus: async (data) => {
+    const response = await paymentAPI.post("/payments/update-status", {
+      paymentID: data,
+      newStatus: "Completed",
+    });
     return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách danh mục:", error);
-    return [];
-  }
-};
+  },
 
+  // Lấy danh sách thanh toán theo orderID
+  getPaymentByOrderId: async (orderID) => {
+    const response = await paymentAPI.get(`/payments/${orderID}`);
+    return response.data;
+  },
+};
 export const getListUsers = async (key) => {
   try {
     const response = await userAPI.get(`/${key}`);
@@ -357,17 +293,6 @@ export const getListUsers = async (key) => {
   } catch (error) {
     console.error("Lỗi khi lấy danh sách người dùng:", error);
     return [];
-  }
-};
-
-// 🟢 Lấy thông tin sản phẩm chi tiết theo ID
-export const getProductDetail = async (id) => {
-  try {
-    const response = await productAPI.get(`products/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
-    return null;
   }
 };
 
@@ -476,30 +401,6 @@ export const insertProduct = async (data) => {
     return null;
   }
 };
-// 🟢 Thêm đơn đặt hàng mới
-export const addOrder = async (orderData) => {
-  try {
-    const response = await orderAPI.post("/orders", orderData);
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      // In ra phản hồi từ máy chủ nếu có
-      console.error("API response error:", error.response.data);
-    }
-    console.error("Lỗi khi thêm đơn đặt hàng:", error);
-    return null;
-  }
-};
-//Lấy danh sách tất cả đơn hàng
-export const getAllOrders = async () => {
-  try {
-    const response = await orderAPI.get("/orders");
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách đơn hàng:", error);
-    return null;
-  }
-};
 
 //Cập nhật trạng thái đơn hàng
 export const updateOrderStatus = async (orderID, status) => {
@@ -511,71 +412,6 @@ export const updateOrderStatus = async (orderID, status) => {
     return null;
   }
 };
-
-// 🟢 Lấy tất cả đánh giá sản phẩm
-export const getAllReviews = async () => {
-  try {
-    const response = await reviewAPI.get("/reviews");
-    const reviews = response.data;
-
-    // Fetch both user and product information for each review
-    const reviewsWithInfo = await Promise.all(
-      reviews.map(async (review) => {
-        try {
-          const [userResponse, productResponse] = await Promise.all([
-            userAPI.get(`/user/${review.userID}`),
-            productAPI.get(`/products/${review.productID}`),
-          ]);
-
-          return {
-            ...review,
-            user: userResponse.data,
-            product: productResponse.data,
-          };
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          return {
-            ...review,
-            user: null,
-            product: null,
-          };
-        }
-      })
-    );
-
-    return reviewsWithInfo;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách đánh giá:", error);
-    return [];
-  }
-};
-
-// 🟢 Lấy tất cả sản phẩm
-export const getAllProducts = async () => {
-  try {
-    const response = await api.get("/products");
-    console.log("API response:", response.data); // In ra dữ liệu trả về từ API
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách tất cả sản phẩm:", error);
-    return [];
-  }
-};
-
-// 🟢 Lấy danh sách danh mục từ sản phẩm
-export const getCategoriesFromProducts = async () => {
-  try {
-    const products = await getAllProducts();
-    const categories = [
-      ...new Set(products.map((product) => product.category)),
-    ];
-    return categories;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
-    return [];
-  }
-};
-
 // 🟢 Lấy thông tin nhập hàng
 export const getStockEntry = async (id) => {
   try {
@@ -585,85 +421,6 @@ export const getStockEntry = async (id) => {
     console.error("Lỗi khi lấy thông tin nhập hàng:", error);
     return null;
   }
-};
-
-//THANH TOÁN
-export const handlePaymentApi = {
-  // Tạo mã QR cho thanh toán
-  createPaymentQR: async (amount, orderID, paymentMethod) => {
-    try {
-      console.log(
-        "API call: Creating payment QR for amount:",
-        amount,
-        "orderID:",
-        orderID,
-        "method:",
-        paymentMethod
-      );
-      const response = await paymentAPI.post("/payments/create-qr", {
-        amount,
-        orderID,
-        paymentMethod,
-      });
-      console.log("Payment QR API response:", response.data);
-
-      if (response.data) {
-        return {
-          qrCodeUrl: response.data.qrURL,
-          message: response.data.message,
-          paymentId: response.data.paymentID,
-          orderID: response.data.orderID,
-          paymentMethod: response.data.paymentMethod,
-          paymentStatus: response.data.paymentStatus,
-          amount: response.data.amount,
-          content: response.data.content,
-        };
-      }
-      return response.data;
-    } catch (error) {
-      console.error("Error details:", error.response || error);
-      console.error("Lỗi khi tạo mã QR thanh toán:", error.message);
-
-      // Fallback: Tạo URL VietQR trực tiếp nếu API không hoạt động
-      const vietQrUrl =
-        "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
-        amount +
-        "&addInfo=Thanh%20toan%20don%20hang&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
-
-      return {
-        qrCodeUrl: vietQrUrl,
-        message: "Tạo mã QR thanh toán tạm thời.",
-        paymentId: "vietqr_" + Date.now(),
-        paymentMethod: paymentMethod || "Bank Transfer",
-        content: "TT" + Math.floor(100000 + Math.random() * 900000), // Add random payment content like backend
-      };
-    }
-  },
-
-  // Kiểm tra trạng thái thanh toán
-  checkPaymentStatus: async (data) => {
-    try {
-      const response = await paymentAPI.post("/payments/update-status", {
-        paymentID: data,
-        newStatus: "Completed",
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error checking payment status:", error);
-      throw error;
-    }
-  },
-
-  // Lấy danh sách thanh toán theo orderID
-  getPaymentByOrderId: async (orderID) => {
-    try {
-      const response = await paymentAPI.get(`/payments/${orderID}`);
-      return response;
-    } catch (error) {
-      console.error("Error fetching payment by order ID:", error);
-      throw error;
-    }
-  },
 };
 
 export default api;

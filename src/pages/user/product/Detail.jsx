@@ -11,15 +11,13 @@ import {
   Space,
   Typography,
   Image,
+  notification,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
-import {
-  getProductById,
-  getUserInfo,
-  saveShoppingCarts,
-} from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
-
+import { getUserInfo } from "../../../services/UserService"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
+import { getProductById } from "../../../services/ProductService";
+import { saveShoppingCarts } from "../../../services/ShoppingCartService";
 // Change this import
 import {
   formattedPrice,
@@ -204,14 +202,26 @@ const Detail = () => {
       localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
 
       // Phát ra sự kiện cập nhật giỏ hàng
-      const event = new CustomEvent("wishlistUpdated", {
-        detail: currentWishlist.length,
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      // Hiển thị thông báo thành công
+      notification.success({
+        message: "Thêm vào giỏ hàng thành công",
+        description: "Sản phẩm đã được thêm vào giỏ hàng của bạn",
+        placement: "topRight",
+        duration: 3,
       });
-      window.dispatchEvent(event);
 
       navigate("/wishlist");
     } catch (error) {
       console.error("Failed to save order:", error);
+      // Hiển thị thông báo lỗi
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể thêm sản phẩm vào giỏ hàng",
+        placement: "topRight",
+        duration: 3,
+      });
     }
   };
 
@@ -222,6 +232,36 @@ const Detail = () => {
   if (!product) {
     return <div>Loading...</div>;
   }
+
+  // Thêm itemRender để tùy chỉnh giao diện số trang
+  const itemRender = (page, type, originalElement) => {
+    if (type === "page") {
+      return (
+        <span
+          style={
+            page === currentPage
+              ? {
+                  backgroundColor: "#82AE46",
+                  color: "white",
+                  fontWeight: "bold",
+                  padding: "6px 12px",
+                  border: "2px solid #82AE46",
+                  borderRadius: "4px",
+                }
+              : {
+                  backgroundColor: "white",
+                  color: "#82AE46",
+                  padding: "6px 12px",
+                  border: "1px solid #82AE46",
+                  borderRadius: "4px",
+                }
+          }>
+          {page}
+        </span>
+      );
+    }
+    return originalElement;
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col mx-[10%]">
@@ -621,13 +661,20 @@ const Detail = () => {
               ))}
 
             {/* Phân trang */}
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={product.reviews.length}
-              onChange={(page) => setCurrentPage(page)}
-              className="mt-4 flex justify-center [&_.ant-pagination-item]:!bg-white [&_.ant-pagination-item]:!border-[#82AE46] [&_.ant-pagination-item>a]:!text-[#82AE46] [&_.ant-pagination-item-active]:!bg-[#82AE46] [&_.ant-pagination-item-active>a]:!text-white [&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-item:hover]:!bg-[#82AE46] [&_.ant-pagination-item:hover>a]:!text-white [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
-            />
+            <div className="flex justify-center mt-4">
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={product.reviews.length}
+                onChange={(page) => {
+                  setCurrentPage(page);
+                  // Cuộn lên đầu trang khi thay đổi trang
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                itemRender={itemRender}
+                className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
+              />
+            </div>
           </div>
         )}
       </div>

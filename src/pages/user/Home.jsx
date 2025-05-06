@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getProducts, getAllReviews } from "../../api/api";
+import { getAllReviews } from "../../services/ReviewService";
 
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
@@ -25,6 +25,7 @@ import { Carousel, Image, Rate } from "antd";
 import Favourite from "./layouts/Favourite";
 import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
 import { ZoomInOutlined } from "@ant-design/icons";
+import { getProducts } from "../../services/ProductService";
 
 const images = [
   {

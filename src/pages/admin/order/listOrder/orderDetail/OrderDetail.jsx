@@ -11,9 +11,7 @@ import PropTypes from "prop-types";
 import logo from "../../../../../assets/pictures/Green.png";
 import { useEffect, useState } from "react";
 import { createNotify } from "../../../../../services/NotifyService";
-import { refresh } from "@cloudinary/url-gen/qualifiers/artisticFilter";
 import {
-  getPaymentByOrderId,
   checkPaymentStatus,
 } from "../../../../../services/PaymentService";
 import { updateStatus } from "../../../../../services/OrderService";

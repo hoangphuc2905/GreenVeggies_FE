@@ -9,15 +9,53 @@ import { handlePaymentApi } from "../api/api";
  */
 export const createPaymentQR = async (amount, orderID, paymentMethod) => {
   try {
+    console.log(
+      "Creating payment QR for amount:",
+      amount,
+      "orderID:",
+      orderID,
+      "method:",
+      paymentMethod
+    );
+
     const response = await handlePaymentApi.createPaymentQR(
       amount,
       orderID,
       paymentMethod
     );
+
+    console.log("Payment QR API response:", response);
+
+    if (response) {
+      return {
+        qrCodeUrl: response.qrURL,
+        message: response.message,
+        paymentId: response.paymentID,
+        orderID: response.orderID,
+        paymentMethod: response.paymentMethod,
+        paymentStatus: response.paymentStatus,
+        amount: response.amount,
+        content: response.content,
+      };
+    }
     return response;
   } catch (error) {
-    console.error("Error creating payment QR code:", error);
-    throw error;
+    console.error("Error details:", error.response || error);
+    console.error("Lỗi khi tạo mã QR thanh toán:", error.message);
+
+    // Fallback: Tạo URL VietQR trực tiếp nếu API không hoạt động
+    const vietQrUrl =
+      "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
+      amount +
+      "&addInfo=Thanh%20toan%20don%20hang&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
+
+    return {
+      qrCodeUrl: vietQrUrl,
+      message: "Tạo mã QR thanh toán tạm thời.",
+      paymentId: "vietqr_" + Date.now(),
+      paymentMethod: paymentMethod || "Bank Transfer",
+      content: "TT" + Math.floor(100000 + Math.random() * 900000),
+    };
   }
 };
 
@@ -28,9 +66,13 @@ export const createPaymentQR = async (amount, orderID, paymentMethod) => {
  */
 export const checkPaymentStatus = async (paymentID) => {
   try {
-    return await handlePaymentApi.checkPaymentStatus(paymentID);
+    const response = await handlePaymentApi.checkPaymentStatus(paymentID);
+    if (!response) {
+      throw new Error("No response from payment status check");
+    }
+    return response;
   } catch (error) {
-    console.error("Error checking payment status at service:", error);
+    console.error("Error checking payment status:", error);
     throw error;
   }
 };
@@ -43,7 +85,10 @@ export const checkPaymentStatus = async (paymentID) => {
 export const getPaymentByOrderId = async (orderID) => {
   try {
     const response = await handlePaymentApi.getPaymentByOrderId(orderID);
-    return response.data.payment;
+    if (!response || !response.payment) {
+      throw new Error("No payment data found for order");
+    }
+    return response.payment;
   } catch (error) {
     console.error("Error fetching payment by order ID:", error);
     throw error;

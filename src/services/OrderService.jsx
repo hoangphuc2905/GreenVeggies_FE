@@ -73,3 +73,13 @@ export const getOrders = async () => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Thêm đơn hàng mới
+export const addOrder = async (orderData) => {
+  try {
+    const response = await handleOrderApi.addOrder(orderData);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi thêm đơn đặt hàng:", error);
+    return null;
+  }
+};

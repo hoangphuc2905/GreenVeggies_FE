@@ -8,14 +8,14 @@ import {
   faCartShopping,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
-import { getShoppingCartByUserId } from "../../../api/api";
+import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
 
 const Navbar = () => {
   const scrollToTop = () => {
     window.scrollTo(0, 0);
   };
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState(""); // Thêm trạng thái cho từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
   const isHomeActive = location.pathname === "/";
   const isProductActive = location.pathname.startsWith("/product");
@@ -27,70 +27,74 @@ const Navbar = () => {
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchQuery.trim() !== "") {
       navigate(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(""); // Reset thanh tìm kiếm về giá trị rỗng
+      setSearchQuery("");
     }
   };
 
   const [cartItemCount, setCartItemCount] = useState(0);
 
   const isLoggedIn = () => {
-    const loggedIn = Boolean(localStorage.getItem("token"));
-    console.log("Is logged in:", loggedIn);
-    return loggedIn;
+    return Boolean(localStorage.getItem("token"));
   };
+
   const fetchAndUpdateCartCount = async () => {
     const userID = localStorage.getItem("userID");
     if (userID) {
       try {
         const shoppingCart = await getShoppingCartByUserId(userID);
-        const itemCount = shoppingCart.shoppingCartDetails.length;
-        setCartItemCount(itemCount);
+        if (shoppingCart && shoppingCart.shoppingCartDetails) {
+          const itemCount = shoppingCart.shoppingCartDetails.length;
+          setCartItemCount(itemCount);
+        } else {
+          setCartItemCount(0);
+        }
       } catch (error) {
         console.error("Failed to fetch shopping cart:", error);
+        setCartItemCount(0);
       }
+    } else {
+      setCartItemCount(0);
     }
   };
-
-  window.addEventListener("wishlistUpdated", fetchAndUpdateCartCount);
 
   useEffect(() => {
     if (isLoggedIn()) {
       fetchAndUpdateCartCount();
     }
 
-    // Listen for the custom event to update the cart item count
-    const handleWishlistUpdated = (event) => {
-      const itemCount = event.detail;
-      setCartItemCount(itemCount);
-      console.log("Updated cart item count:", itemCount);
+    // Listen for cart updates
+    const handleCartUpdated = () => {
+      if (isLoggedIn()) {
+        fetchAndUpdateCartCount();
+      }
     };
 
-    window.addEventListener("wishlistUpdated", handleWishlistUpdated);
+    window.addEventListener("cartUpdated", handleCartUpdated);
 
     return () => {
-      window.removeEventListener("wishlistUpdated", handleWishlistUpdated);
+      window.removeEventListener("cartUpdated", handleCartUpdated);
     };
   }, []);
 
   const handleCartClick = (e) => {
     if (!isLoggedIn()) {
-      e.preventDefault(); // Prevent navigation
-      displayLoginForm(); // Show login form
+      e.preventDefault();
+      displayLoginForm();
     } else {
-      scrollToTop(); // Scroll to top if logged in
+      scrollToTop();
     }
   };
 
   const displayLoginForm = () => {
     alert("Bạn cần đăng nhập để xem giỏ hàng!");
   };
+
   return (
     <div className="fixed top-[50px] bg-[#f1f1f1] w-screen left-0 shadow-md z-10 px-[10%]">
       <div className="container flex justify-between items-center center mx-auto">
         <Link
           to="/"
-          className="flex items-center gap-2 text-2xl py-4 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer"
-        >
+          className="flex items-center gap-2 text-2xl py-4 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer">
           <img
             src={logoImage}
             alt="Mô tả hình ảnh"
@@ -107,8 +111,7 @@ const Navbar = () => {
                 isHomeActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/" className="font-bold" onClick={scrollToTop}>
                 TRANG CHỦ
               </Link>
@@ -120,8 +123,7 @@ const Navbar = () => {
                 isProductActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/product" className="font-bold" onClick={scrollToTop}>
                 CỬA HÀNG
               </Link>
@@ -131,8 +133,7 @@ const Navbar = () => {
                 isNewsActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/news" className="font-bold" onClick={scrollToTop}>
                 TIN TỨC
               </Link>
@@ -142,8 +143,7 @@ const Navbar = () => {
                 isBlogActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/posts" className="font-bold" onClick={scrollToTop}>
                 BÀI VIẾT
               </Link>
@@ -153,8 +153,7 @@ const Navbar = () => {
                 isContactActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/contact" className="font-bold" onClick={scrollToTop}>
                 LIÊN HỆ
               </Link>
@@ -164,13 +163,11 @@ const Navbar = () => {
                 isCartActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link
                 to={isLoggedIn() ? "/wishlist" : "#"}
                 className="font-bold"
-                onClick={handleCartClick}
-              >
+                onClick={handleCartClick}>
                 <Space size="middle">
                   <Badge count={isLoggedIn() ? cartItemCount : 0} showZero>
                     <FontAwesomeIcon
