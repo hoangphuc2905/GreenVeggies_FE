@@ -130,6 +130,9 @@ const PaymentPage = () => {
               duration: 4,
             });
 
+            // Dispatch order success event
+            window.dispatchEvent(new Event("orderSuccess"));
+
             // Navigate to order confirmation or order detail page
             setTimeout(() => {
               navigate("/user/orders");
@@ -289,7 +292,10 @@ const PaymentPage = () => {
           </Button>
           <Button
             type="primary"
-            onClick={() => navigate("/user/orders")}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              navigate("/user/orders");
+            }}
             style={{
               background: "linear-gradient(to right, #82AE46, #5A8E1B)",
               color: "white",

@@ -256,7 +256,33 @@ export const handleShoppingCartApi = {
     );
   },
 };
+//THANH TOÁN
+export const handlePaymentApi = {
+  // Tạo mã QR cho thanh toán
+  createPaymentQR: async (amount, orderID, paymentMethod) => {
+    const response = await paymentAPI.post("/payments/create-qr", {
+      amount,
+      orderID,
+      paymentMethod,
+    });
+    return response.data;
+  },
 
+  // Kiểm tra trạng thái thanh toán
+  checkPaymentStatus: async (data) => {
+    const response = await paymentAPI.post("/payments/update-status", {
+      paymentID: data,
+      newStatus: "Completed",
+    });
+    return response.data;
+  },
+
+  // Lấy danh sách thanh toán theo orderID
+  getPaymentByOrderId: async (orderID) => {
+    const response = await paymentAPI.get(`/payments/${orderID}`);
+    return response.data;
+  },
+};
 export const getListUsers = async (key) => {
   try {
     const response = await userAPI.get(`/${key}`);
@@ -395,85 +421,6 @@ export const getStockEntry = async (id) => {
     console.error("Lỗi khi lấy thông tin nhập hàng:", error);
     return null;
   }
-};
-
-//THANH TOÁN
-export const handlePaymentApi = {
-  // Tạo mã QR cho thanh toán
-  createPaymentQR: async (amount, orderID, paymentMethod) => {
-    try {
-      console.log(
-        "API call: Creating payment QR for amount:",
-        amount,
-        "orderID:",
-        orderID,
-        "method:",
-        paymentMethod
-      );
-      const response = await paymentAPI.post("/payments/create-qr", {
-        amount,
-        orderID,
-        paymentMethod,
-      });
-      console.log("Payment QR API response:", response.data);
-
-      if (response.data) {
-        return {
-          qrCodeUrl: response.data.qrURL,
-          message: response.data.message,
-          paymentId: response.data.paymentID,
-          orderID: response.data.orderID,
-          paymentMethod: response.data.paymentMethod,
-          paymentStatus: response.data.paymentStatus,
-          amount: response.data.amount,
-          content: response.data.content,
-        };
-      }
-      return response.data;
-    } catch (error) {
-      console.error("Error details:", error.response || error);
-      console.error("Lỗi khi tạo mã QR thanh toán:", error.message);
-
-      // Fallback: Tạo URL VietQR trực tiếp nếu API không hoạt động
-      const vietQrUrl =
-        "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
-        amount +
-        "&addInfo=Thanh%20toan%20don%20hang&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
-
-      return {
-        qrCodeUrl: vietQrUrl,
-        message: "Tạo mã QR thanh toán tạm thời.",
-        paymentId: "vietqr_" + Date.now(),
-        paymentMethod: paymentMethod || "Bank Transfer",
-        content: "TT" + Math.floor(100000 + Math.random() * 900000), // Add random payment content like backend
-      };
-    }
-  },
-
-  // Kiểm tra trạng thái thanh toán
-  checkPaymentStatus: async (data) => {
-    try {
-      const response = await paymentAPI.post("/payments/update-status", {
-        paymentID: data,
-        newStatus: "Completed",
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error checking payment status:", error);
-      throw error;
-    }
-  },
-
-  // Lấy danh sách thanh toán theo orderID
-  getPaymentByOrderId: async (orderID) => {
-    try {
-      const response = await paymentAPI.get(`/payments/${orderID}`);
-      return response;
-    } catch (error) {
-      console.error("Error fetching payment by order ID:", error);
-      throw error;
-    }
-  },
 };
 
 export default api;
