@@ -3,7 +3,7 @@ import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getCategoriesFromProducts } from "../../../services/ProductService";
+import { getCategories } from "../../../services/ProductService";
 
 const Menu = () => {
   const [categories, setCategories] = useState([]);
@@ -12,7 +12,7 @@ const Menu = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const categoriesData = await getCategoriesFromProducts();
+        const categoriesData = await getCategories();
         setCategories(categoriesData);
       } catch (error) {
         console.error("Failed to fetch categories:", error);

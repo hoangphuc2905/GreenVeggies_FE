@@ -120,13 +120,10 @@ export const handleProductApi = {
   },
   //Lấy danh sách danh mục
   getCategories: async () => {
-    try {
+    
       const response = await productAPI.get("/categories");
       return response.data;
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách danh mục:", error);
-      throw error;
-    }
+   
   },
   updateProduct: async (id, data) => {
     return await productAPI.put(`/products/${id}`, data);
