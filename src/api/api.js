@@ -589,19 +589,45 @@ export const getStockEntry = async (id) => {
 //Auth
 export const handleAuthApi = {
   // Đăng nhập
-  login: async (email, password) => {
-    try {
-      const response = await auth.post("/auth/login", {
-        email,
-        password,
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi khi đăng nhập:", error);
-      return null;
-    }
+  login: async (formData) => {
+    return await auth.post("/auth/login", formData);
   },
 
+// quên mật khẩu
+forgotPassword: async (email) => {
+  try {
+    // Gửi yêu cầu đến API với email dưới dạng query parameter
+    const response = await auth.post(`/auth/forgot-password?email=${encodeURIComponent(email)}`);
+    return response.data; // Trả về dữ liệu từ API
+  } catch (error) {
+    console.error("Lỗi khi gửi yêu cầu quên mật khẩu:", error);
+    // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
+    throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+  }
+},
+verifyOtp: async (email, otp) => {
+  try {
+    // Gửi email và otp dưới dạng query parameters
+    const response = await auth.post(`/auth/verify-otp-reset?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`);
+    return response.data; // Trả về dữ liệu từ API
+  } catch (error) {
+    console.error("Lỗi khi xác thực OTP:", error);
+    // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
+    throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+  }
+},
+  // Đặt lại mật khẩu
+  updatePassword: async (email, newPassword) => {
+    try {
+      // Gửi email và mật khẩu mới dưới dạng query parameters
+      const response = await auth.post(`/auth/update-password?email=${encodeURIComponent(email)}&newPassword=${encodeURIComponent(newPassword)}`);
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi cập nhật mật khẩu:", error);
+      // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
   // Đăng ký
   register: async (data) => {
     try {
@@ -613,6 +639,7 @@ export const handleAuthApi = {
     }
   },
 };
+//
 
 //THANH TOÁN
 export const handlePaymentApi = {
