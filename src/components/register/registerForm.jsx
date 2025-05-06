@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { register } from "../../services/AuthService"; // Import hàm register
 
 const SignupForm = ({ switchToLogin, email }) => {
   const [formData, setFormData] = useState({
@@ -35,19 +36,19 @@ const SignupForm = ({ switchToLogin, email }) => {
   const validateForm = () => {
     const errors = {};
 
-   // Kiểm tra số điện thoại
-  const phoneRegex = /^0\d{9}$/; // Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số
-  if (!formData.phone || !phoneRegex.test(formData.phone)) {
-    errors.phone = "Số điện thoại phải bắt đầu bằng 0 và có đúng 10 số.";
-  }
+    // Kiểm tra số điện thoại
+    const phoneRegex = /^0\d{9}$/; // Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số
+    if (!formData.phone || !phoneRegex.test(formData.phone)) {
+      errors.phone = "Số điện thoại phải bắt đầu bằng 0 và có đúng 10 số.";
+    }
 
-  // Kiểm tra tuổi (ngày sinh)
-  const currentDate = new Date();
-  const birthDate = new Date(formData.dateOfBirth);
-  const age = currentDate.getFullYear() - birthDate.getFullYear();
-  if (!formData.dateOfBirth || age < 12) {
-    errors.dateOfBirth = "Tuổi phải từ 12 trở lên.";
-  }
+    // Kiểm tra tuổi (ngày sinh)
+    const currentDate = new Date();
+    const birthDate = new Date(formData.dateOfBirth);
+    const age = currentDate.getFullYear() - birthDate.getFullYear();
+    if (!formData.dateOfBirth || age < 12) {
+      errors.dateOfBirth = "Tuổi phải từ 12 trở lên.";
+    }
 
     // Kiểm tra mật khẩu
     if (!formData.password || formData.password.length < 6) {
@@ -72,40 +73,40 @@ const SignupForm = ({ switchToLogin, email }) => {
     }
 
     try {
+      // Xử lý avatar (nếu có)
       const avatar = formData.image
         ? formData.image.name
         : "https://res.cloudinary.com/dze57n4oa/image/upload/v1741758315/e693481de2901eaee3e8746472c2a552_nle9hj.jpg";
 
-      const requestBody = {
+      // Chuẩn bị dữ liệu gửi lên API
+      const userData = {
         email: formData.email,
         username: formData.username,
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         password: formData.password,
         avatar: avatar,
+        role: formData.role || "user",
       };
 
-      const response = await fetch("http://localhost:8001/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      console.log("Dữ liệu gửi lên API:", userData); // Debug log
 
-      const data = await response.json();
+      // Gọi API đăng ký
+      const responseMessage = await register(userData);
 
-      if (response.ok) {
-        setSuccess("Đăng ký thành công!");
+      if (responseMessage) {
+        setSuccess(responseMessage);
         setTimeout(() => {
-          switchToLogin();
+          switchToLogin(); // Chuyển về trang đăng nhập
         }, 2000);
-      } else {
-        // Xử lý lỗi từ BE
-        setFormErrors(data.errors || {});
       }
-    } catch (error) {
-      setError("Lỗi kết nối, vui lòng thử lại.");
+    } catch (err) {
+      // Xử lý lỗi từ backend
+      if (err.email || err.phone || err.username || err.password) {
+        setFormErrors(err); // Hiển thị lỗi cụ thể từ backend
+      } else {
+        setError(err.server || "Lỗi kết nối, vui lòng thử lại."); // Lỗi chung
+      }
     } finally {
       setLoading(false);
     }
@@ -115,7 +116,8 @@ const SignupForm = ({ switchToLogin, email }) => {
     <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
       <button
         onClick={switchToLogin}
-        className="absolute top-4 left-4 flex items-center text-green-700 hover:text-green-900 transition">
+        className="absolute top-4 left-4 flex items-center text-green-700 hover:text-green-900 transition"
+      >
         <ArrowLeft size={24} className="mr-2" />
         Quay lại
       </button>
@@ -234,7 +236,8 @@ const SignupForm = ({ switchToLogin, email }) => {
           <button
             type="submit"
             className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
-            disabled={loading}>
+            disabled={loading}
+          >
             {loading ? "Đang đăng ký..." : "Đăng ký"}
           </button>
         </form>

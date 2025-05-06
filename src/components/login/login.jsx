@@ -1,9 +1,8 @@
 import { notification } from "antd"; // Import notification từ Ant Design
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from "../../redux/userSlice";
-import { getUserInfo } from "../../api/api";
+import { login } from "../../services/AuthService";
 
 const LoginForm = ({
   closeLoginForm,
@@ -34,51 +33,37 @@ const LoginForm = ({
     setErrors({}); // Reset lỗi trước khi gửi
   
     try {
-      const response = await fetch(`http://localhost:8001/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.username,
-          password: formData.password,
-        }),
+      // Gọi hàm login từ AuthService
+      const data = await login({
+        email: formData.username,
+        password: formData.password,
       });
   
-      const data = await response.json();
+      const role = data.user.role;
+      setUserRole(role);
+      onLoginSuccess(data);
   
-      if (response.ok) {
-        const role = data.user.role;
-        setUserRole(role);
-        onLoginSuccess(data);
+      // Lưu thông tin người dùng vào localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userID", data.user.id);
+      localStorage.setItem("role", role);
   
-        // Lưu thông tin người dùng vào localStorage
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userID", data.user.id);
-        localStorage.setItem("role", role);
+      // Hiển thị thông báo đăng nhập thành công
+      notification.success({
+        message: "Đăng nhập thành công",
+        description: "Chào mừng bạn đã quay lại!",
+        placement: "topRight",
+        duration: 3,
+      });
   
-        // Hiển thị thông báo đăng nhập thành công
-        notification.success({
-          message: "Đăng nhập thành công",
-          description: "Chào mừng bạn đã quay lại!",
-          placement: "topRight",
-          duration: 3,
-        });
+      closeLoginForm();
   
-        closeLoginForm();
-  
-        // Tải lại trang sau khi đăng nhập thành công
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000); // Đợi 1 giây để hiển thị thông báo trước khi tải lại
-      } else {
-        // Xử lý lỗi từ BE
-        setErrors(data.errors || {});
-      }
+      // Tải lại trang sau khi đăng nhập thành công
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); // Đợi 1 giây để hiển thị thông báo trước khi tải lại
     } catch (err) {
-      setErrors({
-        server: "Lỗi kết nối. Vui lòng thử lại.",
-      });
+      setErrors(err || { server: "Lỗi kết nối. Vui lòng thử lại." });
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useRef, useState } from "react";
+import { verifyOtpforRegister } from "../../services/AuthService"; // Import hàm verifyOtp từ AuthService
 
 const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -34,6 +35,9 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
     setLoading(true);
     setErrors({}); // Reset lỗi trước khi gửi
 
+    // Lấy email từ localStorage
+    const email = localStorage.getItem("verifiedEmail");
+
     // Gộp OTP thành chuỗi
     const otpValue = otp.join("");
 
@@ -45,31 +49,23 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
     }
 
     try {
-      const response = await fetch(
-        `http://localhost:8001/api/auth/verify-otp?email=${encodeURIComponent(
-          email
-        )}&otp=${otpValue}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Gọi API xác thực OTP
+      const response = await verifyOtpforRegister(email, otpValue);
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response) {
+        // Đóng form OTP và mở form đăng ký
         closeOtpFormdk();
-        openSignupForm(email); // Mở form đăng ký
-      } else {
-        // Xử lý lỗi từ BE
-        setErrors(data.errors || {});
+        openSignupForm(email); // Mở form đăng ký và truyền email
       }
     } catch (err) {
-      setErrors({
-        server: "Lỗi kết nối. Vui lòng thử lại.",
-      });
+      // Xử lý lỗi từ backend hoặc lỗi kết nối
+      if (err.otp) {
+        setErrors({ otp: err.otp }); // Hiển thị lỗi OTP không hợp lệ
+      } else if (err.server) {
+        setErrors({ server: err.server }); // Hiển thị lỗi server từ backend
+      } else {
+        setErrors({ server: err.message || "Lỗi kết nối. Vui lòng thử lại." });
+      }
     } finally {
       setLoading(false);
     }
@@ -129,7 +125,6 @@ const OtpFormdk = ({ goBack, closeOtpFormdk, openSignupForm, email }) => {
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 className="w-12 h-12 text-center border-2 border-gray-300 rounded-lg"
                 maxLength="1"
-            
               />
             ))}
           </div>
