@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useSearchParams } from "react-router-dom";
-
 import Menu from "../layouts/Menu";
 import bgImage from "../../../assets/pictures/bg_1.png";
-
 import Favourite from "../layouts/Favourite";
 import ListProduct from "../layouts/ListProduct";
-import FilterPrice from "../layouts/FilterPrice"; // Import FilterPrice từ layout
+import FilterPrice from "../layouts/FilterPrice";
+import { getProducts } from "../../../services/ProductService";
+import { Card, Typography } from "antd";
+import { Link } from "react-router-dom";
+import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 
 const Page = () => {
   const [minPrice, setMinPrice] = useState(0);
@@ -20,22 +21,18 @@ const Page = () => {
   const searchQuery = searchParams.get("search") || "";
   const [products, setProducts] = useState([]);
 
-  const API_URL = import.meta.env.VITE_API_PRODUCT_URL;
-
-  const fetchProducts = () => {
-    axios
-      .get(`${API_URL}/products`)
-      .then((response) => {
-        setProducts(response.data);
-      })
-      .catch((error) => {
-        console.error("Lỗi khi lấy dữ liệu!", error);
-      });
+  const fetchProducts = async () => {
+    try {
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu!", error);
+    }
   };
 
   useEffect(() => {
     fetchProducts();
-  }, [API_URL]);
+  }, []);
 
   useEffect(() => {
     const handleCartUpdated = () => {

@@ -237,8 +237,12 @@ const ListProduct = ({
                 color="#82AE46"
                 style={{ display: product.discount ? "block" : "none" }}>
                 <Card
-                  hoverable
-                  className="h-[300px] relative hover:scale-105 transition-all duration-300"
+                  hoverable={product.status !== "out_of_stock"}
+                  className={`h-[300px] relative transition-all duration-300 ${
+                    product.status === "out_of_stock"
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:scale-105"
+                  }`}
                   cover={
                     <div className="relative h-[150px] group">
                       <img
@@ -250,33 +254,35 @@ const ListProduct = ({
                         alt={product.name}
                         className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-50"
                       />
-                      <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                        <Link
-                          to={`/product/${product._id}`}
-                          state={{ productID: product.productID }}
-                          className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
-                          <EyeOutlined className="text-2xl" />
-                          <Typography.Text className="text-xs mt-2 text-center">
-                            Xem chi tiết
-                          </Typography.Text>
-                        </Link>
+                      {product.status !== "out_of_stock" && (
+                        <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                          <Link
+                            to={`/product/${product._id}`}
+                            state={{ productID: product.productID }}
+                            className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                            <EyeOutlined className="text-2xl" />
+                            <Typography.Text className="text-xs mt-2 text-center">
+                              Xem chi tiết
+                            </Typography.Text>
+                          </Link>
 
-                        <button
-                          onClick={() =>
-                            product.quantity > 0 && addToWishlist(product)
-                          }
-                          disabled={product.quantity === 0}
-                          className={`flex flex-col items-center ${
-                            product.quantity === 0
-                              ? "text-gray-300 cursor-not-allowed"
-                              : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                          }`}>
-                          <ShoppingCartOutlined className="text-2xl" />
-                          <Typography.Text className="text-xs mt-2">
-                            Thêm vào giỏ hàng
-                          </Typography.Text>
-                        </button>
-                      </div>
+                          <button
+                            onClick={() =>
+                              product.quantity > 0 && addToWishlist(product)
+                            }
+                            disabled={product.quantity === 0}
+                            className={`flex flex-col items-center ${
+                              product.quantity === 0
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
+                            }`}>
+                            <ShoppingCartOutlined className="text-2xl" />
+                            <Typography.Text className="text-xs mt-2">
+                              Thêm vào giỏ hàng
+                            </Typography.Text>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   }>
                   <Card.Meta
@@ -286,6 +292,11 @@ const ListProduct = ({
                         className="font-bold text-center block"
                         style={{ textAlign: "center", width: "100%" }}>
                         {product.name}
+                        {product.status === "out_of_stock" && (
+                          <div className="text-red-500 text-sm mt-1">
+                            Hết hàng
+                          </div>
+                        )}
                       </Typography.Text>
                     }
                     description={
