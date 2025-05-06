@@ -386,33 +386,6 @@ export const updateOrderStatus = async (orderID, status) => {
     return null;
   }
 };
-
-// 🟢 Lấy tất cả sản phẩm
-export const getAllProducts = async () => {
-  try {
-    const response = await api.get("/products");
-    console.log("API response:", response.data); // In ra dữ liệu trả về từ API
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách tất cả sản phẩm:", error);
-    return [];
-  }
-};
-
-// 🟢 Lấy danh sách danh mục từ sản phẩm
-export const getCategoriesFromProducts = async () => {
-  try {
-    const products = await getAllProducts();
-    const categories = [
-      ...new Set(products.map((product) => product.category)),
-    ];
-    return categories;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách danh mục từ sản phẩm:", error);
-    return [];
-  }
-};
-
 // 🟢 Lấy thông tin nhập hàng
 export const getStockEntry = async (id) => {
   try {
