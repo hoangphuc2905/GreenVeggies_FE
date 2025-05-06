@@ -17,7 +17,7 @@ const Page = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
-  const [products, setProducts] = useState([]);
+  const [, setProducts] = useState([]);
 
   const fetchProducts = async () => {
     try {

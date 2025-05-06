@@ -1,5 +1,5 @@
 // Add notification to imports at the top
-import { Divider, InputNumber, notification, Checkbox } from "antd";
+import { Divider, InputNumber, notification, Checkbox, Spin } from "antd";
 import bgImage from "../../../assets/pictures/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -17,9 +17,11 @@ const Cart = () => {
   const [wishlist, setWishlist] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchWishlist = async () => {
+      setLoading(true);
       const userID = localStorage.getItem("userID");
       console.log("UserID:", userID); // Debugging statement
       if (userID) {
@@ -49,6 +51,8 @@ const Cart = () => {
           }
         } catch (error) {
           console.error("Failed to fetch wishlist:", error);
+        } finally {
+          setLoading(false);
         }
       }
     };
@@ -249,81 +253,88 @@ const Cart = () => {
           </div>
 
           {/* Danh sách sản phẩm */}
-          {mergedWishlist.map((item, index) => (
-            <div key={item.productID}>
-              <div className="grid grid-cols-7 items-center p-4 font-semibold cursor-pointer">
-                <div className="col-span-1 flex justify-center">
-                  <FontAwesomeIcon
-                    icon={faXmark}
-                    className="text-lg cursor-pointer border"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromWishlist(item.shoppingCartDetailID);
-                    }}
-                  />
-                </div>
+          <Spin
+            spinning={loading}
+            tip="Đang tải giỏ hàng..."
+            className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
+            {mergedWishlist.map((item, index) => (
+              <div key={item.productID}>
+                <div className="grid grid-cols-7 items-center p-4 font-semibold cursor-pointer">
+                  <div className="col-span-1 flex justify-center">
+                    <FontAwesomeIcon
+                      icon={faXmark}
+                      className="text-lg cursor-pointer border"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFromWishlist(item.shoppingCartDetailID);
+                      }}
+                    />
+                  </div>
 
-                <div
-                  className="col-span-2 flex items-center gap-4"
-                  onClick={() => handleProductClick(item)}>
-                  <img
-                    src={
-                      Array.isArray(item.imageUrl) && item.imageUrl.length > 0
-                        ? item.imageUrl[0]
-                        : item.imageUrl
-                    }
-                    alt={item.name}
-                    className="w-[80px] h-auto"
-                  />
-                  <p className="max-w-[300px] break-words">
-                    {item.name || "No name available"}
-                  </p>
-                </div>
-
-                <div className="col-span-1 text-center">
-                  {(CalcPrice(item.price) || 0).toLocaleString()} VND
-                </div>
-                <div className="col-span-1 text-center">
-                  <InputNumber
-                    min={0}
-                    value={item.quantity}
-                    onChange={(value) => {
-                      if (value === null || value < 0) {
-                        console.error("Invalid value:", value);
-                        return;
+                  <div
+                    className="col-span-2 flex items-center gap-4"
+                    onClick={() => handleProductClick(item)}>
+                    <img
+                      src={
+                        Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+                          ? item.imageUrl[0]
+                          : item.imageUrl
                       }
-                      handleQuantityChange(
-                        item.shoppingCartID,
-                        item.productID,
-                        value
-                      );
-                    }}
-                  />
-                </div>
-                <div className="col-span-1 text-center">
-                  {(
-                    (CalcPrice(item.price) || 0) * item.quantity
-                  ).toLocaleString()}{" "}
-                  VND
-                </div>
-                <div className="col-span-1 flex justify-center">
-                  <Checkbox
-                    checked={selectedItems.includes(item.shoppingCartDetailID)}
-                    onChange={(e) =>
-                      handleSelectItem(
-                        item.shoppingCartDetailID,
-                        e.target.checked
-                      )
-                    }
-                  />
-                </div>
-              </div>
+                      alt={item.name}
+                      className="w-[80px] h-auto"
+                    />
+                    <p className="max-w-[300px] break-words">
+                      {item.name || "No name available"}
+                    </p>
+                  </div>
 
-              {index < mergedWishlist.length - 1 && (
-                <Divider style={{ borderColor: "#7cb305" }} />
-              )}
-            </div>
-          ))}
+                  <div className="col-span-1 text-center">
+                    {(CalcPrice(item.price) || 0).toLocaleString()} VND
+                  </div>
+                  <div className="col-span-1 text-center">
+                    <InputNumber
+                      min={0}
+                      value={item.quantity}
+                      onChange={(value) => {
+                        if (value === null || value < 0) {
+                          console.error("Invalid value:", value);
+                          return;
+                        }
+                        handleQuantityChange(
+                          item.shoppingCartID,
+                          item.productID,
+                          value
+                        );
+                      }}
+                    />
+                  </div>
+                  <div className="col-span-1 text-center">
+                    {(
+                      (CalcPrice(item.price) || 0) * item.quantity
+                    ).toLocaleString()}{" "}
+                    VND
+                  </div>
+                  <div className="col-span-1 flex justify-center">
+                    <Checkbox
+                      checked={selectedItems.includes(
+                        item.shoppingCartDetailID
+                      )}
+                      onChange={(e) =>
+                        handleSelectItem(
+                          item.shoppingCartDetailID,
+                          e.target.checked
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+
+                {index < mergedWishlist.length - 1 && (
+                  <Divider style={{ borderColor: "#7cb305" }} />
+                )}
+              </div>
+            ))}
+          </Spin>
         </div>
 
         <Divider style={{ borderColor: "#7cb305" }} />

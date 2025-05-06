@@ -8,6 +8,7 @@ import {
   Badge,
   Typography,
   Empty,
+  Spin,
 } from "antd";
 import PropTypes from "prop-types";
 
@@ -32,6 +33,7 @@ const ListProductByCatelogyID = ({
 
   useEffect(() => {
     const filterProductsByCategory = () => {
+      setLoading(true);
       const filteredProducts = allProducts.filter((product) => {
         return (
           product.category._id === categoryId &&
@@ -114,9 +116,10 @@ const ListProductByCatelogyID = ({
       <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer px-4">
         Sản phẩm thuộc danh mục: {products[0]?.category?.name}
       </h2>
-      {loading ? (
-        <p>Đang tải...</p>
-      ) : (
+      <Spin
+        spinning={loading}
+        tip="Đang tải sản phẩm..."
+        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
         <List
           grid={{ gutter: 16, column: 4 }}
           className="px-2"
@@ -234,7 +237,7 @@ const ListProductByCatelogyID = ({
             );
           }}
         />
-      )}
+      </Spin>
 
       <div className="w-full flex justify-center mt-6">
         <Pagination
