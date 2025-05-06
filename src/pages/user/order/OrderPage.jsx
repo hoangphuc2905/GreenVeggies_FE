@@ -12,10 +12,11 @@ import { useState, useEffect } from "react";
 import {
   getUserInfo,
   getShoppingCartByUserId,
-  getProductById,
+
   deleteShoppingCartDetailById,
   addOrder,
 } from "../../../api/api";
+import { getProductById } from "../../../services/ProductService";
 import { useNavigate } from "react-router-dom";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 import { createNotify } from "../../../services/NotifyService";

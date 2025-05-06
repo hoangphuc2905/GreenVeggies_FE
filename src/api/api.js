@@ -245,18 +245,6 @@ export const getProducts = async () => {
 };
 
 
-
-// Hàm lấy thông tin sản phẩm cụ thể theo id
-export const getUserById = async (userID) => {
-  try {
-    const response = await userAPI.get(`/users/${userID}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin người dùng:", error);
-    return null;
-  }
-};
-
 // 🟢 Lấy giỏ hàng theo userID
 export const getShoppingCartByUserId = async (userID) => {
   try {
