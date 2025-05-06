@@ -16,6 +16,7 @@ import {
 } from "../../../../../services/PaymentService";
 import { updateStatus } from "../../../../../services/OrderService";
 import { getProductById } from "../../../../../services/ProductService";
+import { formattedPrice } from "../../../../../components/calcSoldPrice/CalcPrice";
 
 const calculateShippingFee = (
   orderTotal,
@@ -47,7 +48,7 @@ const formattedDate = (dateString) => {
   const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
   const year = date.getFullYear();
 
-  const hours = String;
+  const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   const seconds = String(date.getSeconds()).padStart(2, "0");
 
@@ -125,6 +126,30 @@ const OrderDetail = ({
       // Xử lý lỗi nếu cần
     }
   };
+
+  //Thông báo hủy đơn
+  const sendCancelNotify = async (orderID, reason) => {
+    try {
+      const formData = {
+        senderType: "admin",
+        senderUserID: userID,
+        receiverID: customerID,
+        title: "Thông báo đơn hàng",
+        message: `Đơn hàng ${orderID} của bạn đã bị hủy.\nLý do: ${reason}`,
+        type: "order",
+        orderID: orderID,
+      };
+      const response = await createNotify(formData);
+      if (response) {
+        console.log("Thông báo đã được gửi thành công:", response);
+      }
+      // Thực hiện các hành động khác nếu cần
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo:", error);
+      // Xử lý lỗi nếu cần
+    }
+  };
+
   //Kiểm tra tình trạng sản phẩm
   const checkProductAvailability = async (orderDetails) => {
     try {
@@ -271,6 +296,8 @@ const OrderDetail = ({
           Modal.success({
             content: "Đơn hàng đã được hủy thành công.",
           });
+
+          await sendCancelNotify(order.orderID, reason.toString()); // Gửi thông báo sau khi hủy đơn hàng
           setTimeout(() => {
             refreshOrders();
             onClose();
@@ -334,13 +361,19 @@ const OrderDetail = ({
       dataIndex: "price",
       key: "price",
       width: 100,
-      render: (text) => `${text.toLocaleString()} VNĐ`,
+      render: (text) => {
+        const format = formattedPrice(text); // Sử dụng hàm formattedPrice để định dạng
+        return <span>{format}</span>; // Trả về giá đã định dạng
+      },
     },
     {
       title: "Thành tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      render: (text) => `${text.toLocaleString()} VNĐ`,
+      render: (text) => {
+        const format = formattedPrice(text); // Sử dụng hàm formattedPrice để định dạng
+        return <span>{format}</span>; // Trả về giá đã định dạng
+      },
     },
   ];
 
@@ -538,7 +571,7 @@ const OrderDetail = ({
           </Descriptions.Item>
           <Descriptions.Item label="Tổng tiền sản phẩm">
             <span className="font-bold">
-              {totalProductPrice.toLocaleString()} đ
+              {formattedPrice(totalProductPrice)}
             </span>
           </Descriptions.Item>
           <Descriptions.Item label="Ghi chú">
@@ -546,7 +579,7 @@ const OrderDetail = ({
           </Descriptions.Item>
           <Descriptions.Item label="Tổng tiền hóa đơn">
             <span className="font-bold">
-              {order.totalAmount.toLocaleString()} đ
+              {formattedPrice(order.totalAmount)}
             </span>
           </Descriptions.Item>
         </Descriptions>
