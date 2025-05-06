@@ -1,5 +1,6 @@
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react"; // Import the left arrow icon
+import { useState } from "react";
+import { sendOtp } from "../../services/AuthService";
 
 const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
   const [email, setEmail] = useState("");
@@ -38,30 +39,22 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
     setErrors({}); // Reset lỗi trước khi gửi
 
     try {
-      const response = await fetch(
-        `http://localhost:8001/api/auth/send-otp?email=${encodeURIComponent(email)}`,
-        {
-          method: "POST",
-          headers: {
-            accept: "*/*",
-          },
-        }
-      );
+      // Gọi hàm gửi OTP từ AuthService
+      const message = await sendOtp(email);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Mở form OTP và truyền email
-        closeRegisterForm();
-        openOtpFormdk(email);
-      } else {
-        // Xử lý lỗi từ BE
-        setErrors(data.errors || {});
-      }
+      // Nếu thành công, lưu email và mở form OTP
+      localStorage.setItem("verifiedEmail", email);
+      closeRegisterForm();
+      openOtpFormdk(email);
     } catch (err) {
-      setErrors({
-        server: "Lỗi kết nối. Vui lòng thử lại.",
-      });
+      // Hiển thị lỗi từ backend hoặc lỗi kết nối
+      if (err.email) {
+        setErrors({ email: err.email }); // Lỗi email không hợp lệ
+      } else if (err.server) {
+        setErrors({ server: err.server }); // Lỗi server từ backend
+      } else {
+        setErrors({ server: err.message || "Lỗi kết nối. Vui lòng thử lại." });
+      }
     } finally {
       setLoading(false);
     }
@@ -138,10 +131,7 @@ const RegisterForm = ({ goBack, closeRegisterForm, openOtpFormdk }) => {
         </form>
 
         <div className="text-center text-sm text-gray-500 mt-2">
-          <button
-            onClick={goBack}
-            className="text-green-500 hover:underline"
-          >
+          <button onClick={goBack} className="text-green-500 hover:underline">
             Quay lại trang đăng nhập
           </button>
         </div>

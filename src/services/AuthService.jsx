@@ -1,20 +1,69 @@
 import { handleAuthApi } from "../api/api";
 
+export const sendOtp = async (email) => {
+  try {
+    const response = await handleAuthApi.sendOtp(email);
+    if (response && response.message) {
+      return response.message; // Trả về thông báo từ backend
+    }
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    throw { message: "Phản hồi từ API không hợp lệ." };
+  } catch (error) {
+    if (error.email) {
+      throw { email: error.email }; // Lỗi email không hợp lệ
+    } else if (error.server) {
+      throw { server: error.server }; // Lỗi server từ backend
+    } else {
+      console.error("Lỗi khi gọi API sendOtp:", error);
+      throw { message: error.message || "Lỗi kết nối đến máy chủ!" };
+    }
+  }
+};
+
+export const verifyOtpforRegister = async (email, otp) => {
+  try {
+    const response = await handleAuthApi.verifyOtpforRegister(email, otp);
+    if (response && response.message) {
+      return response.message; // Trả về thông báo từ backend nếu OTP hợp lệ
+    }
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    throw { message: "Phản hồi từ API không hợp lệ." };
+  } catch (error) {
+    if (error.errors?.otp) {
+      throw { otp: error.errors.otp }; // Lỗi OTP không hợp lệ hoặc đã hết hạn
+    } else if (error.errors?.server) {
+      throw { server: error.errors.server }; // Lỗi server từ backend
+    } else {
+      console.error("Lỗi khi gọi API verifyOtp:", error);
+      throw { message: error.message || "Lỗi kết nối đến máy chủ!" };
+    }
+  }
+};
+
 export const register = async (userData) => {
   try {
     const response = await handleAuthApi.register(userData);
-    if (response && response.data) {
-      return response.data; // Trả về dữ liệu người dùng đã đăng ký
+    if (response && response.message) {
+      return response.message; // Trả về thông báo từ backend
     }
     console.error("API không trả về dữ liệu hợp lệ:", response);
     return null;
   } catch (error) {
-    if (error.response && error.response.data) {
-      // Ném lỗi chứa danh sách lỗi từ BE
-      throw error.response.data.errors;
+    // Xử lý lỗi cụ thể từ backend
+    if (error.errors?.email) {
+      throw { email: error.errors.email }; // Lỗi email chưa xác thực OTP
+    } else if (error.errors?.username) {
+      throw { username: error.errors.username }; // Lỗi tên người dùng không hợp lệ
+    } else if (error.errors?.phone) {
+      throw { phone: error.errors.phone }; // Lỗi số điện thoại không hợp lệ
+    } else if (error.errors?.password) {
+      throw { password: error.errors.password }; // Lỗi mật khẩu không hợp lệ
+    } else if (error.errors?.server) {
+      throw { server: error.errors.server }; // Lỗi server từ backend
+    } else {
+      console.error("Lỗi khi gọi API register:", error);
+      throw new Error(error.message || "Lỗi kết nối đến máy chủ!");
     }
-    console.error("Lỗi khi gọi API register:", error);
-    throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
 
@@ -35,9 +84,9 @@ export const login = async (formData) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
-export const forgotPassword = async (email) => {
+export const forgotPassword = async (emailqmk) => {
   try {
-    const response = await handleAuthApi.forgotPassword(email);
+    const response = await handleAuthApi.forgotPassword(emailqmk);
     if (response && response.message) {
       return response.message; // Trả về thông báo từ backend
     }
@@ -56,9 +105,9 @@ export const forgotPassword = async (email) => {
     }
   }
 };
-export const verifyOtp = async (email, otp) => {
+export const verifyOtp = async (emailqmk, otp) => {
   try {
-    const response = await handleAuthApi.verifyOtp(email, otp);
+    const response = await handleAuthApi.verifyOtp(emailqmk, otp);
     if (response && response.message) {
       return response.message; // Trả về thông báo từ backend
     }
@@ -75,9 +124,9 @@ export const verifyOtp = async (email, otp) => {
     }
   }
 };
-export const updatePassword = async (email, newPassword) => {
+export const updatePassword = async (emailqmk, newPassword) => {
   try {
-    const response = await handleAuthApi.updatePassword(email, newPassword);
+    const response = await handleAuthApi.updatePassword(emailqmk, newPassword);
     if (response && response.message) {
       return response.message; // Trả về thông báo từ backend
     }
@@ -93,6 +142,29 @@ export const updatePassword = async (email, newPassword) => {
     } else {
       console.error("Lỗi khi gọi API updatePassword:", error);
       throw new Error(error.message || "Lỗi kết nối đến máy chủ!");
+    }
+  }
+};
+export const changePassword = async (email, oldPassword, newPassword) => {
+  try {
+    const response = await handleAuthApi.changePassword(email, oldPassword, newPassword);
+    if (response && response.message) {
+      return response.message; // Trả về thông báo từ backend
+    }
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    throw { message: "Phản hồi từ API không hợp lệ." };
+  } catch (error) {
+    if (error.errors?.email) {
+      throw { email: error.errors.email }; // Lỗi email không hợp lệ
+    } else if (error.errors?.oldPassword) {
+      throw { oldPassword: error.errors.oldPassword }; // Lỗi mật khẩu cũ không hợp lệ
+    } else if (error.errors?.newPassword) {
+      throw { newPassword: error.errors.newPassword }; // Lỗi mật khẩu mới không hợp lệ
+    } else if (error.errors?.server) {
+      throw { server: error.errors.server }; // Lỗi server từ backend
+    } else {
+      console.error("Lỗi khi gọi API changePassword:", error);
+      throw { message: error.message || "Lỗi kết nối đến máy chủ!" };
     }
   }
 };

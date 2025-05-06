@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
 import { updatePassword } from "../../services/AuthService"; // Import hàm updatePassword từ AuthService
 
 const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
@@ -87,16 +87,26 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
       </div>
 
       <div className="w-full md:w-1/2 p-6">
-        <h2 className="text-xl font-bold text-green-700 text-center">GREENVEGGIES</h2>
-        <h3 className="text-xl font-bold mb-4 text-black text-center">Đặt lại mật khẩu</h3>
-        <p className="text-center text-gray-500 mb-3">Nhập mật khẩu mới cho tài khoản</p>
-        <p className="text-center text-gray-500 mb-3">Email: {emailqmk || "Không có email được truyền"}</p>
+        <h2 className="text-xl font-bold text-green-700 text-center">
+          GREENVEGGIES
+        </h2>
+        <h3 className="text-xl font-bold mb-4 text-black text-center">
+          Đặt lại mật khẩu
+        </h3>
+        <p className="text-center text-gray-500 mb-3">
+          Nhập mật khẩu mới cho tài khoản
+        </p>
+        <p className="text-center text-gray-500 mb-3">
+          Email: {emailqmk || "Không có email được truyền"}
+        </p>
 
         {/* Hiển thị lỗi từ BE */}
         {error && <div className="text-red-500 text-center mb-3">{error}</div>}
 
         {/* Hiển thị thông báo thành công */}
-        {success && <div className="text-green-500 text-center mb-3">{success}</div>}
+        {success && (
+          <div className="text-green-500 text-center mb-3">{success}</div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -111,7 +121,9 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
               } rounded-lg bg-gray-100`}
             />
             {formErrors.newPassword && (
-              <div className="text-red-500 text-sm">{formErrors.newPassword}</div>
+              <div className="text-red-500 text-sm">
+                {formErrors.newPassword}
+              </div>
             )}
           </div>
 
@@ -123,11 +135,15 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Xác nhận mật khẩu mới"
               className={`w-full p-2 border ${
-                formErrors.confirmPassword ? "border-red-500" : "border-gray-300"
+                formErrors.confirmPassword
+                  ? "border-red-500"
+                  : "border-gray-300"
               } rounded-lg bg-gray-100`}
             />
             {formErrors.confirmPassword && (
-              <div className="text-red-500 text-sm">{formErrors.confirmPassword}</div>
+              <div className="text-red-500 text-sm">
+                {formErrors.confirmPassword}
+              </div>
             )}
           </div>
 

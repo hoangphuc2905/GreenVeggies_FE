@@ -146,6 +146,10 @@ export const handleUserApi = {
   getUsers: async () => {
     return await userAPI.get("/user");
   },
+  //Cập nhật thông tin người dùng
+  updateUserInfo: async (userID, data) => {
+    return await userAPI.put(`/user/${userID}`, data);
+  },
 };
 
 //THÔNG BÁO
@@ -593,34 +597,44 @@ export const handleAuthApi = {
     return await auth.post("/auth/login", formData);
   },
 
-// quên mật khẩu
-forgotPassword: async (email) => {
-  try {
-    // Gửi yêu cầu đến API với email dưới dạng query parameter
-    const response = await auth.post(`/auth/forgot-password?email=${encodeURIComponent(email)}`);
-    return response.data; // Trả về dữ liệu từ API
-  } catch (error) {
-    console.error("Lỗi khi gửi yêu cầu quên mật khẩu:", error);
-    // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
-    throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
-  }
-},
-verifyOtp: async (email, otp) => {
-  try {
-    // Gửi email và otp dưới dạng query parameters
-    const response = await auth.post(`/auth/verify-otp-reset?email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`);
-    return response.data; // Trả về dữ liệu từ API
-  } catch (error) {
-    console.error("Lỗi khi xác thực OTP:", error);
-    // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
-    throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
-  }
-},
+  // quên mật khẩu
+  forgotPassword: async (emailqmk) => {
+    try {
+      // Gửi yêu cầu đến API với email dưới dạng query parameter
+      const response = await auth.post(
+        `/auth/forgot-password?email=${encodeURIComponent(emailqmk)}`
+      );
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi gửi yêu cầu quên mật khẩu:", error);
+      // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+  verifyOtp: async (emailqmk, otp) => {
+    try {
+      // Gửi email và otp dưới dạng query parameters
+      const response = await auth.post(
+        `/auth/verify-otp-reset?email=${encodeURIComponent(
+          emailqmk
+        )}&otp=${encodeURIComponent(otp)}`
+      );
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi xác thực OTP:", error);
+      // Ném lỗi từ backend nếu có, hoặc trả về lỗi mặc định
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
   // Đặt lại mật khẩu
-  updatePassword: async (email, newPassword) => {
+  updatePassword: async (emailqmk, newPassword) => {
     try {
       // Gửi email và mật khẩu mới dưới dạng query parameters
-      const response = await auth.post(`/auth/update-password?email=${encodeURIComponent(email)}&newPassword=${encodeURIComponent(newPassword)}`);
+      const response = await auth.post(
+        `/auth/update-password?email=${encodeURIComponent(
+          emailqmk
+        )}&newPassword=${encodeURIComponent(newPassword)}`
+      );
       return response.data; // Trả về dữ liệu từ API
     } catch (error) {
       console.error("Lỗi khi cập nhật mật khẩu:", error);
@@ -628,18 +642,100 @@ verifyOtp: async (email, otp) => {
       throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
     }
   },
-  // Đăng ký
-  register: async (data) => {
+
+  //dk
+  // Gửi mã OTP đến email
+  sendOtp: async (email) => {
     try {
-      const response = await auth.post("/auth/register", data);
-      return response.data;
+      const response = await auth.post(
+        `/auth/send-otp?email=${encodeURIComponent(email)}`
+      );
+      return response.data; // Trả về dữ liệu từ API
     } catch (error) {
-      console.error("Lỗi khi đăng ký:", error);
-      return null;
+      console.error("Lỗi khi gửi OTP:", error);
+
+      if (error.response) {
+        // Ném lỗi từ backend
+        throw (
+          error.response.data || {
+            message: "Không thể gửi mã OTP. Vui lòng thử lại.",
+          }
+        );
+      } else {
+        // Ném lỗi kết nối hoặc lỗi không xác định
+        throw { message: "Lỗi kết nối đến máy chủ!" };
+      }
+    }
+  },
+
+  // Xác thực OTP
+  verifyOtpforRegister: async (email, otp) => {
+    try {
+      const response = await auth.post(
+        `/auth/verify-otp?email=${encodeURIComponent(
+          email
+        )}&otp=${encodeURIComponent(otp)}`
+      );
+      return response.data; // Trả về thông báo từ API
+    } catch (error) {
+      console.error("Lỗi khi xác thực OTP:", error);
+
+      // Kiểm tra lỗi từ backend
+      if (error.response) {
+        console.error("Phản hồi từ backend:", error.response.data);
+        throw error.response.data; // Ném lỗi từ backend
+      }
+
+      // Lỗi kết nối hoặc lỗi không xác định
+      throw { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+  changePassword: async (email, oldPassword, newPassword) => {
+    try {
+      const response = await auth.post(
+        `/auth/change-password?email=${encodeURIComponent(email)}&oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`
+      );
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi đổi mật khẩu:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+  getAddressesByUserId: async (userID) => {
+    try {
+      const response = await address.get(`/address`, {
+        params: { userID },
+      });
+      return response.data; // Trả về danh sách địa chỉ
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách địa chỉ:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+
+  // Thêm địa chỉ mới
+  addNewAddress: async (addressData) => {
+    try {
+      const response = await address.post("/address", addressData);
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi thêm địa chỉ:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+
+  // Đăng ký tài khoản
+  register: async (userData) => {
+    try {
+      const response = await auth.post(`/auth/register`, userData);
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi đăng ký tài khoản:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
     }
   },
 };
-//
+//dang ky
 
 //THANH TOÁN
 export const handlePaymentApi = {
