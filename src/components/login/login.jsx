@@ -1,9 +1,7 @@
 import { notification } from "antd"; // Import notification từ Ant Design
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from "../../redux/userSlice";
-import { getUserInfo } from "../../api/api";
 
 const LoginForm = ({
   closeLoginForm,
@@ -32,7 +30,7 @@ const LoginForm = ({
     e.preventDefault();
     setLoading(true);
     setErrors({}); // Reset lỗi trước khi gửi
-  
+
     try {
       const response = await fetch(`http://localhost:8001/api/auth/login`, {
         method: "POST",
@@ -44,19 +42,19 @@ const LoginForm = ({
           password: formData.password,
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         const role = data.user.role;
         setUserRole(role);
         onLoginSuccess(data);
-  
+
         // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("token", data.token);
         localStorage.setItem("userID", data.user.id);
         localStorage.setItem("role", role);
-  
+
         // Hiển thị thông báo đăng nhập thành công
         notification.success({
           message: "Đăng nhập thành công",
@@ -64,9 +62,9 @@ const LoginForm = ({
           placement: "topRight",
           duration: 3,
         });
-  
+
         closeLoginForm();
-  
+
         // Tải lại trang sau khi đăng nhập thành công
         setTimeout(() => {
           window.location.reload();

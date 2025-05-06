@@ -605,6 +605,33 @@ export const getStockEntry = async (id) => {
     return null;
   }
 };
+//Auth
+export const handleAuthApi = {
+  // Đăng nhập
+  login: async (email, password) => {
+    try {
+      const response = await auth.post("/auth/login", {
+        email,
+        password,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi đăng nhập:", error);
+      return null;
+    }
+  },
+
+  // Đăng ký
+  register: async (data) => {
+    try {
+      const response = await auth.post("/auth/register", data);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi đăng ký:", error);
+      return null;
+    }
+  },
+};
 
 //THANH TOÁN
 export const handlePaymentApi = {
