@@ -7,10 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import {
   getShoppingCartByUserId,
-  getProductById,
   deleteShoppingCartDetailById,
   updateCartQuantity,
 } from "../../../api/api"; // Import the API functions
+import { getProductById } from "../../../services/ProductService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 const Cart = () => {
   const navigate = useNavigate();
