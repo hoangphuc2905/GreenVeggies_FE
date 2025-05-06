@@ -7,10 +7,11 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getProductById } from "../../../services/ProductService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
-import { deleteShoppingCartDetailById,
+import {
+  deleteShoppingCartDetailById,
   getShoppingCartByUserId,
   updateCartQuantity,
- } from "../../../services/ShoppingCartService";
+} from "../../../services/ShoppingCartService";
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
@@ -82,13 +83,24 @@ const Cart = () => {
       );
       setWishlist(updatedWishlist);
 
-      // Cập nhật số lượng sản phẩm trong giỏ hàng ở Header
-      const event = new CustomEvent("wishlistUpdated", {
-        detail: updatedWishlist.length,
+      // Dispatch cartUpdated event instead of wishlistUpdated
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      // Show success notification
+      notification.success({
+        message: "Đã xóa sản phẩm",
+        description: "Sản phẩm đã được xóa khỏi giỏ hàng",
+        placement: "topRight",
+        duration: 3,
       });
-      window.dispatchEvent(event);
     } else {
       console.error("Failed to remove item from wishlist");
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể xóa sản phẩm khỏi giỏ hàng",
+        placement: "topRight",
+        duration: 3,
+      });
     }
   };
 

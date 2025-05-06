@@ -45,10 +45,15 @@ const Navbar = () => {
         if (shoppingCart && shoppingCart.shoppingCartDetails) {
           const itemCount = shoppingCart.shoppingCartDetails.length;
           setCartItemCount(itemCount);
+        } else {
+          setCartItemCount(0);
         }
       } catch (error) {
         console.error("Failed to fetch shopping cart:", error);
+        setCartItemCount(0);
       }
+    } else {
+      setCartItemCount(0);
     }
   };
 
@@ -59,20 +64,15 @@ const Navbar = () => {
 
     // Listen for cart updates
     const handleCartUpdated = () => {
-      fetchAndUpdateCartCount();
-    };
-
-    // Listen for order success
-    const handleOrderSuccess = () => {
-      fetchAndUpdateCartCount();
+      if (isLoggedIn()) {
+        fetchAndUpdateCartCount();
+      }
     };
 
     window.addEventListener("cartUpdated", handleCartUpdated);
-    window.addEventListener("orderSuccess", handleOrderSuccess);
 
     return () => {
       window.removeEventListener("cartUpdated", handleCartUpdated);
-      window.removeEventListener("orderSuccess", handleOrderSuccess);
     };
   }, []);
 
