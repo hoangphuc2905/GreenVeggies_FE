@@ -9,7 +9,7 @@ import {
   notification,
 } from "antd";
 import { useState, useEffect } from "react";
-import { getUserInfo } from "../../../api/api";
+import { getUserInfo } from "../../../services/UserService";
 import { deleteShoppingCartDetailById } from "../../../services/ShoppingCartService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";

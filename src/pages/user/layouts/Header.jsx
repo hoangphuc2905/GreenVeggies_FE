@@ -27,7 +27,7 @@ import {
 } from "@ant-design/icons";
 import { Dropdown } from "antd";
 
-import { getUserInfo } from "../../../api/api";
+import { getUserInfo } from "../../../services/UserService";
 import { fetchNotifications } from "../../../services/NotifyService";
 import Notification from "../notification/Notification";
 import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
