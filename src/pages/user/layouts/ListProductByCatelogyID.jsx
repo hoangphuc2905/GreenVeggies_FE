@@ -87,10 +87,8 @@ const ListProductByCatelogyID = ({
 
       localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
 
-      const event = new CustomEvent("wishlistUpdated", {
-        detail: currentWishlist.length,
-      });
-      window.dispatchEvent(event);
+      // Dispatch cartUpdated event
+      window.dispatchEvent(new Event("cartUpdated"));
 
       // Add success notification
       notification.success({

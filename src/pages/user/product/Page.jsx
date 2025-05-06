@@ -18,19 +18,35 @@ const Page = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
+  const [products, setProducts] = useState([]);
 
   const API_URL = import.meta.env.VITE_API_PRODUCT_URL;
 
-  useEffect(() => {
+  const fetchProducts = () => {
     axios
       .get(`${API_URL}/products`)
-      .then(() => {
-        // Xử lý dữ liệu sản phẩm nếu cần thiết
+      .then((response) => {
+        setProducts(response.data);
       })
       .catch((error) => {
         console.error("Lỗi khi lấy dữ liệu!", error);
       });
+  };
+
+  useEffect(() => {
+    fetchProducts();
   }, [API_URL]);
+
+  useEffect(() => {
+    const handleCartUpdated = () => {
+      fetchProducts();
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdated);
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdated);
+    };
+  }, []);
 
   const handleFilter = () => {
     const newMinPrice = tempMinPrice ? Number(tempMinPrice) : 0;

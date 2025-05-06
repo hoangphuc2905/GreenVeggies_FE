@@ -160,10 +160,8 @@ const ListProduct = ({
 
       localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
 
-      const event = new CustomEvent("wishlistUpdated", {
-        detail: currentWishlist.length,
-      });
-      window.dispatchEvent(event);
+      // Dispatch cartUpdated event
+      window.dispatchEvent(new Event("cartUpdated"));
 
       // Add notification
       const key = `open${Date.now()}`;
