@@ -120,7 +120,13 @@ export const handleProductApi = {
   },
   //Lấy danh sách danh mục
   getCategories: async () => {
-    return await productAPI.get("/categories");
+    try {
+      const response = await productAPI.get("/categories");
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách danh mục:", error);
+      throw error;
+    }
   },
   updateProduct: async (id, data) => {
     return await productAPI.put(`/products/${id}`, data);
@@ -246,17 +252,6 @@ export const handleShoppingCartApi = {
       `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`
     );
   },
-};
-
-// 🟢 Lấy danh sách sản phẩm theo Category
-export const getCategories = async () => {
-  try {
-    const response = await api.get("/categories");
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách danh mục:", error);
-    return [];
-  }
 };
 
 export const getListUsers = async (key) => {

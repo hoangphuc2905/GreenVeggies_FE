@@ -132,6 +132,21 @@ export const addProduct = async (values) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Lấy danh sách danh mục
+export const getCategoriesFromProducts = async () => {
+  try {
+    const response = await handleProductApi.getCategories();
+    if (response && Array.isArray(response)) {
+      return response;
+    }
+    console.error("API không trả về dữ liệu danh mục hợp lệ:", response);
+    return [];
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách danh mục:", error);
+    return [];
+  }
+};
+
 //Thêm danh mục mới
 export const addCategory = async (values) => {
   try {
