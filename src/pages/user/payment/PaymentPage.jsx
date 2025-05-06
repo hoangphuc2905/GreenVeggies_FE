@@ -5,6 +5,8 @@ import {
   createPaymentQR,
   checkPaymentStatus,
 } from "../../../services/PaymentService";
+import { createNotify } from "../../../services/NotifyService";
+import { updateOrderStatus } from "../../../api/api";
 
 const { Text, Paragraph } = Typography;
 
@@ -292,9 +294,58 @@ const PaymentPage = () => {
           </Button>
           <Button
             type="primary"
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-              navigate("/user/orders");
+            onClick={async () => {
+              try {
+                // Cập nhật trạng thái đơn hàng
+                await updateOrderStatus(orderId, "Pending");
+
+                // Tạo thông báo cho người dùng
+                const notificationDataUser = {
+                  senderType: "system",
+                  receiverID: localStorage.getItem("userID"),
+                  title: "Thông báo đơn hàng",
+                  message: `Đơn hàng #${orderId} đã được thanh toán thành công.`,
+                  type: "order",
+                  orderID: orderId,
+                };
+
+                // Tạo thông báo cho admin
+                const notificationDataAdmin = {
+                  senderType: "system",
+                  receiverID: "admin",
+                  title: "Thông báo đơn hàng",
+                  message: `Đơn hàng #${orderId} đã được thanh toán, cần được duyệt.`,
+                  type: "order",
+                  orderID: orderId,
+                };
+
+                await createNotify(notificationDataUser);
+                await createNotify(notificationDataAdmin);
+
+                // Phát sự kiện cập nhật thông báo
+                window.dispatchEvent(new Event("orderSuccess"));
+
+                notification.success({
+                  message: "Thành công",
+                  description:
+                    "Thanh toán thành công! Đơn hàng của bạn đang được xử lý.",
+                  placement: "topRight",
+                  duration: 4,
+                });
+
+                // Scroll to top và chuyển trang
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                navigate("/user/orders");
+              } catch (error) {
+                console.error("Error processing payment:", error);
+                notification.error({
+                  message: "Lỗi",
+                  description:
+                    "Đã xảy ra lỗi khi xử lý thanh toán. Vui lòng thử lại.",
+                  placement: "topRight",
+                  duration: 4,
+                });
+              }
             }}
             style={{
               background: "linear-gradient(to right, #82AE46, #5A8E1B)",

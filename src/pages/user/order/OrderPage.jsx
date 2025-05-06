@@ -131,24 +131,16 @@ const OrderPage = () => {
         ) {
           console.log("Order created for bank transfer:", orderResponse);
 
-          const notificationDataUser = {
-            senderType: "system",
-            receiverID: userID,
-            title: "Thông báo đơn hàng",
-            message: `Đơn hàng #${orderResponse.order.orderID} đã được tạo, chờ thanh toán.`,
-            type: "order",
-            orderID: orderResponse.order.orderID,
-          };
-
-          await createNotify(notificationDataUser);
-
           // Xóa các sản phẩm đã chọn khỏi giỏ hàng
           for (const item of cartItems) {
             await deleteShoppingCartDetailById(item.shoppingCartDetailID);
           }
 
-          // Phát sự kiện cập nhật giỏ hàng
+          // Chỉ phát sự kiện cập nhật giỏ hàng
           window.dispatchEvent(new Event("cartUpdated"));
+
+          // Scroll to top
+          window.scrollTo({ top: 0, behavior: "smooth" });
 
           navigate(
             `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
@@ -196,8 +188,12 @@ const OrderPage = () => {
           await deleteShoppingCartDetailById(item.shoppingCartDetailID);
         }
 
-        // Phát sự kiện cập nhật giỏ hàng
+        // Phát sự kiện cập nhật giỏ hàng và thông báo
         window.dispatchEvent(new Event("cartUpdated"));
+        window.dispatchEvent(new Event("orderSuccess"));
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: "smooth" });
 
         notification.success({
           message: "Thành công",

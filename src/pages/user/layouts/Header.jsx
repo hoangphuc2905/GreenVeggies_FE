@@ -124,12 +124,11 @@ const Header = () => {
     if (token && userID) {
       getUserInfo(userID, token)
         .then(async (userInfo) => {
-          console.log("Fetched user:", userInfo); // Kiểm tra user lấy từ API
-          setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
+          console.log("Fetched user:", userInfo);
+          setUser(userInfo);
 
-          // Lấy giỏ hàng từ API và cập nhật trạng thái cartItemCount
           const shoppingCart = await getShoppingCartByUserId(userID);
-          console.log("Shopping cart on mount:", shoppingCart); // Debugging statement
+          console.log("Shopping cart on mount:", shoppingCart);
         })
         .catch((error) => {
           console.error("Error fetching user:", error);
@@ -139,6 +138,23 @@ const Header = () => {
         setNotificationCount(unread);
       });
     }
+
+    // Thêm event listener cho sự kiện orderSuccess
+    const handleOrderSuccess = () => {
+      const userID = localStorage.getItem("userID");
+      if (userID) {
+        fetchNotifications(userID, 1, (notifies) => {
+          const unread = notifies.filter((notify) => !notify.isRead).length;
+          setNotificationCount(unread);
+        });
+      }
+    };
+
+    window.addEventListener("orderSuccess", handleOrderSuccess);
+
+    return () => {
+      window.removeEventListener("orderSuccess", handleOrderSuccess);
+    };
   }, []);
 
   // Mở OTP form qmk với email
