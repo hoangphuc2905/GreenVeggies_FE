@@ -10,6 +10,7 @@ import {
 } from "@ant-design/icons";
 import UserDetailModal from "./UserDetailModal";
 import { getListUsers } from "../../../services/UserService";
+import { getOrdersByUserId } from "../../../services/OrderService"; // Import the function
 
 const { Search } = Input;
 
@@ -32,13 +33,44 @@ const ListUser = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [orderCounts, setOrderCounts] = useState({}); // State to store order counts
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 5 }); // Add pagination state
 
   useEffect(() => {
     const fetchUsers = async () => {
       const data = await getUsers();
-      setUsers(data);
-      setOriginalUsers(data);
-      console.log("User: " + data);
+
+      // Sort users to place Admins at the top
+      const sortedData = data.sort((a, b) => {
+        if (a.role === "admin" && b.role !== "admin") return -1;
+        if (a.role !== "admin" && b.role === "admin") return 1;
+        return 0;
+      });
+
+      setUsers(sortedData);
+      setOriginalUsers(sortedData);
+      console.log("Sorted Users: ", sortedData);
+
+      // Fetch order counts for each user
+      const counts = {};
+      for (const user of sortedData) {
+        try {
+          console.log("User ID: ", user.userID); // Log the user ID
+          const { orders } = await getOrdersByUserId(user.userID);
+          counts[user.userID] = orders.length;
+          console.log(
+            `User ID: ${user.userID}, Order Count: ${counts[user.userID]}`
+          ); // Log the order count for each user
+        } catch (error) {
+          console.error(
+            `Failed to fetch orders for user ${user.userID}:`,
+            error
+          );
+          counts[user.userID] = 0; // Default to 0 if there's an error
+        }
+      }
+      setOrderCounts(counts);
+      console.log("Order Counts: ", counts); // Log the final order counts
     };
 
     fetchUsers();
@@ -108,6 +140,10 @@ const ListUser = () => {
     setIsModalOpen(true);
   };
 
+  const handleTableChange = (pagination) => {
+    setPagination(pagination); // Update pagination state when the page changes
+  };
+
   return (
     <Layout className="overflow-hidden">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px]">
@@ -151,10 +187,11 @@ const ListUser = () => {
           </Flex>
           <Table
             size="small"
-            dataSource={users}
+            dataSource={users || []} // Ensure dataSource is always an array
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             rowKey="_id"
-            pagination={{ pageSize: 5 }}
+            pagination={pagination} // Pass pagination state to the Table
+            onChange={handleTableChange} // Handle page changes
             className="text-sm font-thin hover:cursor-pointer "
             onRow={(record) => ({
               onClick: () => showUserDetails(record),
@@ -164,7 +201,9 @@ const ListUser = () => {
               title="#"
               key="index"
               align="center"
-              render={(_, __, index) => index + 1}
+              render={(_, __, index) =>
+                index + 1 + (pagination.current - 1) * pagination.pageSize
+              } // Adjust index based on current page
             />
             <Column
               title="Tên"
@@ -201,10 +240,13 @@ const ListUser = () => {
             />
             <Column
               title="Đơn hàng"
-              dataIndex="orders"
-              key="quality"
+              dataIndex="userID" // Ensure this matches the key used in `orderCounts`
+              key="orders"
               align="center"
-              render={(text) => text || "--|--"} // Provide a default value if data is missing
+              render={(userID) => {
+                console.log("Rendering Order Count for User ID: ", userID); // Debug log
+                return orderCounts[userID] || "--|--"; // Display order count or default value
+              }}
             />
             <Column
               title="Trạng thái"

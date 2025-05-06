@@ -77,7 +77,7 @@ const ListOrder = () => {
       const screenHeight = window.innerHeight;
       if (screenHeight > 1200) return 20; // Màn hình lớn
       if (screenHeight > 800) return 10; // Màn hình trung bình
-      return 5; // Màn hình nhỏ
+      return 8; // Màn hình nhỏ
     };
 
     // Cập nhật pageSize khi tải trang hoặc thay đổi kích thước màn hình
@@ -568,7 +568,7 @@ const ListOrder = () => {
           className={styles.customTable + " hover:cursor-pointer"}
           size="small"
           columns={filteredColumns}
-          dataSource={orders}
+          dataSource={orders || []} // Ensure dataSource is always an array
           pagination={{
             pageSize: pagination.pageSize,
             current: pagination.current,
