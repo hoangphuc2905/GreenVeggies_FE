@@ -11,13 +11,11 @@ import {
   Space,
   Typography,
   Image,
+  notification,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
-import {
-  getUserInfo,
-  
-} from "../../../api/api"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
+import { getUserInfo } from "../../../services/UserService"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 import { getProductById } from "../../../services/ProductService";
 import { saveShoppingCarts } from "../../../services/ShoppingCartService";
 // Change this import
@@ -204,14 +202,26 @@ const Detail = () => {
       localStorage.setItem("wishlist", JSON.stringify(currentWishlist));
 
       // Phát ra sự kiện cập nhật giỏ hàng
-      const event = new CustomEvent("wishlistUpdated", {
-        detail: currentWishlist.length,
+      window.dispatchEvent(new Event("cartUpdated"));
+
+      // Hiển thị thông báo thành công
+      notification.success({
+        message: "Thêm vào giỏ hàng thành công",
+        description: "Sản phẩm đã được thêm vào giỏ hàng của bạn",
+        placement: "topRight",
+        duration: 3,
       });
-      window.dispatchEvent(event);
 
       navigate("/wishlist");
     } catch (error) {
       console.error("Failed to save order:", error);
+      // Hiển thị thông báo lỗi
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể thêm sản phẩm vào giỏ hàng",
+        placement: "topRight",
+        duration: 3,
+      });
     }
   };
 

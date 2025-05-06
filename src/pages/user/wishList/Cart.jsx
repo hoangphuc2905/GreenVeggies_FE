@@ -1,5 +1,5 @@
 // Add notification to imports at the top
-import { Divider, InputNumber, notification } from "antd";
+import { Divider, InputNumber, notification, Checkbox } from "antd";
 import bgImage from "../../../assets/pictures/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -15,6 +15,8 @@ import {
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -63,11 +65,12 @@ const Cart = () => {
     return Array.from(productMap.values());
   }, [wishlist]);
 
-  // Tính tổng giá tạm tính
-  const subtotal = mergedWishlist.reduce(
-    (acc, item) => acc + (item.totalAmount || 0),
-    0
-  );
+  // Tính tổng giá tạm tính chỉ cho các sản phẩm được chọn
+  const subtotal = useMemo(() => {
+    return mergedWishlist
+      .filter((item) => selectedItems.includes(item.shoppingCartDetailID))
+      .reduce((acc, item) => acc + (item.totalAmount || 0), 0);
+  }, [mergedWishlist, selectedItems]);
 
   const removeFromWishlist = async (shoppingCartDetailID) => {
     console.log(
@@ -173,17 +176,43 @@ const Cart = () => {
       );
     }
   };
+
+  // Xử lý chọn/bỏ chọn tất cả sản phẩm
+  const handleSelectAll = (checked) => {
+    setSelectAll(checked);
+    if (checked) {
+      setSelectedItems(mergedWishlist.map((item) => item.shoppingCartDetailID));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  // Xử lý chọn/bỏ chọn một sản phẩm
+  const handleSelectItem = (shoppingCartDetailID, checked) => {
+    if (checked) {
+      setSelectedItems([...selectedItems, shoppingCartDetailID]);
+    } else {
+      setSelectedItems(
+        selectedItems.filter((id) => id !== shoppingCartDetailID)
+      );
+    }
+  };
+
   const handleCheckout = () => {
-    if (mergedWishlist.length === 0) {
+    if (selectedItems.length === 0) {
       notification.warning({
-        message: "Giỏ hàng trống",
-        description: "Bạn chưa có sản phẩm nào trong giỏ hàng",
+        message: "Chưa chọn sản phẩm",
+        description: "Vui lòng chọn ít nhất một sản phẩm để thanh toán",
         placement: "top",
         duration: 3,
       });
       return;
     }
-    navigate("/order");
+    // Chỉ chuyển các sản phẩm đã chọn sang trang thanh toán
+    const selectedProducts = mergedWishlist.filter((item) =>
+      selectedItems.includes(item.shoppingCartDetailID)
+    );
+    navigate("/order", { state: { selectedProducts } });
   };
 
   return (
@@ -203,7 +232,7 @@ const Cart = () => {
 
         <div className="container mx-auto mt-4">
           {/* Hàng tiêu đề */}
-          <div className="grid grid-cols-6 h-[60px] bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] p-4 text-white font-semibold mb-4">
+          <div className="grid grid-cols-7 h-[60px] bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] p-4 text-white font-semibold mb-4">
             <div className="col-span-1 flex justify-center"></div>
             <div className="col-span-2 flex justify-center">
               Danh sách sản phẩm
@@ -211,107 +240,108 @@ const Cart = () => {
             <div className="col-span-1 flex justify-center">Giá</div>
             <div className="col-span-1 flex justify-center">Số lượng</div>
             <div className="col-span-1 flex justify-center">Tổng</div>
+            <div className="col-span-1 flex justify-center">
+              <Checkbox
+                checked={selectAll}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+              />
+            </div>
           </div>
 
           {/* Danh sách sản phẩm */}
-          {mergedWishlist.map((item, index) => {
-            console.log("Item:", item); // Thêm dòng này để kiểm tra giá trị của item
-            return (
-              <div key={item.productID}>
-                <div className="grid grid-cols-6 items-center p-4 font-semibold cursor-pointer">
-                  <div className="col-span-1 flex justify-center">
-                    <FontAwesomeIcon
-                      icon={faXmark}
-                      className="text-lg cursor-pointer border"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Ngăn chặn sự kiện onClick của sản phẩm
-                        removeFromWishlist(item.shoppingCartDetailID); // Pass shoppingCartDetailID here
-                      }}
-                    />
-                  </div>
-
-                  <div
-                    className="col-span-2 flex items-center gap-4 "
-                    onClick={() => handleProductClick(item)}>
-                    <img
-                      src={
-                        Array.isArray(item.imageUrl) && item.imageUrl.length > 0
-                          ? item.imageUrl[0]
-                          : item.imageUrl
-                      }
-                      alt={item.name}
-                      className="w-[80px] h-auto"
-                    />
-                    <p className="max-w-[300px] break-words">
-                      {item.name || "No name available"}
-                    </p>
-                  </div>
-
-                  <div className="col-span-1 text-center">
-                    {(CalcPrice(item.price) || 0).toLocaleString()} VND
-                  </div>
-                  <div className="col-span-1 text-center">
-                    <InputNumber
-                      min={0}
-                      value={item.quantity}
-                      onChange={(value) => {
-                        if (value === null || value < 0) {
-                          console.error("Invalid value:", value);
-                          return;
-                        }
-
-                        console.log(
-                          "Changing quantity for:",
-                          item.productID,
-                          "New value:",
-                          value
-                        );
-                        handleQuantityChange(
-                          item.shoppingCartID,
-                          item.productID,
-                          value
-                        );
-                      }}
-                    />
-                  </div>
-                  <div className="col-span-1 text-center">
-                    {(
-                      (CalcPrice(item.price) || 0) * item.quantity
-                    ).toLocaleString()}{" "}
-                    VND
-                  </div>
+          {mergedWishlist.map((item, index) => (
+            <div key={item.productID}>
+              <div className="grid grid-cols-7 items-center p-4 font-semibold cursor-pointer">
+                <div className="col-span-1 flex justify-center">
+                  <FontAwesomeIcon
+                    icon={faXmark}
+                    className="text-lg cursor-pointer border"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromWishlist(item.shoppingCartDetailID);
+                    }}
+                  />
                 </div>
 
-                {/* Chỉ hiển thị Divider nếu không phải sản phẩm cuối cùng */}
-                {index < mergedWishlist.length - 1 && (
-                  <Divider style={{ borderColor: "#7cb305" }} />
-                )}
+                <div
+                  className="col-span-2 flex items-center gap-4"
+                  onClick={() => handleProductClick(item)}>
+                  <img
+                    src={
+                      Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+                        ? item.imageUrl[0]
+                        : item.imageUrl
+                    }
+                    alt={item.name}
+                    className="w-[80px] h-auto"
+                  />
+                  <p className="max-w-[300px] break-words">
+                    {item.name || "No name available"}
+                  </p>
+                </div>
+
+                <div className="col-span-1 text-center">
+                  {(CalcPrice(item.price) || 0).toLocaleString()} VND
+                </div>
+                <div className="col-span-1 text-center">
+                  <InputNumber
+                    min={0}
+                    value={item.quantity}
+                    onChange={(value) => {
+                      if (value === null || value < 0) {
+                        console.error("Invalid value:", value);
+                        return;
+                      }
+                      handleQuantityChange(
+                        item.shoppingCartID,
+                        item.productID,
+                        value
+                      );
+                    }}
+                  />
+                </div>
+                <div className="col-span-1 text-center">
+                  {(
+                    (CalcPrice(item.price) || 0) * item.quantity
+                  ).toLocaleString()}{" "}
+                  VND
+                </div>
+                <div className="col-span-1 flex justify-center">
+                  <Checkbox
+                    checked={selectedItems.includes(item.shoppingCartDetailID)}
+                    onChange={(e) =>
+                      handleSelectItem(
+                        item.shoppingCartDetailID,
+                        e.target.checked
+                      )
+                    }
+                  />
+                </div>
               </div>
-            );
-          })}
+
+              {index < mergedWishlist.length - 1 && (
+                <Divider style={{ borderColor: "#7cb305" }} />
+              )}
+            </div>
+          ))}
         </div>
 
         <Divider style={{ borderColor: "#7cb305" }} />
         <div className="container mx-auto mt-4">
-          <div className="grid grid-cols-6 bg-white p-4">
-            <div className="bg-white py-4"></div>
-            <div className="bg-white py-4">
+          <div className="grid grid-cols-7 bg-white p-4">
+            <div className="col-span-4 bg-white py-4">
               <p className="mb-4 font-bold">Tổng giỏ hàng</p>
               <p className="mb-4">Tạm tính</p>
               <p className="mb-4">Tổng</p>
             </div>
-            <div className="bg-white text-center py-4"></div>
-            <div className="bg-white text-center py-4"></div>
-            <div className="bg-white text-center py-4"></div>
-            <div className="bg-white text-center py-4 mt-10">
+            <div className="col-span-2 bg-white text-center py-4 mt-10">
               <p className="mb-4">{subtotal.toLocaleString()} VND</p>
               <p className="mb-4">{subtotal.toLocaleString()} VND</p>
             </div>
 
-            {/* Thêm nút thanh toán vào cột 5 và 6 */}
-            <div className="col-span-2 col-start-5 flex justify-end mt-4">
+            <div className="col-span-1 flex justify-end items-center">
               <button
-                className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-2 px-6 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
+                className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-3 px-8 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
                 onClick={handleCheckout}>
                 Tiến hành thanh toán
               </button>
