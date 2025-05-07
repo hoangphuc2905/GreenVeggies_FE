@@ -38,6 +38,12 @@ const RoleBasedRouter = () => {
             navigate("/admin/dashboard/revenue", { replace: true }); // Sử dụng replace để tránh vòng lặp
           } else if (
             userRole !== "admin" &&
+            !window.location.pathname.startsWith("/user") &&
+            !window.location.pathname.startsWith("/")
+          ) {
+            navigate("/not-authorized", { replace: true }); // Redirect to error page for invalid paths
+          } else if (
+            userRole !== "admin" &&
             window.location.pathname.startsWith("/admin")
           ) {
             navigate("/", { replace: true }); // Chuyển về trang chính nếu không phải admin
@@ -75,7 +81,7 @@ const RoleBasedRouter = () => {
         )}
 
         {/* Fallback for undefined routes */}
-        <Route path="*" element={<ErrorRouter />} />
+        <Route path="/not-authorized" element={<ErrorRouter />} />
       </Routes>
     </App>
   );
