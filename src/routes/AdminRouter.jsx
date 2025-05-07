@@ -39,7 +39,6 @@ const AdminRouter = () => {
         setUserInfo(userInfo);
         if (role === "admin") {
           setIsAdmin(true);
-          navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
         } else {
           navigate("/not-authorized");
         }
@@ -72,10 +71,7 @@ const AdminRouter = () => {
                 }}
               />
               <Routes>
-                <Route
-                  path="/"
-                  element={<Navigate to="/admin/dashboard/revenue" />}
-                />
+                <Route path="/dashboard/revenue" element={<Revenue />} />
                 <Route path="/products" element={<Page />} />
                 <Route path="/products/:id" element={<Detail />} />
                 <Route path="/user-list" element={<ListUser />} />
@@ -84,9 +80,7 @@ const AdminRouter = () => {
                   path="/products/update-product/:id"
                   element={<UpdateProduct />}
                 />
-                <Route path="/dashboard/revenue" element={<Revenue />} />
                 <Route path="/dashboard/orders" element={<Order />} />
-                {/* // /admin/dashboard/orders/list */}
                 <Route path="/dashboard/orders/list" element={<ListOrder />} />
                 <Route
                   path="/notifications"
