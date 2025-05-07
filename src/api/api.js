@@ -287,145 +287,6 @@ export const handlePaymentApi = {
     return response.data;
   },
 };
-export const getListUsers = async (key) => {
-  try {
-    const response = await userAPI.get(`/${key}`);
-    console.log("Full response:", response); // Xem toàn bộ response
-    console.log("User API Base URL:", API_URL_USER);
-
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy danh sách người dùng:", error);
-    return [];
-  }
-};
-
-// 🟢 Lấy thông tin người dùng theo ID
-export const getUserInfo = async (userID) => {
-  try {
-    const response = await userAPI.get(`user/${userID}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin người dùng:", error);
-    return null;
-  }
-};
-
-// 🟢 Cập nhật thông tin người dùng
-export const updateUserInfo = async (userID, token, updatedData) => {
-  try {
-    const response = await userAPI.put(`user/${userID}`, updatedData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật thông tin người dùng:", error);
-    return null;
-  }
-};
-
-// 🟢 Lấy địa chỉ người dùng theo ID
-export const getAddressByID = async (userID) => {
-  try {
-    const response = await address.get(`/address?userID=${userID}`);
-    return response.data; // Trả về dữ liệu từ API
-  } catch (error) {
-    console.error("Lỗi khi lấy địa chỉ:", error);
-    return null;
-  }
-};
-
-// 🟢 API thêm địa chỉ mới cho người dùng
-export const addNewAddress = async (addressData) => {
-  try {
-    const response = await address.post("/address", addressData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.status === 201) {
-      return {
-        success: true,
-        message: "✅ Địa chỉ đã được thêm thành công!",
-      };
-    } else {
-      return {
-        success: false,
-        message: response.data.message || "❌ Lỗi khi thêm địa chỉ.",
-      };
-    }
-  } catch (error) {
-    console.error("❌ Lỗi khi gửi API thêm địa chỉ:", error);
-    return {
-      success: false,
-      message: "❌ Lỗi kết nối hoặc dữ liệu không hợp lệ.",
-    };
-  }
-};
-
-export const changePassword = async (
-  email,
-  oldPassword,
-  newPassword,
-  token
-) => {
-  try {
-    const response = await auth.post(
-      "/auth/change-password",
-      {
-        email,
-        oldPassword,
-        newPassword,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi thay đổi mật khẩu:", error);
-    return null;
-  }
-};
-
-// 🟢 Thêm mới sản phẩm
-export const insertProduct = async (data) => {
-  try {
-    const response = await productAPI.post("/products", data);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi thêm sản phẩm:", error);
-    return null;
-  }
-};
-
-//Cập nhật trạng thái đơn hàng
-export const updateOrderStatus = async (orderID, status) => {
-  try {
-    const response = await orderAPI.put(`/orders/${orderID}`, { status });
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
-    return null;
-  }
-};
-// 🟢 Lấy thông tin nhập hàng
-export const getStockEntry = async (id) => {
-  try {
-    const response = await productAPI.get(`/stock-entries/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy thông tin nhập hàng:", error);
-    return null;
-  }
-};
 //Auth
 export const handleAuthApi = {
   // Đăng nhập
@@ -529,7 +390,11 @@ export const handleAuthApi = {
   changePassword: async (email, oldPassword, newPassword) => {
     try {
       const response = await auth.post(
-        `/auth/change-password?email=${encodeURIComponent(email)}&oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`
+        `/auth/change-password?email=${encodeURIComponent(
+          email
+        )}&oldPassword=${encodeURIComponent(
+          oldPassword
+        )}&newPassword=${encodeURIComponent(newPassword)}`
       );
       return response.data; // Trả về dữ liệu từ API
     } catch (error) {

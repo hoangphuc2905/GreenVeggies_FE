@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { getAddressByID } from "../../../api/api";
-import { addNewAddress } from "../../../services/UserService";
+import {
+  addNewAddress,
+  getAddressesByUserId,
+} from "../../../services/UserService";
 
 const AddressForm = () => {
   const [showForm, setShowForm] = useState(false);
@@ -30,7 +32,7 @@ const AddressForm = () => {
 
   const fetchUserAddress = async () => {
     try {
-      const userAddress = await getAddressByID(userID);
+      const userAddress = await getAddressesByUserId(userID);
       if (userAddress && Array.isArray(userAddress) && userAddress.length > 0) {
         setAddresses(userAddress);
       } else if (userAddress && typeof userAddress === "object") {

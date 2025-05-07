@@ -16,8 +16,8 @@ import { useDispatch } from "react-redux";
 
 import { useEffect, useState } from "react";
 import { fetchUser } from "../redux/userSlice";
-import { getUserInfo } from "../api/api";
 import NotificationScreen from "../pages/admin/notification/NotificationScreen";
+import { getUserInfo } from "../services/UserService";
 
 const AdminRouter = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -32,12 +32,14 @@ const AdminRouter = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userID = localStorage.getItem("userID");
+    const role = localStorage.getItem("role");
     if (token && userID) {
       dispatch(fetchUser({ userID, token }));
-      getUserInfo(userID, token).then((userInfo) => {
+      getUserInfo(userID).then((userInfo) => {
         setUserInfo(userInfo);
-        if (userInfo.role === "admin") {
+        if (role === "admin") {
           setIsAdmin(true);
+          navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
         } else {
           navigate("/not-authorized");
         }

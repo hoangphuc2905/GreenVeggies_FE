@@ -37,6 +37,8 @@ export const getListUsers = async () => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+
+//Lấy danh sách đơn hàng của người dùng
 export const getAddressesByUserId = async (userID) => {
   try {
     const addresses = await handleAuthApi.getAddressesByUserId(userID);

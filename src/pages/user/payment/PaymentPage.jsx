@@ -6,7 +6,7 @@ import {
   checkPaymentStatus,
 } from "../../../services/PaymentService";
 import { createNotify } from "../../../services/NotifyService";
-import { updateOrderStatus } from "../../../api/api";
+import { updateStatus } from "../../../services/OrderService";
 
 const { Text, Paragraph } = Typography;
 
@@ -178,7 +178,8 @@ const PaymentPage = () => {
               style={{
                 background: "linear-gradient(to right, #82AE46, #5A8E1B)",
                 color: "white",
-              }}>
+              }}
+            >
               Quay lại
             </Button>,
           ]}
@@ -202,7 +203,8 @@ const PaymentPage = () => {
               style={{
                 background: "linear-gradient(to right, #82AE46, #5A8E1B)",
                 color: "white",
-              }}>
+              }}
+            >
               Xem đơn hàng
             </Button>,
           ]}
@@ -297,7 +299,7 @@ const PaymentPage = () => {
             onClick={async () => {
               try {
                 // Cập nhật trạng thái đơn hàng
-                await updateOrderStatus(orderId, "Pending");
+                await updateStatus(orderId, "Pending");
 
                 // Tạo thông báo cho người dùng
                 const notificationDataUser = {
@@ -350,7 +352,8 @@ const PaymentPage = () => {
             style={{
               background: "linear-gradient(to right, #82AE46, #5A8E1B)",
               color: "white",
-            }}>
+            }}
+          >
             Đã thanh toán
           </Button>
         </div>
