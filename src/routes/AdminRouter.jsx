@@ -86,6 +86,7 @@ const AdminRouter = () => {
                   path="/notifications"
                   element={<NotificationScreen userID={userInfo.userID} />}
                 />
+                <Route path="*" element={<Navigate to="/not-authorized" replace />} />
               </Routes>
             </Layout>
           </Layout>

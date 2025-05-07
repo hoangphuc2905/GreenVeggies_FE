@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import Home from "../pages/user/Home";
 import Product from "../pages/user/product/Page";
@@ -87,6 +87,9 @@ const UserRouter = () => {
           <Route path="order/:orderID" element={<OrderDetail />} />
           <Route path="payment" element={<PaymentPage />} />
         </Route>
+
+        {/* Fallback route */}
+        <Route path="*" element={<Navigate to="/not-authorized" replace />} />
       </Routes>
 
       <UserFooter />
