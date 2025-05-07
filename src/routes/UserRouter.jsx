@@ -35,12 +35,13 @@ const UserRouter = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userID = localStorage.getItem("userID");
+    const role = localStorage.getItem("role");
     if (token && userID) {
       dispatch(fetchUser({ userID, token }));
       getUserInfo(userID, token).then((userInfo) => {
         setUserInfo(userInfo);
-        if (userInfo.role === "admin") {
-          navigate("/not-authorized");
+        if (role === "admin") {
+          navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
         } else {
           setIsAdmin(false);
         }

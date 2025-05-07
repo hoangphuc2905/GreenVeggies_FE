@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchUser } from "../../../redux/userSlice";
-import { updateUserInfo } from "../../../api/api";
 import { Upload, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { updateUserInfo } from "../../../services/UserService";
+import { cloundinaryURL } from "../../../api/api";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -115,7 +116,7 @@ const Profile = () => {
     }
 
     // Call the updateUserInfo function with FormData
-    const updatedUser = await updateUserInfo(userID, token, formData);
+    const updatedUser = await updateUserInfo(userID, formData);
 
     if (updatedUser) {
       setIsEditing(false); // Exit editing mode if the update was successful
@@ -176,7 +177,7 @@ const Profile = () => {
         {isEditing ? (
           <Upload
             multiple={false}
-            action="https://api.cloudinary.com/v1_1/dze57n4oa/image/upload"
+            action={cloundinaryURL}
             listType="picture-card"
             accept="image/*"
             data={() => ({ upload_preset: "ml_default" })}
