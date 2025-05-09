@@ -90,6 +90,11 @@ const statisticAPI = axios.create({
     "Content-Type": "application/json",
   },
 });
+//Authentication
+const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 //SẢN PHẨM
 export const handleProductApi = {
@@ -104,7 +109,10 @@ export const handleProductApi = {
   },
   //Cập nhật trạng thái sản phẩm
   updateProductStatus: async (productID, status) => {
-    return await productAPI.put(`/products/status/${productID}`, { status });
+    return await productAPI.put(`/products/status/${productID}`, {
+      status,
+      headers: getAuthHeader(),
+    });
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
@@ -113,10 +121,14 @@ export const handleProductApi = {
 
   //Thêm sản phẩm mới
   addProduct: async (data) => {
-    return await productAPI.post("/products", data);
+    return await productAPI.post("/products", data, {
+      headers: getAuthHeader(),
+    });
   },
   addCategory: async (data) => {
-    return await productAPI.post("/categories", data);
+    return await productAPI.post("/categories", data, {
+      headers: getAuthHeader(),
+    });
   },
   //Lấy danh sách danh mục
   getCategories: async () => {
@@ -141,15 +153,19 @@ export const handleProductApi = {
   },
 };
 
-//NGƯỜI DUNG
+//NGƯỜI DÙNG
 export const handleUserApi = {
   //Lấy thông tin của người dùng
   getUserInfo: async (userID) => {
-    return await userAPI.get(`/user/${userID}`);
+    return await userAPI.get(`/user/${userID}`, {
+      headers: getAuthHeader(),
+    });
   },
   //Lấy danh sách người dùng
   getUsers: async () => {
-    return await userAPI.get("/user");
+    return await userAPI.get("/user", {
+      headers: getAuthHeader(),
+    });
   },
   //Cập nhật thông tin người dùng
   updateUserInfo: async (userID, data) => {
@@ -162,10 +178,14 @@ export const handleNotifyApi = {
   //Lấy danh sách thông báo
 
   getNotificationsByReceiver: async (receiverID) => {
-    return await notifyAPI.get(`/notifications/${receiverID}`);
+    return await notifyAPI.get(`/notifications/${receiverID}`, {
+      headers: getAuthHeader(),
+    });
   },
   markAsRead: async (notifyID) => {
-    return await notifyAPI.patch(`/notifications/${notifyID}/read`);
+    return await notifyAPI.patch(`/notifications/${notifyID}/read`, {
+      headers: getAuthHeader(),
+    });
   },
   createNotification: async (data) => {
     return await notifyAPI.post("/notifications", data);
@@ -176,7 +196,9 @@ export const handleNotifyApi = {
 export const handleOrderApi = {
   //Lấy thông tin đơn hàng theo ID
   getOrderById: async (orderID) => {
-    return await orderAPI.get(`/orders/${orderID}`);
+    return await orderAPI.get(`/orders/${orderID}`, {
+      headers: getAuthHeader(),
+    });
   },
   //Lấy danh sách đơn hàng theo userID
   getOrdersByUserId: async (userID) => {
@@ -243,7 +265,9 @@ export const handleShoppingCartApi = {
   },
   // Lấy giỏ hàng theo userID
   getShoppingCartByUserId: async (userID) => {
-    return await shoppingCartAPI.get(`/shopping-carts/user/${userID}`);
+    return await shoppingCartAPI.get(`/shopping-carts/user/${userID}`, {
+      headers: getAuthHeader(),
+    });
   },
   // Cập nhật số lượng sản phẩm trong giỏ hàng
   updateCartQuantity: async (shoppingCartID, productID, quantity) => {
