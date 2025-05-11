@@ -8,7 +8,7 @@ export const getProducts = async () => {
 
     // Cập nhật trạng thái sản phẩm nếu cần
     const updatedProducts = await Promise.all(
-      response.map(async (product) => {
+      response.data.map(async (product) => {
         if (product.quantity === 0 && product.status !== "out_of_stock") {
           try {
             updateStatus(product.productID, "out_of_stock"); // Cập nhật trạng thái sản phẩm
@@ -66,7 +66,7 @@ export const updateProductStatus = async (productID, status) => {
 export const getCategories = async () => {
   try {
     const response = await handleProductApi.getListProducts("categories");
-    return response;
+    return response.data; // Trả về danh sách danh mục
   } catch (error) {
     console.error(error);
     return [];
