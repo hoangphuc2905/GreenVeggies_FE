@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal, Checkbox } from "antd";
+import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal } from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
@@ -9,7 +9,7 @@ import { getPaymentByOrderId } from "../../../../services/PaymentService";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 import { createNotify } from "../../../../services/NotifyService";
 import { getUserInfo } from "../../../../services/UserService";
-import { getOrders } from "../../../../services/OrderService";
+import { getOrders, updateStatus } from "../../../../services/OrderService";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -28,76 +28,43 @@ const useStyle = createStyles(({ css, token }) => {
 });
 
 const fetchOrders = async () => {
-  // Hàm lấy danh sách đơn hàng từ API
   try {
     const orders = await getOrders();
-
-    // Lấy thông tin người dùng (số điện thoại) cho từng đơn hàng
     const ordersWithPhone = await Promise.all(
       orders.map(async (order) => {
         const userInfo = await fetchUserInfo(order.userID);
         return {
           ...order,
-          phone: userInfo?.phone || "Không có số điện thoại", // Thêm số điện thoại vào đơn hàng
+          phone: userInfo?.phone || "Không có số điện thoại",
         };
       })
     );
-
-    // Sắp xếp đơn hàng: Ưu tiên trạng thái "Pending", sau đó theo thời gian đặt (trễ nhất -> sớm nhất)
     ordersWithPhone.sort((a, b) => {
       if (a.status === "Pending" && b.status !== "Pending") return -1;
       if (a.status !== "Pending" && b.status === "Pending") return 1;
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
-
     return ordersWithPhone;
   } catch (error) {
     console.error("Error fetching orders:", error);
-    return []; // Trả về mảng rỗng nếu có lỗi
+    return [];
   }
 };
 
 const fetchUserInfo = async (userID) => {
-  // Hàm lấy thông tin người dùng dựa trên userID
   try {
     const response = await getUserInfo(userID);
     return response;
   } catch (error) {
     console.error("Error fetching user info:", error);
-    return null; // Trả về null nếu có lỗi
+    return null;
   }
 };
 
 const ListOrder = () => {
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 }); // Initialize pagination state
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]); // State for selected rows
-  const [selectedOrders, setSelectedOrders] = useState([]); // State for selected orders
-
-  useEffect(() => {
-    // Hàm tính toán số lượng dòng hiển thị dựa trên chiều cao màn hình
-    const calculatePageSize = () => {
-      const screenHeight = window.innerHeight;
-      if (screenHeight > 1200) return 20; // Màn hình lớn
-      if (screenHeight > 800) return 10; // Màn hình trung bình
-      return 8; // Màn hình nhỏ
-    };
-
-    // Cập nhật pageSize khi tải trang hoặc thay đổi kích thước màn hình
-    const updatePageSize = () => {
-      setPagination((prev) => ({
-        ...prev,
-        pageSize: calculatePageSize(),
-      }));
-    };
-
-    updatePageSize();
-    window.addEventListener("resize", updatePageSize);
-
-    return () => {
-      window.removeEventListener("resize", updatePageSize);
-    };
-  }, []);
-
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedOrders, setSelectedOrders] = useState([]);
   const [visibleColumns, setVisibleColumns] = useState({
     key: true,
     orderID: true,
@@ -121,30 +88,43 @@ const ListOrder = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [orders, setOrders] = useState([]);
   const [customer, setCustomer] = useState("");
-  const [paymentContents, setPaymentContents] = useState({}); // Store payment content by order ID
+  const [paymentContents, setPaymentContents] = useState({});
   const [loading, setLoading] = useState(true);
-  const [cancelReason, setCancelReason] = useState(""); // State to hold cancellation reason
+  const [cancelReason, setCancelReason] = useState("");
+
+  useEffect(() => {
+    const calculatePageSize = () => {
+      const screenHeight = window.innerHeight;
+      if (screenHeight > 1200) return 20;
+      if (screenHeight > 800) return 10;
+      return 8;
+    };
+    const updatePageSize = () => {
+      setPagination((prev) => ({
+        ...prev,
+        pageSize: calculatePageSize(),
+      }));
+    };
+    updatePageSize();
+    window.addEventListener("resize", updatePageSize);
+    return () => {
+      window.removeEventListener("resize", updatePageSize);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       const data = await fetchOrders();
       setOrders(data);
-
-      // Fetch payment content for orders with "Chuyển khoản"
       const paymentData = await Promise.all(
         data
           .filter(
-            (order) =>
-              (order.paymentMethod &&
-                order.paymentMethod.toLowerCase() === "bank") ||
-              "string" // Normalize to lowercase
+            (order) => order.paymentMethod?.toLowerCase() === "bank" || "string"
           )
           .map(async (order) => {
             try {
               const paymentDetails = await getPaymentByOrderId(order.orderID);
-              console.log("Thông tin thanh toán", paymentDetails);
-
               return {
                 orderID: order.orderID,
                 content: paymentDetails?.content || "Không có nội dung",
@@ -158,34 +138,28 @@ const ListOrder = () => {
             }
           })
       );
-
-      // Map payment content to order IDs
       const paymentContentMap = paymentData.reduce((acc, item) => {
         acc[item.orderID] = item.content;
         return acc;
       }, {});
       setPaymentContents(paymentContentMap);
-
       setLoading(false);
     };
     fetchData();
   }, []);
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    // Hàm xử lý tìm kiếm trong bảng
     confirm();
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
 
   const handleReset = (clearFilters) => {
-    // Hàm đặt lại bộ lọc tìm kiếm
     clearFilters();
     setSearchText("");
   };
 
   const handleCancelFilters = () => {
-    // Hàm hủy tất cả bộ lọc và sắp xếp
     setSearchText("");
     setSearchedColumn("");
     setFilteredInfo({});
@@ -205,19 +179,17 @@ const ListOrder = () => {
   };
 
   const showOrderDetail = (order) => {
-    // Hàm hiển thị chi tiết đơn hàng
     setSelectedOrder(order);
     setIsModalVisible(true);
   };
 
   const getUserInfoById = async (userID) => {
-    // Hàm lấy thông tin người dùng dựa trên userID và cập nhật state
     try {
       const response = await fetchUserInfo(userID);
       return setCustomer(response || "Không có tên");
     } catch (error) {
       console.error("Error fetching user info:", error);
-      return null; // Trả về null nếu có lỗi
+      return null;
     }
   };
 
@@ -232,7 +204,6 @@ const ListOrder = () => {
   };
 
   const refreshOrders = async () => {
-    // Hàm làm mới danh sách đơn hàng
     setLoading(true);
     const data = await fetchOrders();
     setOrders(data);
@@ -240,22 +211,17 @@ const ListOrder = () => {
   };
 
   const formattedDate = (dateString) => {
-    // Hàm định dạng ngày tháng từ chuỗi
     const date = new Date(dateString);
-
     const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
-
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
     const seconds = String(date.getSeconds()).padStart(2, "0");
-
     return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
   };
 
   const getColumnSearchProps = (dataIndex, sortable = false) => ({
-    // Hàm hỗ trợ tìm kiếm và sắp xếp cho các cột trong bảng
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
@@ -347,8 +313,7 @@ const ListOrder = () => {
 
   const handleCancelOrder = async (order, reason) => {
     try {
-      // ...existing logic to cancel the order...
-      await sendCancelNotification(order.orderID, order.userID, reason); // Send notification after canceling
+      await sendCancelNotification(order.orderID, order.userID, reason);
       Modal.success({
         content: "Đơn hàng đã được hủy thành công và thông báo đã được gửi.",
       });
@@ -363,19 +328,20 @@ const ListOrder = () => {
 
   const handleApproveSelectedOrders = async () => {
     try {
-      const approvedOrders = [];
-      for (const order of selectedOrders) {
-        if (order.status === "Pending") {
-          await updateStatus(order.orderID, "Shipped"); // Approve the order
-          approvedOrders.push(order.orderID);
-        }
-      }
+      console.log("Selected orders:", selectedOrders);
+      const approvedOrders = await Promise.all(
+        selectedOrders.map(async (orderID) => {
+          console.log("Đơn hàng đã chọn:", orderID);
+          await updateStatus(orderID, "Shipped");
+          return orderID;
+        })
+      );
       Modal.success({
         content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
       });
-      setSelectedRowKeys([]); // Clear selected rows
-      setSelectedOrders([]); // Clear selected orders
-      refreshOrders(); // Refresh the order list
+      setSelectedRowKeys([]);
+      setSelectedOrders([]);
+      refreshOrders();
     } catch (error) {
       Modal.error({
         content: "Đã xảy ra lỗi khi duyệt các đơn hàng.",
@@ -385,14 +351,11 @@ const ListOrder = () => {
   };
 
   const rowSelection = {
-    selectedRowKeys,
-    onChange: (selectedKeys, selectedRows) => {
-      setSelectedRowKeys(selectedKeys);
-      setSelectedOrders(selectedRows);
+    selectedRowKeys, // Controlled selected row keys
+    onChange: (newSelectedRowKeys, selectedRows) => {
+      setSelectedRowKeys(newSelectedRowKeys); // Update selected row keys
+      setSelectedOrders(selectedRows.map((row) => row.orderID)); // Store selected order IDs
     },
-    getCheckboxProps: (record) => ({
-      disabled: record.status !== "Pending", // Disable checkbox for non-pending orders
-    }),
   };
 
   const columns = [
@@ -402,69 +365,63 @@ const ListOrder = () => {
       key: "key",
       width: 50,
       render: (text, record, index) => {
-        return (pagination.current - 1) * pagination.pageSize + index + 1; // Adjust STT based on pagination
+        return (pagination.current - 1) * pagination.pageSize + index + 1;
       },
     },
     {
       title: "Mã đơn hàng",
       dataIndex: "orderID",
       key: "orderID",
-      ellipsis: true, // Hiển thị chữ dạng ... nếu nội dung quá dài
+      ellipsis: true,
       fixed: "left",
       ...getColumnSearchProps("orderID", true),
-      render: (orderID) => {
-        return (
-          <Tooltip placement="topLeft" title={orderID}>
-            {orderID}
-          </Tooltip>
-        );
-      },
+      render: (orderID) => (
+        <Tooltip placement="topLeft" title={orderID}>
+          {orderID}
+        </Tooltip>
+      ),
     },
     {
       title: "Mã khách hàng",
       dataIndex: "userID",
       key: "userID",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("userID", true),
       fixed: "left",
-      render: (userID) => {
-        return (
-          <Tooltip placement="topLeft" title={userID}>
-            {userID}
-          </Tooltip>
-        );
-      },
+      render: (userID) => (
+        <Tooltip placement="topLeft" title={userID}>
+          {userID}
+        </Tooltip>
+      ),
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("phone"),
-      render: (phone) => {
-        return (
-          <Tooltip placement="topLeft" title={phone}>
-            {phone}
-          </Tooltip>
-        );
-      },
+      render: (phone) => (
+        <Tooltip placement="topLeft" title={phone}>
+          {phone}
+        </Tooltip>
+      ),
     },
     {
       title: "Giá tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("totalAmount", true),
       render: (totalAmount) => {
-        const format = formattedPrice(totalAmount); // Sử dụng hàm formattedPrice để định dạng
-        return <span>{format}</span>; // Trả về giá đã định dạng
+        const format = formattedPrice(totalAmount);
+        return <span>{format}</span>;
       },
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("address"),
       render: (address) => (
         <Tooltip placement="topLeft" title={address}>
@@ -476,7 +433,7 @@ const ListOrder = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("status", true),
       render: (status) => {
         let color =
@@ -495,7 +452,6 @@ const ListOrder = () => {
             : status === "Delivered"
             ? "Đã giao thành công"
             : "Đã hủy";
-
         return <Tag color={color}>{statusText}</Tag>;
       },
     },
@@ -503,27 +459,25 @@ const ListOrder = () => {
       title: "Thời gian",
       dataIndex: "createdAt",
       key: "createdAt",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("createdAt", true),
-      render: (createdAt) => formattedDate(createdAt), // Sử dụng hàm formattedDate để định dạng
+      renderWELL: (createdAt) => formattedDate(createdAt),
     },
     {
       title: "Phương thức thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("paymentMethod", true),
       render: (paymentMethod) => {
         let paymentText =
           paymentMethod === "COD" || paymentMethod === "CASH"
             ? "Thanh toán khi nhận hàng"
             : "Chuyển khoản";
-
         let color =
           paymentMethod === "COD" || paymentMethod === "CASH"
             ? "green"
             : "blue";
-
         return (
           <Tag color={color} className="text-white">
             {paymentText}
@@ -537,7 +491,7 @@ const ListOrder = () => {
       key: "paymentContent",
       width: 180,
       ellipsis: true,
-      ...getColumnSearchProps("paymentContent"), // Enable search for payment content
+      ...getColumnSearchProps("paymentContent"),
       render: (orderID) => {
         const content = paymentContents[orderID];
         return content ? (
@@ -595,7 +549,7 @@ const ListOrder = () => {
               onClick={handleApproveSelectedOrders}
               className="bg-green-500 text-white"
             >
-              Duyệt các đơn đã chọn
+              Duyệt {selectedRowKeys.length} đơn đã chọn
             </Button>
           )}
           <Button onClick={handleCancelFilters}>Hủy lọc</Button>
@@ -612,24 +566,25 @@ const ListOrder = () => {
         <Table
           className={styles.customTable + " hover:cursor-pointer"}
           size="small"
-          columns={filteredColumns}
           dataSource={orders || []} // Ensure dataSource is always an array
-          rowSelection={rowSelection} // Add row selection
-          pagination={{
-            pageSize: pagination.pageSize,
-            current: pagination.current,
-            onChange: (page, pageSize) => {
-              setPagination({ current: page, pageSize }); // Update pagination state
-            },
+          rowSelection={{
+            ...rowSelection, // Use the updated rowSelection logic
           }}
-          scroll={{ x: filteredColumns.length * 150 }}
+          rowKey="orderID" // Use orderID as the unique key for rows
+          pagination={pagination} // Pass pagination state to the Table
           onChange={(pagination, filters, sorter) => {
-            setFilteredInfo(filters);
-            setSortedInfo(sorter);
+            setPagination({
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+            }); // Update pagination state
+            setFilteredInfo(filters || {}); // Ensure filters are handled properly
+            setSortedInfo(sorter || {}); // Ensure sorter is handled properly
           }}
           onRow={(record) => ({
-            onClick: () => showOrderDetail(record),
+            onClick: () => showOrderDetail(record), // Show order details on row click
           })}
+          columns={filteredColumns}
+          scroll={{ x: filteredColumns.length * 150 }}
           filteredInfo={filteredInfo}
           sortedInfo={sortedInfo}
         />
