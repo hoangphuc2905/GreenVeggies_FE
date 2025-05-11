@@ -5,7 +5,7 @@ import { changePassword } from "../../../services/AuthService"; // Import hàm c
 const ChangePassword = () => {
   const location = useLocation();
   const [email, setEmail] = useState(
-    location.state?.email || "user@example.com"
+    location.state?.email || localStorage.getItem("email") || "user@example.com"
   );
 
   useEffect(() => {

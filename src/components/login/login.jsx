@@ -47,6 +47,7 @@ const LoginForm = ({
       // Lưu thông tin người dùng vào localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("userID", data.user.userID);
+      localStorage.setItem("email", data.user.email);
       localStorage.setItem("role", role);
 
       // Hiển thị thông báo đăng nhập thành công

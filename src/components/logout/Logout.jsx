@@ -11,6 +11,8 @@ const useLogout = () => {
         // Xóa thông tin người dùng và token khỏi localStorage
         localStorage.removeItem("token");
         localStorage.removeItem("userID");
+        localStorage.removeItem("email");
+        localStorage.removeItem("role");
 
         // Hiển thị thông báo đăng xuất thành công
         notification.success({
