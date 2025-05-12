@@ -191,11 +191,16 @@ export const handleNotifyApi = {
       headers: getAuthHeader(),
     });
   },
-  markAsRead: async (notifyID) => {
-    return await notifyAPI.patch(`/notifications/${notifyID}/read`, {
-      headers: getAuthHeader(),
-    });
+  markAsRead: async (notificationID) => {
+    return await notifyAPI.patch(
+      `/notifications/${notificationID}/read`,
+      {},
+      {
+        headers: getAuthHeader(),
+      }
+    );
   },
+
   createNotification: async (data) => {
     return await notifyAPI.post("/notifications", data, {
       headers: getAuthHeader(),

@@ -16,7 +16,10 @@ import {
   getPaymentByOrderId,
 } from "../../../../../services/PaymentService";
 import { updateStatus } from "../../../../../services/OrderService";
-import { getProductById } from "../../../../../services/ProductService";
+import {
+  getProductById,
+  updateProductQuantity,
+} from "../../../../../services/ProductService";
 import { formattedPrice } from "../../../../../components/calcSoldPrice/CalcPrice";
 
 const calculateShippingFee = (
@@ -277,7 +280,6 @@ const OrderDetail = ({
             defaultValue={selectedReason || undefined}
             onChange={(value) => {
               selectedReason = value;
-              enteredReason = ""; // Clear custom reason when a predefined reason is selected
             }}
           >
             {cancellationOptions.map((option) => (
@@ -291,7 +293,6 @@ const OrderDetail = ({
             defaultValue={enteredReason}
             onChange={(e) => {
               enteredReason = e.target.value;
-              selectedReason = ""; // Clear predefined reason when custom reason is entered
             }}
           />
         </div>
@@ -299,22 +300,40 @@ const OrderDetail = ({
       okText: "Hủy đơn",
       cancelText: "Đóng",
       onOk: async () => {
-        const reason = enteredReason || selectedReason;
+        const reason = [selectedReason, enteredReason]
+          .filter(Boolean) // Loại bỏ giá trị null hoặc undefined
+          .join("; "); // Kết hợp cả hai lý do bằng dấu chấm phẩy
 
         if (!reason) {
           Modal.error({
             content: "Vui lòng chọn hoặc nhập lý do hủy đơn hàng.",
           });
-          return Promise.reject(); // Prevent modal from closing
+          return Promise.reject(); // Ngăn modal đóng
         }
 
         try {
+          // Cập nhật lại số lượng sản phẩm
+          if (order.orderDetails) {
+            await Promise.all(
+              order.orderDetails.map(async (item) => {
+                const product = await getProductById(item.productID);
+                const updatedQuantity = product.quantity + item.quantity;
+
+                await updateProductQuantity(item.productID, {
+                  ...product,
+                  quantity: updatedQuantity,
+                  sold: product.sold - item.quantity,
+                });
+              })
+            );
+          }
+
           await updateStatus(order.orderID, "Cancelled", { reason });
           Modal.success({
             content: "Đơn hàng đã được hủy thành công.",
           });
 
-          await sendCancelNotify(order.orderID, reason.toString()); // Gửi thông báo sau khi hủy đơn hàng
+          await sendCancelNotify(order.orderID, reason); // Gửi thông báo sau khi hủy đơn hàng
           setTimeout(() => {
             refreshOrders();
             onClose();
