@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal } from "antd";
+import {
+  Button,
+  Input,
+  Space,
+  Table,
+  Tag,
+  Tooltip,
+  Spin,
+  Modal,
+  Select,
+} from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
@@ -349,49 +359,98 @@ const ListOrder = () => {
   };
 
   const handleCancelOrder = async (order, reason) => {
-    try {
-      // Gửi thông báo hủy đơn hàng
-      await sendCancelNotification(order.orderID, order.userID, reason);
+    let selectedReason = "";
+    let enteredReason = "";
 
-      // Cập nhật lại số lượng sản phẩm
-      if (order.orderDetails) {
-        await Promise.all(
-          order.orderDetails.map(async (item) => {
-            // Lấy thông tin sản phẩm hiện tại
-            const product = await getProductById(item.productID);
-            console.log("Sản phẩm hiện tại:", product);
-            // const imageUrls = product.imageUrl;
-            // Cộng lại số lượng sản phẩm
-            const updatedQuantity = product.quantity + item.quantity;
-            console.log("Số lượng sản phẩm sau khi cập nhật:", updatedQuantity);
+    Modal.confirm({
+      title: "Xác nhận hủy đơn hàng",
+      content: (
+        <div>
+          <p>Vui lòng chọn hoặc nhập lý do hủy đơn hàng:</p>
+          <Select
+            style={{ width: "100%", marginBottom: "10px" }}
+            placeholder="Chọn lý do hủy (không bắt buộc)"
+            onChange={(value) => {
+              selectedReason = value;
+            }}
+          >
+            {[
+              "Khách hàng yêu cầu hủy",
+              "Hết hàng",
+              "Thông tin giao hàng không chính xác",
+              "Lý do khác",
+            ].map((option) => (
+              <Select.Option key={option} value={option}>
+                {option}
+              </Select.Option>
+            ))}
+          </Select>
+          <Input
+            placeholder="Hoặc nhập lý do hủy"
+            onChange={(e) => {
+              enteredReason = e.target.value;
+            }}
+          />
+        </div>
+      ),
+      okText: "Hủy đơn",
+      cancelText: "Đóng",
+      onOk: async () => {
+        const finalReason = [selectedReason, enteredReason]
+          .filter(Boolean) // Loại bỏ giá trị null hoặc undefined
+          .join("; "); // Kết hợp cả hai lý do bằng dấu chấm phẩy
 
-            // Gọi API updateProduct để cập nhật số lượng
-            await updateProductQuantity(item.productID, {
-              ...product,
-              quantity: updatedQuantity,
-              sold: product.sold - item.quantity,
-            });
-          })
-        );
-      }
+        if (!finalReason) {
+          Modal.error({
+            content: "Vui lòng chọn hoặc nhập lý do hủy đơn hàng.",
+          });
+          return Promise.reject(); // Ngăn modal đóng
+        }
 
-      await updateStatus(order.orderID, "Cancelled", { reason });
+        try {
+          // Gửi thông báo hủy đơn hàng
+          await sendCancelNotification(
+            order.orderID,
+            order.userID,
+            finalReason
+          );
 
-      Modal.success({
-        content:
-          "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
-      });
+          // Cập nhật lại số lượng sản phẩm
+          if (order.orderDetails) {
+            await Promise.all(
+              order.orderDetails.map(async (item) => {
+                const product = await getProductById(item.productID);
+                const updatedQuantity = product.quantity + item.quantity;
 
-      // Làm mới danh sách đơn hàng
-      refreshOrders();
-    } catch (error) {
-      Modal.error({
-        content: "Đã xảy ra lỗi khi hủy đơn hàng.",
-      });
-      console.error("Error cancelling order:", error);
-    }
+                await updateProductQuantity(item.productID, {
+                  ...product,
+                  quantity: updatedQuantity,
+                  sold: product.sold - item.quantity,
+                });
+              })
+            );
+          }
+
+          await updateStatus(order.orderID, "Cancelled", {
+            reason: finalReason,
+          });
+
+          Modal.success({
+            content:
+              "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
+          });
+
+          // Làm mới danh sách đơn hàng
+          refreshOrders();
+        } catch (error) {
+          Modal.error({
+            content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+          });
+          console.error("Error cancelling order:", error);
+        }
+      },
+    });
   };
-
   const handleApproveSelectedOrders = async () => {
     try {
       console.log("Selected orders:", selectedOrders);
@@ -602,19 +661,10 @@ const ListOrder = () => {
         <Button
           type="default"
           size="small"
-          onClick={() => {
-            Modal.confirm({
-              title: "Xác nhận hủy đơn hàng",
-              content: (
-                <Input.TextArea
-                  placeholder="Nhập lý do hủy đơn hàng"
-                  onChange={(e) => setCancelReason(e.target.value)}
-                />
-              ),
-              okText: "Hủy đơn",
-              cancelText: "Đóng",
-              onOk: () => handleCancelOrder(record, cancelReason),
-            });
+          onClick={(event) => {
+            event.stopPropagation();
+            handleCancelOrder(record, cancelReason);
+            setCancelReason("");
           }}
         >
           Hủy đơn
