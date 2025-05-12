@@ -308,6 +308,26 @@ const ListOrder = () => {
     },
   });
 
+  const handleSendNotification = async (orderID, customerID) => {
+    try {
+      const formData = {
+        senderType: "admin",
+        senderUserID: localStorage.getItem("userID"),
+        receiverID: customerID,
+        title: "Thông báo đơn hàng",
+        message: `Đơn hàng ${orderID} đã được duyệt.`,
+        type: "order",
+        orderID: orderID,
+      };
+      const response = await createNotify(formData);
+      if (response) {
+        console.log("Thông báo đã được gửi thành công:", response);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo:", error);
+    }
+  };
+
   const sendCancelNotification = async (orderID, customerID, reason) => {
     try {
       const formData = {
@@ -378,13 +398,24 @@ const ListOrder = () => {
       const approvedOrders = await Promise.all(
         selectedOrders.map(async (orderID) => {
           console.log("Đơn hàng đã chọn:", orderID);
+
+          // Lấy thông tin đơn hàng để lấy userID
+          const order = orders.find((o) => o.orderID === orderID);
+          if (order) {
+            // Gửi thông báo cho khách hàng bằng hàm handleSendNotification
+            await handleSendNotification(orderID, order.userID);
+          }
+
+          // Cập nhật trạng thái đơn hàng
           await updateStatus(orderID, "Shipped");
           return orderID;
         })
       );
+
       Modal.success({
-        content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+        content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng và gửi thông báo.`,
       });
+
       setSelectedRowKeys([]);
       setSelectedOrders([]);
       refreshOrders();
@@ -395,7 +426,6 @@ const ListOrder = () => {
       console.error("Error approving selected orders:", error);
     }
   };
-
   const rowSelection = {
     selectedRowKeys, // Controlled selected row keys
     onChange: (newSelectedRowKeys, selectedRows) => {

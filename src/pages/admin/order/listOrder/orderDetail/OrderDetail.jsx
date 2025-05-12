@@ -16,7 +16,10 @@ import {
   getPaymentByOrderId,
 } from "../../../../../services/PaymentService";
 import { updateStatus } from "../../../../../services/OrderService";
-import { getProductById } from "../../../../../services/ProductService";
+import {
+  getProductById,
+  updateProductQuantity,
+} from "../../../../../services/ProductService";
 import { formattedPrice } from "../../../../../components/calcSoldPrice/CalcPrice";
 
 const calculateShippingFee = (
@@ -309,6 +312,22 @@ const OrderDetail = ({
         }
 
         try {
+          // Cập nhật lại số lượng sản phẩm
+          if (order.orderDetails) {
+            await Promise.all(
+              order.orderDetails.map(async (item) => {
+                const product = await getProductById(item.productID);
+                const updatedQuantity = product.quantity + item.quantity;
+
+                await updateProductQuantity(item.productID, {
+                  ...product,
+                  quantity: updatedQuantity,
+                  sold: product.sold - item.quantity,
+                });
+              })
+            );
+          }
+
           await updateStatus(order.orderID, "Cancelled", { reason });
           Modal.success({
             content: "Đơn hàng đã được hủy thành công.",
