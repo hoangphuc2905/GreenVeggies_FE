@@ -86,13 +86,15 @@ const UploadPicture = ({
 
     try {
       const data = await deleteImage(publicId);
-      if (data?.message === "Xóa ảnh thành công!") {
-        message.success("Xóa ảnh thành công!");
+      console.log("Xóa ảnh thành công:", data.data);
+      if (data.data?.success === true) {
+        // Updated condition to check 'success'
+        message.success(data.data?.message || "Xóa ảnh thành công!");
         const newFileList = files.filter((item) => item.uid !== file.uid);
         setFiles(newFileList);
         onFileListChange(newFileList);
       } else {
-        message.error(data?.message || "Xóa ảnh thất bại!");
+        message.error(data.data?.message || "Xóa ảnh thất bại!");
       }
     } catch (error) {
       message.error(
