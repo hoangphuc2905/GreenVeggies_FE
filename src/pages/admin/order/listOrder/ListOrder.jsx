@@ -10,6 +10,11 @@ import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 import { createNotify } from "../../../../services/NotifyService";
 import { getUserInfo } from "../../../../services/UserService";
 import { getOrders, updateStatus } from "../../../../services/OrderService";
+import {
+  getProductById,
+  updateProduct,
+  updateProductQuantity,
+} from "../../../../services/ProductService";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -291,6 +296,18 @@ const ListOrder = () => {
       ),
   });
 
+  const getColumnDropdownProps = (dataIndex, options) => ({
+    filters: options.map((option) => ({
+      text: option.label, // Display Vietnamese label
+      value: option.value, // Use English value for filtering
+    })),
+    onFilter: (value, record) => record[dataIndex]?.toString() === value,
+    render: (text) => {
+      const matchedOption = options.find((option) => option.value === text);
+      return <span>{matchedOption ? matchedOption.label : text}</span>; // Display label if matched
+    },
+  });
+
   const sendCancelNotification = async (orderID, customerID, reason) => {
     try {
       const formData = {
@@ -313,10 +330,39 @@ const ListOrder = () => {
 
   const handleCancelOrder = async (order, reason) => {
     try {
+      // Gửi thông báo hủy đơn hàng
       await sendCancelNotification(order.orderID, order.userID, reason);
+
+      // Cập nhật lại số lượng sản phẩm
+      if (order.orderDetails) {
+        await Promise.all(
+          order.orderDetails.map(async (item) => {
+            // Lấy thông tin sản phẩm hiện tại
+            const product = await getProductById(item.productID);
+            console.log("Sản phẩm hiện tại:", product);
+            // const imageUrls = product.imageUrl;
+            // Cộng lại số lượng sản phẩm
+            const updatedQuantity = product.quantity + item.quantity;
+            console.log("Số lượng sản phẩm sau khi cập nhật:", updatedQuantity);
+
+            // Gọi API updateProduct để cập nhật số lượng
+            await updateProductQuantity(item.productID, {
+              ...product,
+              quantity: updatedQuantity,
+              sold: product.sold - item.quantity,
+            });
+          })
+        );
+      }
+
+      await updateStatus(order.orderID, "Cancelled", { reason });
+
       Modal.success({
-        content: "Đơn hàng đã được hủy thành công và thông báo đã được gửi.",
+        content:
+          "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
       });
+
+      // Làm mới danh sách đơn hàng
       refreshOrders();
     } catch (error) {
       Modal.error({
@@ -356,6 +402,10 @@ const ListOrder = () => {
       setSelectedRowKeys(newSelectedRowKeys); // Update selected row keys
       setSelectedOrders(selectedRows.map((row) => row.orderID)); // Store selected order IDs
     },
+    getCheckboxProps: (record) => ({
+      disabled: record.status !== "Pending", // Allow selection only for "Pending" rows
+      name: record.orderID,
+    }),
   };
 
   const columns = [
@@ -434,7 +484,12 @@ const ListOrder = () => {
       dataIndex: "status",
       key: "status",
       ellipsis: true,
-      ...getColumnSearchProps("status", true),
+      ...getColumnDropdownProps("status", [
+        { value: "Pending", label: "Đang chờ duyệt" },
+        { value: "Shipped", label: "Đang giao hàng" },
+        { value: "Delivered", label: "Đã giao thành công" },
+        { value: "Cancelled", label: "Đã hủy" },
+      ]),
       render: (status) => {
         let color =
           status === "Pending"
@@ -468,7 +523,11 @@ const ListOrder = () => {
       dataIndex: "paymentMethod",
       key: "paymentMethod",
       ellipsis: true,
-      ...getColumnSearchProps("paymentMethod", true),
+      ...getColumnDropdownProps("paymentMethod", [
+        { value: "COD", label: "Thanh toán khi nhận hàng (COD)" },
+        { value: "CASH", label: "Thanh toán tiền mặt" },
+        { value: "BANK", label: "Chuyển khoản" },
+      ]),
       render: (paymentMethod) => {
         let paymentText =
           paymentMethod === "COD" || paymentMethod === "CASH"
@@ -571,7 +630,17 @@ const ListOrder = () => {
             ...rowSelection, // Use the updated rowSelection logic
           }}
           rowKey="orderID" // Use orderID as the unique key for rows
-          pagination={pagination} // Pass pagination state to the Table
+          pagination={{
+            ...pagination,
+            showSizeChanger: true, // Hiển thị bộ chọn số lượng phần tử trên mỗi trang
+            pageSizeOptions: ["5", "10", "20", "50"], // Các tùy chọn số lượng phần tử
+            onShowSizeChange: (current, size) => {
+              setPagination((prev) => ({
+                ...prev,
+                pageSize: size, // Cập nhật số lượng phần tử trên mỗi trang
+              }));
+            },
+          }}
           onChange={(pagination, filters, sorter) => {
             setPagination({
               current: pagination.current,

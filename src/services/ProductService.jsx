@@ -187,6 +187,38 @@ export const updateProduct = async (productID, values) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Cập nhật số lượng sản phẩm
+export const updateProductQuantity = async (productID, values) => {
+  try {
+    //Data
+    const formData = {
+      name: values.name,
+      description: values.description,
+      origin: values.origin,
+      imageUrl: values.imageUrl,
+      category: values.category,
+      quantity: values.quantity,
+      sold: values.sold,
+      unit: values.unit,
+      status: values.status,
+      price: values.price,
+    };
+    // Gọi API cập nhật số lượng sản phẩm
+    const response = await handleProductApi.updateProduct(productID, formData);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu sản phẩm vừa cập nhật
+    }
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API updateProductQuantity:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
 //Thêm phiếu nhập hàng
 export const insertStockEntry = async (values) => {
   try {
