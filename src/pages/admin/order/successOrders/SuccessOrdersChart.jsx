@@ -42,8 +42,8 @@ const SuccessOrdersChart = () => {
         const data = await getMonthlyOrderStats(selectedMonth, selectedYear);
         console.log("Tháng:", selectedMonth);
         console.log("Năm:", selectedYear);
-        // Kiểm tra xem dữ liệu có hợp lệ không
         console.log("Thống kê đơn hàng:", data);
+
         if (data?.stats && Array.isArray(data.stats)) {
           const labels = data.stats.map(
             (item) =>
@@ -51,10 +51,27 @@ const SuccessOrdersChart = () => {
                 .toString()
                 .padStart(2, "0")}`
           );
-          const values = data.stats.map((item) => item.totalOrders);
 
-          // Check if all values are zero
-          const hasData = values.some((value) => value > 0);
+          // Tạo các dataset cho từng trạng thái
+          const pendingData = data.stats.map(
+            (item) => item.statuses.Pending || 0
+          );
+          const shippedData = data.stats.map(
+            (item) => item.statuses.Shipped || 0
+          );
+          const deliveredData = data.stats.map(
+            (item) => item.statuses.Delivered || 0
+          );
+          const cancelledData = data.stats.map(
+            (item) => item.statuses.Cancelled || 0
+          );
+
+          // Kiểm tra nếu tất cả giá trị đều bằng 0
+          const hasData =
+            pendingData.some((value) => value > 0) ||
+            shippedData.some((value) => value > 0) ||
+            deliveredData.some((value) => value > 0) ||
+            cancelledData.some((value) => value > 0);
 
           setChartData(
             hasData
@@ -62,11 +79,41 @@ const SuccessOrdersChart = () => {
                   labels,
                   datasets: [
                     {
-                      label: "Số lượng đơn hàng thành công",
-                      data: values,
-                      borderColor: "#34C759", // Line color
-                      backgroundColor: "rgba(52, 199, 89, 0.6)", // Fill color
+                      label: "Đang chờ duyệt",
+                      data: pendingData,
+                      borderColor: "#FFA500", // Màu cam
+                      backgroundColor: "rgba(255, 165, 0, 0.6)",
+                      pointBackgroundColor: "#FFA500",
+                      pointBorderColor: "#fff",
+                      pointRadius: 4,
+                      borderWidth: 2,
+                    },
+                    {
+                      label: "Đang giao hàng",
+                      data: shippedData,
+                      borderColor: "#007BFF", // Màu xanh dương
+                      backgroundColor: "rgba(0, 123, 255, 0.6)",
+                      pointBackgroundColor: "#007BFF",
+                      pointBorderColor: "#fff",
+                      pointRadius: 4,
+                      borderWidth: 2,
+                    },
+                    {
+                      label: "Đã giao thành công",
+                      data: deliveredData,
+                      borderColor: "#34C759", // Màu xanh lá
+                      backgroundColor: "rgba(52, 199, 89, 0.6)",
                       pointBackgroundColor: "#34C759",
+                      pointBorderColor: "#fff",
+                      pointRadius: 4,
+                      borderWidth: 2,
+                    },
+                    {
+                      label: "Đã hủy",
+                      data: cancelledData,
+                      borderColor: "#FF3B30", // Màu đỏ
+                      backgroundColor: "rgba(255, 59, 48, 0.6)",
+                      pointBackgroundColor: "#FF3B30",
                       pointBorderColor: "#fff",
                       pointRadius: 4,
                       borderWidth: 2,

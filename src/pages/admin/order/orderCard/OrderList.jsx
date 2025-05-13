@@ -2,16 +2,37 @@ import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import OrderCard from "./OrderCard";
 import { getOrderStatusByDate } from "../../../../services/StatisticService";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
-const OrderList = ({ selectedDate }) => {
+const OrderList = ({ selectedDay, selectedMonth, selectedYear }) => {
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const fetchOrderStats = async (date) => {
-    console.log("Fetching order stats for date:", selectedDate);
+  const fetchOrderStats = async () => {
     setLoading(true);
     try {
-      const response = await getOrderStatusByDate(date.format("DD-MM-YYYY"));
+      let dateString = null;
+      if (selectedYear) {
+        if (selectedMonth) {
+          if (selectedDay) {
+            dateString = dayjs(
+              `${selectedYear}-${selectedMonth}-${selectedDay}`
+            ).format("DD-MM-YYYY");
+          } else {
+            dateString = dayjs(`${selectedYear}-${selectedMonth}-01`).format(
+              "MM-YYYY"
+            );
+          }
+        } else {
+          dateString = dayjs(`${selectedYear}-01-01`).format("YYYY");
+        }
+      }
+
+      console.log("Fetching order stats for date:", dateString);
+      const response = await getOrderStatusByDate(dateString);
+      console.log("Order stats response:", response);
       setOrderData(response.stats);
     } catch (error) {
       console.error("Lỗi khi lấy thống kê đơn hàng:", error);
@@ -21,10 +42,8 @@ const OrderList = ({ selectedDate }) => {
   };
 
   useEffect(() => {
-    if (selectedDate) {
-      fetchOrderStats(selectedDate);
-    }
-  }, [selectedDate]);
+    fetchOrderStats();
+  }, [selectedDay, selectedMonth, selectedYear]);
 
   // Placeholder khi chưa có dữ liệu
   const placeholderCards = [
@@ -66,6 +85,7 @@ const OrderList = ({ selectedDate }) => {
     cards = [
       {
         title: "Đang xử lý",
+        option: "Pending",
         value: current.Pending,
         growth: null,
         unit: "đơn",
@@ -73,6 +93,7 @@ const OrderList = ({ selectedDate }) => {
       },
       {
         title: "Đã giao",
+        option: "Delivered",
         value: current.Delivered,
         growth: change.Delivered,
         unit: "đơn",
@@ -80,6 +101,7 @@ const OrderList = ({ selectedDate }) => {
       },
       {
         title: "Đã hủy",
+        option: "Cancelled",
         value: current.Cancelled,
         growth: change.Cancelled,
         unit: "đơn",
@@ -87,6 +109,7 @@ const OrderList = ({ selectedDate }) => {
       },
       {
         title: "Đang vận chuyển",
+        option: "Shipped",
         value: current.Shipped,
         growth: change.Shipped,
         unit: "đơn",
@@ -95,17 +118,35 @@ const OrderList = ({ selectedDate }) => {
     ];
   }
 
+  const handleCardClick = (status) => {
+    console.log("Clicked card with status:", status);
+    navigate("/admin/dashboard/orders/list", {
+      state: {
+        status: status === "Đang xử lý" ? "Pending" : status,
+        day: selectedDay,
+        month: selectedMonth,
+        year: selectedYear,
+      },
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4">
       {cards.map((item, index) => (
-        <OrderCard key={index} {...item} />
+        <OrderCard
+          key={index}
+          {...item}
+          onClick={() => handleCardClick(item.option)}
+        />
       ))}
     </div>
   );
 };
 
 OrderList.propTypes = {
-  selectedDate: PropTypes.object.isRequired,
+  selectedDay: PropTypes.number,
+  selectedMonth: PropTypes.number,
+  selectedYear: PropTypes.number,
 };
 
 export default OrderList;

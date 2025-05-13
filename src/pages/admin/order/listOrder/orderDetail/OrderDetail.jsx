@@ -10,7 +10,10 @@ import {
 import PropTypes from "prop-types";
 import logo from "../../../../../assets/pictures/Green.png";
 import { useEffect, useState } from "react";
-import { createNotify } from "../../../../../services/NotifyService";
+import {
+  createNotify,
+  fetchCancelledOrderNotifications,
+} from "../../../../../services/NotifyService";
 import {
   checkPaymentStatus,
   getPaymentByOrderId,
@@ -73,6 +76,7 @@ const OrderDetail = ({
   const [cancelReason, setCancelReason] = useState(""); // State for cancellation reason
   const [customReason, setCustomReason] = useState(""); // State for custom reason input
   const userID = localStorage.getItem("userID");
+  const [reason, setReason] = useState(""); // State for cancellation reason
 
   const cancellationOptions = [
     "Khách hàng yêu cầu hủy",
@@ -119,7 +123,23 @@ const OrderDetail = ({
         console.error("Lỗi khi lấy thông tin thanh toán:", error);
       }
     };
-
+    const fetchCancelledNotifications = async () => {
+      if (order.status === "Cancelled") {
+        try {
+          const notifications = await fetchCancelledOrderNotifications(
+            order.orderID
+          );
+          console.log(
+            "Thông báo hủy đơn hàng:",
+            notifications || "Không có thông báo nào"
+          );
+          setReason(notifications || []);
+        } catch (error) {
+          console.error("Lỗi khi lấy thông báo hủy đơn hàng:", error);
+        }
+      }
+    };
+    fetchCancelledNotifications();
     fetchDetails();
     fetchPaymentDetails(); // Fetch payment details when order changes
   }, [order]);
@@ -382,7 +402,7 @@ const OrderDetail = ({
       render: (text, record) => (
         <span>
           {text}{" "}
-          {record.status === "unavailable" && (
+          {order.status === "Pending" && record.status === "unavailable" && (
             <span style={{ color: "red" }}>
               ({record.status === "unavailable" ? "Ngưng bán" : ""})
             </span>
@@ -412,7 +432,6 @@ const OrderDetail = ({
       },
     },
   ];
-
   return (
     <ConfigProvider
       theme={{
@@ -550,10 +569,37 @@ const OrderDetail = ({
               ? "Đang giao hàng"
               : order.status === "Delivered"
               ? "Đã giao thành công"
-              : "Đã hủy"}
+              : `Đã hủy đơn (${
+                  reason.length > 0
+                    ? reason[0]?.message // Lấy message từ thông báo đầu tiên
+                    : "Không có lý do hủy"
+                })`}
           </Descriptions.Item>
-          <Descriptions.Item label="Thời gian">
+          <Descriptions.Item label="Thời gian đặt">
             {formattedDate(order.createdAt)}
+          </Descriptions.Item>
+          <Descriptions.Item
+            label={
+              order.status === "Pending"
+                ? "Thời gian chờ duyệt"
+                : order.status === "Shipped"
+                ? "Thời gian duyệt"
+                : order.status === "Delivered"
+                ? "Thời gian nhận"
+                : order.status === "Cancelled"
+                ? "Thời gian hủy"
+                : "Thời gian"
+            }
+          >
+            {order.status === "Pending"
+              ? "Chưa duyệt"
+              : order.status === "Shipped"
+              ? formattedDate(order.updatedAt)
+              : order.status === "Delivered"
+              ? formattedDate(order.updatedAt)
+              : order.status === "Cancelled"
+              ? formattedDate(order.updatedAt)
+              : "Không xác định"}
           </Descriptions.Item>
           <Descriptions.Item label="Phương thức thanh toán">
             {order.paymentMethod.toLowerCase() === "cash"
@@ -628,6 +674,19 @@ OrderDetail.propTypes = {
   visible: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   customerName: PropTypes.string.isRequired,
+  customerPhone: PropTypes.string.isRequired,
+  customerID: PropTypes.string.isRequired,
+  orderDetails: PropTypes.arrayOf(
+    PropTypes.shape({
+      productID: PropTypes.string.isRequired,
+      quantity: PropTypes.number.isRequired,
+      totalAmount: PropTypes.number.isRequired,
+      unit: PropTypes.string.isRequired,
+      status: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  refreshOrders: PropTypes.func.isRequired,
+  // order: PropTypes.object.isRequired,
   order: PropTypes.shape({
     orderID: PropTypes.string.isRequired,
     customerId: PropTypes.string.isRequired,
@@ -638,6 +697,7 @@ OrderDetail.propTypes = {
     createdAt: PropTypes.string.isRequired,
     paymentMethod: PropTypes.string.isRequired,
     totalAmount: PropTypes.string.isRequired,
+    updatedAt: PropTypes.string,
 
     orderDetails: PropTypes.arrayOf(
       PropTypes.shape({
