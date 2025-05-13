@@ -25,6 +25,8 @@ import {
   updateProduct,
   updateProductQuantity,
 } from "../../../../services/ProductService";
+import { useLocation } from "react-router-dom";
+import { getListOrdersStatusByDate } from "../../../../services/StatisticService";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -42,41 +44,10 @@ const useStyle = createStyles(({ css, token }) => {
   };
 });
 
-const fetchOrders = async () => {
-  try {
-    const orders = await getOrders();
-    const ordersWithPhone = await Promise.all(
-      orders.map(async (order) => {
-        const userInfo = await fetchUserInfo(order.userID);
-        return {
-          ...order,
-          phone: userInfo?.phone || "Không có số điện thoại",
-        };
-      })
-    );
-    ordersWithPhone.sort((a, b) => {
-      if (a.status === "Pending" && b.status !== "Pending") return -1;
-      if (a.status !== "Pending" && b.status === "Pending") return 1;
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-    return ordersWithPhone;
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return [];
-  }
-};
-
-const fetchUserInfo = async (userID) => {
-  try {
-    const response = await getUserInfo(userID);
-    return response;
-  } catch (error) {
-    console.error("Error fetching user info:", error);
-    return null;
-  }
-};
-
 const ListOrder = () => {
+  const location = useLocation();
+  const { status, day, month, year } = location.state || {}; // Retrieve state parameters
+
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedOrders, setSelectedOrders] = useState([]);
@@ -88,7 +59,7 @@ const ListOrder = () => {
     totalAmount: true,
     address: true,
     status: true,
-    createdAt: true,
+    updatedAt: true,
     paymentMethod: true,
     paymentContent: true,
     actions: true,
@@ -106,6 +77,51 @@ const ListOrder = () => {
   const [paymentContents, setPaymentContents] = useState({});
   const [loading, setLoading] = useState(true);
   const [cancelReason, setCancelReason] = useState("");
+  const [order, setOrder] = useState(null);
+
+  const fetchOrders = async (status, day, month, year) => {
+    console.log("Fetching orders with status:", status);
+    // console.log("Fetching orders with date:", date);
+
+    try {
+      let orders;
+      if (!status && !day && !month && !year) {
+        // Fetch all orders if no status or date is provided
+        orders = await getOrders();
+      } else {
+        // Extract day, month, and year from the date
+
+        orders = await getListOrdersStatusByDate({ day, month, year, status });
+        orders = orders.data || []; // Ensure orders is an array
+        console.log("Fetched orders:", orders);
+      }
+
+      const ordersWithPhone = await Promise.all(
+        orders.map(async (order) => {
+          const userInfo = await fetchUserInfo(order.userID);
+          return {
+            ...order,
+            phone: userInfo?.phone || "Không có số điện thoại",
+          };
+        })
+      );
+
+      return ordersWithPhone;
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      return [];
+    }
+  };
+
+  const fetchUserInfo = async (userID) => {
+    try {
+      const response = await getUserInfo(userID);
+      return response;
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const calculatePageSize = () => {
@@ -130,7 +146,7 @@ const ListOrder = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const data = await fetchOrders();
+      const data = await fetchOrders(status, day, month, year); // Pass status and date to fetchOrders
       setOrders(data);
       const paymentData = await Promise.all(
         data
@@ -161,7 +177,7 @@ const ListOrder = () => {
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [status, day, month, year]); // Add status and date as dependencies
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
@@ -186,7 +202,7 @@ const ListOrder = () => {
       totalAmount: true,
       address: true,
       status: true,
-      createdAt: true,
+      updatedAt: true,
       paymentMethod: true,
       paymentContent: true,
       actions: true,
@@ -451,33 +467,86 @@ const ListOrder = () => {
       },
     });
   };
+
+  const checkProductAvailability = async (orderDetails) => {
+    try {
+      for (const item of orderDetails) {
+        const product = await getProductById(item.productID);
+        if (!product || product.status === "unavailable") {
+          return {
+            isAvailable: false,
+            productName: product?.name || "Không xác định",
+          };
+        }
+      }
+      return { isAvailable: true };
+    } catch (error) {
+      console.error("Error checking product availability:", error);
+      return { isAvailable: false, productName: "Không xác định" };
+    }
+  };
+
   const handleApproveSelectedOrders = async () => {
     try {
-      console.log("Selected orders:", selectedOrders);
-      const approvedOrders = await Promise.all(
-        selectedOrders.map(async (orderID) => {
-          console.log("Đơn hàng đã chọn:", orderID);
+      const unavailableOrders = [];
+      const approvedOrders = [];
 
-          // Lấy thông tin đơn hàng để lấy userID
-          const order = orders.find((o) => o.orderID === orderID);
-          if (order) {
-            // Gửi thông báo cho khách hàng bằng hàm handleSendNotification
-            await handleSendNotification(orderID, order.userID);
-          }
+      for (const orderID of selectedOrders) {
+        const order = orders.find((o) => o.orderID === orderID);
+        if (!order) continue;
 
-          // Cập nhật trạng thái đơn hàng
-          await updateStatus(orderID, "Shipped");
-          return orderID;
-        })
-      );
+        const { isAvailable, productName } = await checkProductAvailability(
+          order.orderDetails
+        );
+        if (!isAvailable) {
+          unavailableOrders.push({ orderID, productName });
+          continue;
+        }
 
-      Modal.success({
-        content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng và gửi thông báo.`,
-      });
+        // Approve the order
+        await updateStatus(orderID, "Shipped");
+        await handleSendNotification(orderID, order.userID);
+        approvedOrders.push(orderID);
+      }
 
-      setSelectedRowKeys([]);
-      setSelectedOrders([]);
-      refreshOrders();
+      if (unavailableOrders.length > 0) {
+        Modal.confirm({
+          title: "Một số sản phẩm đã ngưng bán",
+          content: (
+            <div>
+              <p>Các đơn hàng sau có sản phẩm ngưng bán:</p>
+              <ul>
+                {unavailableOrders.map((order) => (
+                  <li key={order.orderID}>
+                    Đơn hàng {order.orderID}: Sản phẩm `{order.productName}`
+                  </li>
+                ))}
+              </ul>
+              <p>
+                Bạn có muốn bỏ qua các đơn này và tiếp tục duyệt các đơn khác
+                không?
+              </p>
+            </div>
+          ),
+          okText: "Tiếp tục",
+          cancelText: "Hủy",
+          onOk: async () => {
+            Modal.success({
+              content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+            });
+            setSelectedRowKeys([]);
+            setSelectedOrders([]);
+            refreshOrders();
+          },
+        });
+      } else {
+        Modal.success({
+          content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+        });
+        setSelectedRowKeys([]);
+        setSelectedOrders([]);
+        refreshOrders();
+      }
     } catch (error) {
       Modal.error({
         content: "Đã xảy ra lỗi khi duyệt các đơn hàng.",
@@ -485,6 +554,7 @@ const ListOrder = () => {
       console.error("Error approving selected orders:", error);
     }
   };
+
   const rowSelection = {
     selectedRowKeys, // Controlled selected row keys
     onChange: (newSelectedRowKeys, selectedRows) => {
@@ -601,11 +671,11 @@ const ListOrder = () => {
     },
     {
       title: "Thời gian",
-      dataIndex: "createdAt",
-      key: "createdAt",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
       ellipsis: true,
-      ...getColumnSearchProps("createdAt", true),
-      renderWELL: (createdAt) => formattedDate(createdAt),
+      ...getColumnSearchProps("updatedAt", true),
+      renderWELL: (updatedAt) => formattedDate(updatedAt),
     },
     {
       title: "Phương thức thanh toán",

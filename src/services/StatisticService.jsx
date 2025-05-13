@@ -58,3 +58,27 @@ export const getMonthlyOrderStats = async (month, year) => {
     return null;
   }
 };
+//Lấy danh sách đơn hàng theo ngày, tháng và năm
+export const getListOrdersStatusByDate = async ({
+  day,
+  month,
+  year,
+  status,
+}) => {
+  try {
+    console.log("Ngày:", day);
+    console.log("Tháng:", month);
+    console.log("Năm:", year);
+    console.log("Trạng thái:", status);
+    const response = await handleStatisticApi.getOrderStatusByDate({
+      day,
+      month,
+      year,
+      status,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};

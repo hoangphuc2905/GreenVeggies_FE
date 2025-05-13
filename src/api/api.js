@@ -105,9 +105,13 @@ export const handleProductApi = {
   },
   //Cập nhật trạng thái sản phẩm
   updateProductStatus: async (productID, status) => {
-    return await productAPI.put(`/products/status/${productID}`, status, {
-      headers: getAuthHeader(),
-    });
+    return await productAPI.put(
+      `/products/status/${productID}`,
+      { status },
+      {
+        headers: getAuthHeader(),
+      }
+    );
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
@@ -206,6 +210,12 @@ export const handleNotifyApi = {
       headers: getAuthHeader(),
     });
   },
+  //Lấy thông báo của đơn hàng bị hủy
+  getNotificationsByOrderId: async (orderID) => {
+    return await notifyAPI.get(`/notifications/order/${orderID}`, {
+      headers: getAuthHeader(),
+    });
+  },
 };
 
 //ĐƠN HÀNG
@@ -283,6 +293,24 @@ export const handleStatisticApi = {
         headers: getAuthHeader(),
       }
     );
+  },
+
+  //Lấy danh sách đơn hàng theo ngày, tháng và năm
+  getOrderStatusByDate: async ({ day, month, year, status }) => {
+    console.log("Tham số ngày:", day);
+    console.log("Tham số tháng:", month);
+    console.log("Tham số năm:", year);
+    console.log("Tham số trạng thái:", status);
+
+    const params = { year, status };
+    if (day) params.day = day;
+    if (month) params.month = month;
+    console.log("Tham số truy vấn:", params);
+
+    return await statisticAPI.get("/statistics/orderbydateandstatus", {
+      params,
+      headers: getAuthHeader(),
+    });
   },
 };
 // ĐÁNH GIÁ

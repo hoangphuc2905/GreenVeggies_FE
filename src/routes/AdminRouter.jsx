@@ -81,12 +81,18 @@ const AdminRouter = () => {
                   element={<UpdateProduct />}
                 />
                 <Route path="/dashboard/orders" element={<Order />} />
-                <Route path="/dashboard/orders/list" element={<ListOrder />} />
+                <Route
+                  path="/dashboard/orders/list"
+                  element={<ListOrder state={{}} />}
+                />
                 <Route
                   path="/notifications"
                   element={<NotificationScreen userID={userInfo.userID} />}
                 />
-                <Route path="*" element={<Navigate to="/not-authorized" replace />} />
+                <Route
+                  path="*"
+                  element={<Navigate to="/not-authorized" replace />}
+                />
               </Routes>
             </Layout>
           </Layout>
