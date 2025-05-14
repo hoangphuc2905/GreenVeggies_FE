@@ -247,11 +247,75 @@ export const handleOrderApi = {
       headers: getAuthHeader(),
     });
   },
-  // 🟢 Thêm đơn đặt hàng mới
+  // Thêm đơn đặt hàng mới
   addOrder: async (orderData) => {
-    return await orderAPI.post("/orders", orderData, {
-      headers: getAuthHeader(),
-    });
+    try {
+      // Log dữ liệu trước khi gửi
+      console.log("API addOrder - dữ liệu gửi đi:", orderData);
+
+      // Đảm bảo dữ liệu đúng định dạng
+      const formattedData = {
+        ...orderData,
+        totalQuantity: parseInt(orderData.totalQuantity),
+        totalAmount: parseInt(orderData.totalAmount),
+        orderDetails: orderData.orderDetails.map((item) => ({
+          ...item,
+          quantity: parseInt(item.quantity),
+        })),
+      };
+
+      // Thêm cơ chế thử lại cho lỗi transaction MongoDB
+      let maxRetries = 3;
+      let retryCount = 0;
+      let lastError = null;
+
+      while (retryCount < maxRetries) {
+        try {
+          console.log(
+            `Đang thử gửi yêu cầu lần ${retryCount + 1}/${maxRetries}`
+          );
+
+          const response = await orderAPI.post("/orders", formattedData, {
+            headers: getAuthHeader(),
+          });
+
+          console.log("Đã tạo đơn hàng thành công:", response.data);
+          return response.data;
+        } catch (error) {
+          lastError = error;
+
+          // Kiểm tra nếu là lỗi transaction MongoDB
+          const errorMsg = error.response?.data?.errors?.server || "";
+          const isTransactionError =
+            typeof errorMsg === "string" &&
+            (errorMsg.includes("Please retry your operation") ||
+              errorMsg.includes("multi-document transaction"));
+
+          if (isTransactionError && retryCount < maxRetries - 1) {
+            // Tăng số lần thử và chờ một lúc trước khi thử lại
+            retryCount++;
+            console.log(
+              `Lỗi transaction, đang thử lại lần ${retryCount}/${maxRetries}`
+            );
+
+            // Chờ 1 giây trước khi thử lại
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            continue;
+          }
+
+          // Nếu không phải lỗi transaction hoặc đã hết số lần thử, ném lỗi
+          console.error("API addOrder - lỗi:", error.response || error);
+          throw error;
+        }
+      }
+
+      // Nếu đã thử hết số lần mà vẫn lỗi
+      console.error("Đã thử lại tối đa nhưng vẫn thất bại:", lastError);
+      throw lastError;
+    } catch (error) {
+      console.error("API addOrder - lỗi cuối cùng:", error.response || error);
+      throw error;
+    }
   },
 };
 //THỐNG KÊ
@@ -367,34 +431,46 @@ export const handleShoppingCartApi = {
 };
 //THANH TOÁN
 export const handlePaymentApi = {
-  // Tạo mã QR cho thanh toán
-  createPaymentQR: async (amount, orderID, paymentMethod) => {
-    return await paymentAPI.post(
-      "/payments/create-qr",
-      {
-        amount,
-        orderID,
-        paymentMethod,
-      },
-      {
-        headers: getAuthHeader(),
-      }
-    );
+  // Create a direct payment record (for fallback when QR creation fails)
+  createPayment: async (amount, orderID, paymentMethod, content) => {
+    try {
+      const response = await paymentAPI.post(
+        "/payments/create",
+        {
+          amount,
+          orderID,
+          paymentMethod,
+          content,
+        },
+        {
+          headers: getAuthHeader(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating payment record:", error);
+      throw error;
+    }
   },
 
   // Kiểm tra trạng thái thanh toán
-  checkPaymentStatus: async (data) => {
-    const response = await paymentAPI.post(
-      "/payments/update-status",
-      {
-        paymentID: data,
-        newStatus: "Completed",
-      },
-      {
-        headers: getAuthHeader(),
-      }
-    );
-    return response.data;
+  checkPaymentStatus: async (paymentID) => {
+    try {
+      const response = await paymentAPI.post(
+        "/payments/update-status",
+        {
+          paymentID: paymentID,
+          newStatus: "Completed",
+        },
+        {
+          headers: getAuthHeader(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      throw error;
+    }
   },
 
   // Lấy danh sách thanh toán theo orderID
