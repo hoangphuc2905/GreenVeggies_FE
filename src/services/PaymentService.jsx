@@ -18,83 +18,85 @@ export const createPaymentQR = async (amount, orderID, paymentMethod) => {
       paymentMethod
     );
 
-    // Tạo mã nội dung (content) duy nhất ngay từ đầu
-    const content = "TT" + Math.floor(100000 + Math.random() * 900000);
-
-    // Gọi API để tạo thanh toán với content được tạo từ trước
+    // Chỉ gọi API backend một lần duy nhất
+    console.log("Đang gọi API tạo payment");
     const response = await handlePaymentApi.createPayment(
       amount,
       orderID,
-      paymentMethod,
-      content
+      paymentMethod
     );
 
-    console.log("Payment API response:", response);
+    // Nếu API trả về thành công
+    if (response && response.paymentID) {
+      console.log("Tạo payment thành công với ID:", response.paymentID);
+      console.log("Content từ backend:", response.content);
 
-    if (response && response.payment) {
-      // Tạo URL VietQR với content đã tạo
-      const vietQrUrl =
-        "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
-        amount +
-        "&addInfo=" +
-        content +
-        "&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
-
-      // Trả về kết quả với content đã tạo (đảm bảo nhất quán)
+      // Sử dụng content và QR URL từ backend
       return {
-        qrCodeUrl: vietQrUrl,
-        message: "Tạo mã QR thanh toán thành công.",
+        qrCodeUrl:
+          response.qrURL || createFallbackQRUrl(amount, response.content),
+        message: response.message || "Tạo mã QR thanh toán thành công.",
+        paymentId: response.paymentID,
+        orderID: response.orderID || orderID,
+        paymentMethod: response.paymentMethod || paymentMethod,
+        paymentStatus: response.paymentStatus || "Pending",
+        amount: response.amount || amount,
+        content: response.content, // Luôn sử dụng content từ backend
+      };
+    }
+
+    // Nếu không nhận được phản hồi hợp lệ, tìm payment từ cơ sở dữ liệu
+    console.error("Không nhận được phản hồi hợp lệ từ API thanh toán");
+    return findPaymentInDatabase(orderID);
+  } catch (error) {
+    console.error("Error details:", error.response || error);
+    console.error("Lỗi khi tạo mã QR thanh toán:", error.message);
+
+    // Trong trường hợp lỗi, tìm payment từ cơ sở dữ liệu
+    return findPaymentInDatabase(orderID);
+  }
+};
+
+/**
+ * Helper function to create a fallback QR URL
+ */
+function createFallbackQRUrl(amount, content) {
+  return `https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=${amount}&addInfo=${content}&accountName=HUYNH%20HOANG%20PHUC&acqId=970422`;
+}
+
+/**
+ * Tìm payment đã có trong cơ sở dữ liệu
+ */
+async function findPaymentInDatabase(orderID) {
+  try {
+    const response = await handlePaymentApi.getPaymentByOrderId(orderID);
+
+    // Nếu đã có payment trong database, sử dụng thông tin đó
+    if (response && response.payment) {
+      console.log("Đã tìm thấy payment trong database:", response.payment);
+      return {
+        qrCodeUrl: createFallbackQRUrl(
+          response.payment.amount,
+          response.payment.content
+        ),
+        message: "Sử dụng thông tin thanh toán đã lưu",
         paymentId: response.payment.paymentID,
         orderID: response.payment.orderID,
         paymentMethod: response.payment.paymentMethod,
         paymentStatus: response.payment.paymentStatus,
         amount: response.payment.amount,
-        content: content, // Sử dụng content đã tạo, không phải response.payment.content
+        content: response.payment.content, // Sử dụng content từ database
       };
     }
 
-    // Nếu không nhận được phản hồi từ API, tạo kết quả dự phòng
-    console.error("Không nhận được phản hồi từ API thanh toán");
-
-    // Tạo URL VietQR dự phòng
-    const fallbackVietQrUrl =
-      "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
-      amount +
-      "&addInfo=" +
-      content +
-      "&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
-
-    return {
-      qrCodeUrl: fallbackVietQrUrl,
-      message: "Tạo mã QR thanh toán tạm thời.",
-      paymentId: "vietqr_" + Date.now(),
-      paymentMethod: paymentMethod || "Bank Transfer",
-      content: content, // Sử dụng content đã tạo từ đầu
-    };
+    // Không tìm thấy payment và không tạo content mới
+    throw new Error("Không tìm thấy thông tin thanh toán và không thể tạo mới");
   } catch (error) {
-    console.error("Error details:", error.response || error);
-    console.error("Lỗi khi tạo mã QR thanh toán:", error.message);
-
-    // Trong trường hợp lỗi, vẫn sử dụng content đã tạo từ đầu
-    const content = "TT" + Math.floor(100000 + Math.random() * 900000);
-
-    // Tạo URL VietQR dự phòng
-    const vietQrUrl =
-      "https://img.vietqr.io/image/MB-868629052003-compact2.png?amount=" +
-      amount +
-      "&addInfo=" +
-      content +
-      "&accountName=HUYNH%20HOANG%20PHUC&acqId=970422";
-
-    return {
-      qrCodeUrl: vietQrUrl,
-      message: "Tạo mã QR thanh toán tạm thời.",
-      paymentId: "vietqr_" + Date.now(),
-      paymentMethod: paymentMethod || "Bank Transfer",
-      content: content,
-    };
+    // Nếu lỗi khi lấy payment từ database, trả về lỗi
+    console.error("Không thể lấy thông tin payment từ database:", error);
+    throw new Error("Không thể tạo hoặc lấy thông tin thanh toán");
   }
-};
+}
 
 /**
  * Checks the status of a payment

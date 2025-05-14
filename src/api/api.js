@@ -431,21 +431,26 @@ export const handleShoppingCartApi = {
 };
 //THANH TOÁN
 export const handlePaymentApi = {
-  // Create a direct payment record (for fallback when QR creation fails)
-  createPayment: async (amount, orderID, paymentMethod, content) => {
+  // Create a direct payment record
+  createPayment: async (amount, orderID, paymentMethod) => {
     try {
-      const response = await paymentAPI.post(
-        "/payments/create",
-        {
-          amount,
-          orderID,
-          paymentMethod,
-          content,
-        },
-        {
-          headers: getAuthHeader(),
-        }
-      );
+      // Chuẩn bị dữ liệu gửi đi - không cần gửi content, để backend tự tạo
+      const requestData = {
+        amount,
+        orderID,
+        paymentMethod,
+      };
+
+      console.log("Gửi request tạo payment:", requestData);
+
+      const response = await paymentAPI.post("/payments/create", requestData, {
+        headers: getAuthHeader(),
+      });
+
+      // Đảm bảo trả về đúng dữ liệu từ response
+      console.log("Response từ API payment/create:", response.data);
+
+      // Trả về đúng cấu trúc dữ liệu mà backend gửi về
       return response.data;
     } catch (error) {
       console.error("Error creating payment record:", error);

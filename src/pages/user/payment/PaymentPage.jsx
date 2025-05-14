@@ -44,20 +44,16 @@ const PaymentPage = () => {
           orderId,
           "Bank Transfer"
         );
-        console.log("QR code response:", response);
+        console.log("QR code response từ PaymentService:", response);
 
         // More detailed logging for debugging
         console.log(
-          "QR code content:",
+          "QR content từ response:",
           response.content ? response.content : "No content provided"
         );
         console.log(
-          "Payment method:",
-          response.paymentMethod || "No method provided"
-        );
-        console.log(
-          "Payment ID:",
-          response.paymentId || "No payment ID provided"
+          "QR payment ID từ response:",
+          response.paymentId ? response.paymentId : "No payment ID provided"
         );
 
         if (response?.qrCodeUrl) {
@@ -155,15 +151,24 @@ const PaymentPage = () => {
     try {
       setProcessingPayment(true);
 
-      // We'll wrap each operation in try/catch to prevent one failure from stopping the flow
+      // Đã có payment ID (từ khi tạo payment QR), không cần tạo mới
+      if (!paymentId || paymentId.startsWith("vietqr_")) {
+        // Trường hợp hiếm khi không có paymentId hợp lệ
+        console.warn("Không tìm thấy payment ID hợp lệ");
+      } else {
+        console.log("Cập nhật trạng thái cho payment ID:", paymentId);
+      }
+
+      // Cập nhật trạng thái đơn hàng
       try {
-        // Cập nhật trạng thái đơn hàng
         await updateStatus(orderId, "Pending");
+        console.log("Đã cập nhật trạng thái đơn hàng:", orderId);
       } catch (updateError) {
         console.error("Error updating order status:", updateError);
         // Continue anyway, don't block the flow
       }
 
+      // Tạo thông báo cho người dùng và admin
       try {
         // Tạo thông báo cho người dùng
         const notificationDataUser = {
@@ -187,6 +192,7 @@ const PaymentPage = () => {
 
         await createNotify(notificationDataUser);
         await createNotify(notificationDataAdmin);
+        console.log("Đã tạo thông báo thành công");
       } catch (notifyError) {
         console.error("Error creating notifications:", notifyError);
         // Continue anyway
