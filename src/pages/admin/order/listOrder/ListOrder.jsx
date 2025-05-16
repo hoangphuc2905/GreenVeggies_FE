@@ -22,7 +22,6 @@ import { getUserInfo } from "../../../../services/UserService";
 import { getOrders, updateStatus } from "../../../../services/OrderService";
 import {
   getProductById,
-  updateProduct,
   updateProductQuantity,
 } from "../../../../services/ProductService";
 import { useLocation } from "react-router-dom";
@@ -77,7 +76,6 @@ const ListOrder = () => {
   const [paymentContents, setPaymentContents] = useState({});
   const [loading, setLoading] = useState(true);
   const [cancelReason, setCancelReason] = useState("");
-  const [order, setOrder] = useState(null);
 
   const fetchOrders = async (status, day, month, year) => {
     console.log("Fetching orders with status:", status);
@@ -374,7 +372,7 @@ const ListOrder = () => {
     }
   };
 
-  const handleCancelOrder = async (order, reason) => {
+  const handleCancelOrder = async (order) => {
     let selectedReason = "";
     let enteredReason = "";
 

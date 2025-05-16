@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Select, Space } from "antd";
-import moment from "moment";
 import OrderList from "./orderCard/OrderList";
 import SuccessOrdersChart from "./successOrders/SuccessOrdersChart";
-import ListOrder from "./listOrder/ListOrder";
 import dayjs from "dayjs";
 
 const Order = () => {

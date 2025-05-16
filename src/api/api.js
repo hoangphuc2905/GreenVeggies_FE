@@ -1,36 +1,15 @@
 import axios from "axios";
 
-const API_URL_USER = import.meta.env.VITE_API_USER_URL;
-const API_PRODUCT_URL = import.meta.env.VITE_API_PRODUCT_URL;
 const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
-const API_AUTH_URL = import.meta.env.VITE_API_AUTH_URL;
-const API_ADDRESS_URL = import.meta.env.VITE_API_ADDRESS_URL;
-const API_ORDER_URL = import.meta.env.VITE_API_ORDER_URL;
-const API_SHOPPING_CART_URL = import.meta.env.VITE_API_SHOPPING_CART_URL;
-const API_URL_NOTIFY = import.meta.env.VITE_API_NOTIFICATION_URL;
-const API_PAYMENT_URL = import.meta.env.VITE_API_PAYMENT_URL;
-const API_URL_STATISTIC = import.meta.env.VITE_API_STATISTIC_URL;
+
+const OFFICIAL_WEBSITE = import.meta.env.VITE_API;
 
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
 export const cloundinaryName = import.meta.env.VITE_CLOUDINARY_NAME;
 
 const api = axios.create({
-  baseURL: API_PRODUCT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const productAPI = axios.create({
-  baseURL: API_PRODUCT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const userAPI = axios.create({
-  baseURL: API_URL_USER,
+  baseURL: OFFICIAL_WEBSITE,
   headers: {
     "Content-Type": "application/json",
   },
@@ -43,53 +22,6 @@ const reviewAPI = axios.create({
   },
 });
 
-const auth = axios.create({
-  baseURL: API_AUTH_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const address = axios.create({
-  baseURL: API_ADDRESS_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const orderAPI = axios.create({
-  baseURL: API_ORDER_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const shoppingCartAPI = axios.create({
-  baseURL: API_SHOPPING_CART_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-const notifyAPI = axios.create({
-  baseURL: API_URL_NOTIFY,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const paymentAPI = axios.create({
-  baseURL: API_PAYMENT_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const statisticAPI = axios.create({
-  baseURL: API_URL_STATISTIC,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 //Authentication
 const getAuthHeader = () => {
   const token = localStorage.getItem("token");
@@ -99,13 +31,13 @@ const getAuthHeader = () => {
 //SẢN PHẨM
 export const handleProductApi = {
   getListProducts: async (key) => {
-    return await productAPI.get(`/${key}`, {
+    return await api.get(`/${key}`, {
       headers: getAuthHeader(),
     });
   },
   //Cập nhật trạng thái sản phẩm
   updateProductStatus: async (productID, status) => {
-    return await productAPI.put(
+    return await api.put(
       `/products/status/${productID}`,
       { status },
       {
@@ -115,46 +47,46 @@ export const handleProductApi = {
   },
   //Tìm sản phẩm theo id
   getProductById: async (id) => {
-    return await productAPI.get(`/products/${id}`);
+    return await api.get(`/products/${id}`);
   },
 
   //Thêm sản phẩm mới
   addProduct: async (data) => {
-    return await productAPI.post("/products", data, {
+    return await api.post("/products", data, {
       headers: getAuthHeader(),
     });
   },
   addCategory: async (data) => {
-    return await productAPI.post("/categories", data, {
+    return await api.post("/categories", data, {
       headers: getAuthHeader(),
     });
   },
   //Lấy danh sách danh mục
   getCategories: async () => {
-    const response = await productAPI.get("/categories");
+    const response = await api.get("/categories");
     return response.data;
   },
   updateProduct: async (id, data) => {
-    return await productAPI.put(`/products/${id}`, data, {
+    return await api.put(`/products/${id}`, data, {
       headers: getAuthHeader(),
     });
   },
   //Thêm phiếu nhập kho
 
   insertStockEntry: async (data) => {
-    return await productAPI.post("/stock-entries", data, {
+    return await api.post("/stock-entries", data, {
       headers: getAuthHeader(),
     });
   },
   //Lấy thông tin nhập hàng
   getStockEntry: async (stockID) => {
-    return await productAPI.get(`/stock-entries/${stockID}`, {
+    return await api.get(`/stock-entries/${stockID}`, {
       headers: getAuthHeader(),
     });
   },
   //Xóa hình ảnh trên cloud
   deleteImage: async (publicId) => {
-    return await productAPI.post(
+    return await api.post(
       "/products/delete-image",
       { publicId },
       {
@@ -168,19 +100,19 @@ export const handleProductApi = {
 export const handleUserApi = {
   //Lấy thông tin của người dùng
   getUserInfo: async (userID) => {
-    return await userAPI.get(`/user/${userID}`, {
+    return await api.get(`/user/${userID}`, {
       headers: getAuthHeader(),
     });
   },
   //Lấy danh sách người dùng
   getUsers: async () => {
-    return await userAPI.get("/user", {
+    return await api.get("/user", {
       headers: getAuthHeader(),
     });
   },
   //Cập nhật thông tin người dùng
   updateUserInfo: async (userID, data) => {
-    return await userAPI.put(`/user/${userID}`, data, {
+    return await api.put(`/user/${userID}`, data, {
       headers: getAuthHeader(),
     });
   },
@@ -191,12 +123,12 @@ export const handleNotifyApi = {
   //Lấy danh sách thông báo
 
   getNotificationsByReceiver: async (receiverID) => {
-    return await notifyAPI.get(`/notifications/${receiverID}`, {
+    return await api.get(`/notifications/${receiverID}`, {
       headers: getAuthHeader(),
     });
   },
   markAsRead: async (notificationID) => {
-    return await notifyAPI.patch(
+    return await api.patch(
       `/notifications/${notificationID}/read`,
       {},
       {
@@ -206,13 +138,13 @@ export const handleNotifyApi = {
   },
 
   createNotification: async (data) => {
-    return await notifyAPI.post("/notifications", data, {
+    return await api.post("/notifications", data, {
       headers: getAuthHeader(),
     });
   },
   //Lấy thông báo của đơn hàng bị hủy
   getNotificationsByOrderId: async (orderID) => {
-    return await notifyAPI.get(`/notifications/order/${orderID}`, {
+    return await api.get(`/notifications/order/${orderID}`, {
       headers: getAuthHeader(),
     });
   },
@@ -222,18 +154,18 @@ export const handleNotifyApi = {
 export const handleOrderApi = {
   //Lấy thông tin đơn hàng theo ID
   getOrderById: async (orderID) => {
-    return await orderAPI.get(`/orders/${orderID}`, {
+    return await api.get(`/orders/${orderID}`, {
       headers: getAuthHeader(),
     });
   },
   //Lấy danh sách đơn hàng theo userID
   getOrdersByUserId: async (userID) => {
-    return await orderAPI.get(`/orders/user/${userID}`, {
+    return await api.get(`/orders/user/${userID}`, {
       headers: getAuthHeader(),
     });
   },
   updateStatus: async (orderID, status) => {
-    return await orderAPI.put(
+    return await api.put(
       `/orders/${orderID}`,
       { status },
       {
@@ -243,13 +175,13 @@ export const handleOrderApi = {
   },
   //Lấy danh sách tất cva3 đơn hàng
   getAllOrders: async () => {
-    return await orderAPI.get("/orders", {
+    return await api.get("/orders", {
       headers: getAuthHeader(),
     });
   },
   // 🟢 Thêm đơn đặt hàng mới
   addOrder: async (orderData) => {
-    return await orderAPI.post("/orders", orderData, {
+    return await api.post("/orders", orderData, {
       headers: getAuthHeader(),
     });
   },
@@ -258,36 +190,33 @@ export const handleOrderApi = {
 export const handleStatisticApi = {
   // Thống kê doanh thu hàng ngày
   getDailyRevenue: async (date) => {
-    return await statisticAPI.get(`/statistics/daily?date=${date}`, {
+    return await api.get(`/statistics/daily?date=${date}`, {
       headers: getAuthHeader(),
     });
   },
   //Tình trạng doanh thu theo ngày
   getRevenueByPaymentMethod: async (date) => {
-    return await statisticAPI.get(
-      `/statistics/revenue-by-payment-method?date=${date}`,
-      {
-        headers: getAuthHeader(),
-      }
-    );
+    return await api.get(`/statistics/revenue-by-payment-method?date=${date}`, {
+      headers: getAuthHeader(),
+    });
   },
   //Thống kê đơn hàng theo trạng thái
   getOrderStatsByStatus: async (date) => {
     // statistics/order-status?date
-    return await statisticAPI.get(`/statistics/order-status?date=${date}`, {
+    return await api.get(`/statistics/order-status?date=${date}`, {
       headers: getAuthHeader(),
     });
   },
   //Thống kê doanh thu theo năm
   getYearlyRevenue: async (year) => {
     // statistics/yearly-revenue?year=2025
-    return await statisticAPI.get(`/statistics/yearly-revenue?year=${year}`, {
+    return await api.get(`/statistics/yearly-revenue?year=${year}`, {
       headers: getAuthHeader(),
     });
   },
   //Thống kê đơn hàng thành công theo tháng của năm
   getMonthlySuccessfulOrders: async (month, year) => {
-    return await statisticAPI.get(
+    return await api.get(
       `/statistics/daily-orders?month=${month}&year=${year}`,
       {
         headers: getAuthHeader(),
@@ -307,7 +236,7 @@ export const handleStatisticApi = {
     if (month) params.month = month;
     console.log("Tham số truy vấn:", params);
 
-    return await statisticAPI.get("/statistics/orderbydateandstatus", {
+    return await api.get("/statistics/orderbydateandstatus", {
       params,
       headers: getAuthHeader(),
     });
@@ -331,19 +260,19 @@ export const handleReviewApi = {
 export const handleShoppingCartApi = {
   // Lưu thông tin sản phẩm vào giỏ hàng
   saveShoppingCarts: async (orderData) => {
-    return await shoppingCartAPI.post("/shopping-carts", orderData, {
+    return await api.post("/shopping-carts", orderData, {
       headers: getAuthHeader(),
     });
   },
   // Lấy giỏ hàng theo userID
   getShoppingCartByUserId: async (userID) => {
-    return await shoppingCartAPI.get(`/shopping-carts/user/${userID}`, {
+    return await api.get(`/shopping-carts/user/${userID}`, {
       headers: getAuthHeader(),
     });
   },
   // Cập nhật số lượng sản phẩm trong giỏ hàng
   updateCartQuantity: async (shoppingCartID, productID, quantity) => {
-    return await shoppingCartAPI.patch(
+    return await api.patch(
       "/shopping-carts/update-quantity",
       {
         shoppingCartID,
@@ -357,7 +286,7 @@ export const handleShoppingCartApi = {
   },
   // Xóa chi tiết giỏ hàng theo shoppingCartDetailID
   deleteShoppingCartDetailById: async (shoppingCartDetailID) => {
-    return await shoppingCartAPI.delete(
+    return await api.delete(
       `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`,
       {
         headers: getAuthHeader(),
@@ -369,7 +298,7 @@ export const handleShoppingCartApi = {
 export const handlePaymentApi = {
   // Tạo mã QR cho thanh toán
   createPaymentQR: async (amount, orderID, paymentMethod) => {
-    return await paymentAPI.post(
+    return await api.post(
       "/payments/create-qr",
       {
         amount,
@@ -384,7 +313,7 @@ export const handlePaymentApi = {
 
   // Kiểm tra trạng thái thanh toán
   checkPaymentStatus: async (data) => {
-    const response = await paymentAPI.post(
+    const response = await api.post(
       "/payments/update-status",
       {
         paymentID: data,
@@ -399,7 +328,7 @@ export const handlePaymentApi = {
 
   // Lấy danh sách thanh toán theo orderID
   getPaymentByOrderId: async (orderID) => {
-    const response = await paymentAPI.get(`/payments/${orderID}`, {
+    const response = await api.get(`/payments/${orderID}`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -409,14 +338,14 @@ export const handlePaymentApi = {
 export const handleAuthApi = {
   // Đăng nhập
   login: async (formData) => {
-    return await auth.post("/auth/login", formData);
+    return await api.post("/auth/login", formData);
   },
 
   // quên mật khẩu
   forgotPassword: async (emailqmk) => {
     try {
       // Gửi yêu cầu đến API với email dưới dạng query parameter
-      const response = await auth.post(
+      const response = await api.post(
         `/auth/forgot-password?email=${encodeURIComponent(emailqmk)}`
       );
       return response.data; // Trả về dữ liệu từ API
@@ -429,7 +358,7 @@ export const handleAuthApi = {
   verifyOtp: async (emailqmk, otp) => {
     try {
       // Gửi email và otp dưới dạng query parameters
-      const response = await auth.post(
+      const response = await api.post(
         `/auth/verify-otp-reset?email=${encodeURIComponent(
           emailqmk
         )}&otp=${encodeURIComponent(otp)}`
@@ -445,7 +374,7 @@ export const handleAuthApi = {
   updatePassword: async (emailqmk, newPassword) => {
     try {
       // Gửi email và mật khẩu mới dưới dạng query parameters
-      const response = await auth.post(
+      const response = await api.post(
         `/auth/update-password?email=${encodeURIComponent(
           emailqmk
         )}&newPassword=${encodeURIComponent(newPassword)}`
@@ -462,7 +391,7 @@ export const handleAuthApi = {
   // Gửi mã OTP đến email
   sendOtp: async (email) => {
     try {
-      const response = await auth.post(
+      const response = await api.post(
         `/auth/send-otp?email=${encodeURIComponent(email)}`
       );
       return response.data; // Trả về dữ liệu từ API
@@ -486,7 +415,7 @@ export const handleAuthApi = {
   // Xác thực OTP
   verifyOtpforRegister: async (email, otp) => {
     try {
-      const response = await auth.post(
+      const response = await api.post(
         `/auth/verify-otp?email=${encodeURIComponent(
           email
         )}&otp=${encodeURIComponent(otp)}`
@@ -509,7 +438,7 @@ export const handleAuthApi = {
     try {
       const headers = getAuthHeader();
 
-      const response = await auth.post(
+      const response = await api.post(
         `/auth/change-password?email=${encodeURIComponent(
           email
         )}&oldPassword=${encodeURIComponent(
@@ -526,7 +455,7 @@ export const handleAuthApi = {
   },
   getAddressesByUserId: async (userID) => {
     try {
-      const response = await address.get(`/address`, {
+      const response = await api.get(`/address`, {
         params: { userID },
       });
       return response.data; // Trả về danh sách địa chỉ
@@ -539,7 +468,7 @@ export const handleAuthApi = {
   // Thêm địa chỉ mới
   addNewAddress: async (addressData) => {
     try {
-      const response = await address.post("/address", addressData);
+      const response = await api.post("/address", addressData);
       return response.data; // Trả về dữ liệu từ API
     } catch (error) {
       console.error("Lỗi khi thêm địa chỉ:", error);
@@ -550,7 +479,7 @@ export const handleAuthApi = {
   // Đăng ký tài khoản
   register: async (userData) => {
     try {
-      const response = await auth.post(`/auth/register`, userData);
+      const response = await api.post(`/auth/register`, userData);
       return response.data; // Trả về dữ liệu từ API
     } catch (error) {
       console.error("Lỗi khi đăng ký tài khoản:", error);

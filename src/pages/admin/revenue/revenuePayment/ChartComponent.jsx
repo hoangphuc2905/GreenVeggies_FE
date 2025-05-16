@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Select, Spin, Table, Button } from "antd";
+import { Select, Table, Button } from "antd";
 import { Bar, Line } from "react-chartjs-2";
 import * as XLSX from "xlsx";
 import {
@@ -13,6 +13,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import PropTypes from "prop-types";
+
 import { getPaymentStatusByDate } from "../../../../services/StatisticService";
 
 ChartJS.register(
@@ -68,7 +70,7 @@ const ChartComponent = ({ selectedDate }) => {
     datasets: [
       {
         data: paymentData.map((item) => item.revenue),
-        backgroundColor: ["#1890ff", "#f5222d", "#faad14", "#52c41a"],
+        backgroundColor: ["#1890ff", "#27A743", "#faad14", "#52c41a"],
         borderColor: chartType === "line" ? "#000" : "transparent",
         borderWidth: chartType === "line" ? 1 : 0,
       },
@@ -108,7 +110,7 @@ const ChartComponent = ({ selectedDate }) => {
     datasets: [
       {
         data: [0, 0],
-        backgroundColor: ["#1890ff", "#f5222d"],
+        backgroundColor: ["#1890ff", "#27A743"],
         borderColor: chartType === "line" ? "#000" : "transparent",
         borderWidth: chartType === "line" ? 1 : 0,
       },
@@ -166,6 +168,10 @@ const ChartComponent = ({ selectedDate }) => {
       </div>
     </div>
   );
+};
+
+ChartComponent.propTypes = {
+  selectedDate: PropTypes.object.isRequired,
 };
 
 export default ChartComponent;
