@@ -19,14 +19,12 @@ import Header from "../pages/user/layouts/Header";
 import UserFooter from "../pages/user/layouts/UserFooter";
 import { App } from "antd";
 import { fetchUser } from "../redux/userSlice";
-import { getUserInfo } from "../services/UserService";
 import OrderPage from "../pages/user/order/OrderPage";
 import ChangePassword from "../pages/user/profile/ChangePassword";
 import PaymentPage from "../pages/user/payment/PaymentPage";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
-  const [userInfo, setUserInfo] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
 
   const dispatch = useDispatch();
@@ -36,18 +34,28 @@ const UserRouter = () => {
     const token = localStorage.getItem("token");
     const userID = localStorage.getItem("userID");
     const role = localStorage.getItem("role");
+
     if (token && userID) {
       dispatch(fetchUser({ userID, token }));
-      getUserInfo(userID, token).then((userInfo) => {
-        setUserInfo(userInfo);
-        if (role === "admin") {
-          navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
-        } else {
-          setIsAdmin(false);
-        }
-      });
+
+      if (role === "admin") {
+        navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
+      } else {
+        setIsAdmin(false);
+      }
     } else {
-      navigate("/");
+      // Kiểm tra xem người dùng có đang cố truy cập vào các route yêu cầu đăng nhập không
+      const path = window.location.pathname;
+      const publicRoutes = ["/", "/product", "/news", "/contact", "/category"];
+      const isPublicRoute = publicRoutes.some((route) =>
+        path.startsWith(route)
+      );
+      const isProductDetail = /^\/product\/[\w-]+$/.test(path);
+
+      // Nếu đang cố truy cập các route yêu cầu đăng nhập, chuyển hướng về trang chủ
+      if (!isPublicRoute && !isProductDetail) {
+        navigate("/");
+      }
     }
   }, [dispatch, navigate]);
 

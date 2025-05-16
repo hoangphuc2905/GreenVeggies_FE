@@ -85,6 +85,7 @@ const Cart = () => {
     // Call the API to delete the item from the wishlist
     const result = await deleteShoppingCartDetailById(shoppingCartDetailID);
     if (result) {
+      // Update local state: remove the deleted item
       const updatedWishlist = wishlist.filter(
         (item) => item.shoppingCartDetailID !== shoppingCartDetailID
       );
@@ -100,6 +101,7 @@ const Cart = () => {
         placement: "topRight",
         duration: 3,
       });
+      return true;
     } else {
       console.error("Failed to remove item from wishlist");
       notification.error({
@@ -108,6 +110,7 @@ const Cart = () => {
         placement: "topRight",
         duration: 3,
       });
+      return false;
     }
   };
 
@@ -132,11 +135,54 @@ const Cart = () => {
       const itemToRemove = wishlist.find(
         (item) => item.productID === productID
       );
+
       if (itemToRemove && itemToRemove.shoppingCartDetailID) {
-        removeFromWishlist(itemToRemove.shoppingCartDetailID);
-        notification.success({
-          message: "Đã xóa sản phẩm",
-          description: "Sản phẩm đã được xóa khỏi giỏ hàng",
+        try {
+          // Call API to remove the item directly
+          const result = await deleteShoppingCartDetailById(
+            itemToRemove.shoppingCartDetailID
+          );
+
+          if (result) {
+            // Update local state without making another API call
+            setWishlist((prevWishlist) =>
+              prevWishlist.filter(
+                (item) =>
+                  item.shoppingCartDetailID !==
+                  itemToRemove.shoppingCartDetailID
+              )
+            );
+
+            // Dispatch event to notify cart has been updated
+            window.dispatchEvent(new Event("cartUpdated"));
+
+            notification.success({
+              message: "Đã xóa sản phẩm",
+              description: "Sản phẩm đã được xóa khỏi giỏ hàng",
+              placement: "topRight",
+              duration: 3,
+            });
+          } else {
+            notification.error({
+              message: "Lỗi",
+              description: "Không thể xóa sản phẩm khỏi giỏ hàng",
+              placement: "topRight",
+              duration: 3,
+            });
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa sản phẩm:", error);
+          notification.error({
+            message: "Lỗi",
+            description: "Không thể xóa sản phẩm khỏi giỏ hàng",
+            placement: "topRight",
+            duration: 3,
+          });
+        }
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: "Không tìm thấy thông tin chi tiết sản phẩm cần xóa",
           placement: "topRight",
           duration: 3,
         });

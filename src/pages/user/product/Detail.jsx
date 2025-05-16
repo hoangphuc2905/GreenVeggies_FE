@@ -12,6 +12,7 @@ import {
   Typography,
   Image,
   notification,
+  Modal,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
@@ -23,6 +24,7 @@ import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
+import LoginForm from "../../../components/login/login";
 
 const Detail = () => {
   const location = useLocation();
@@ -46,6 +48,8 @@ const Detail = () => {
   const [selectedTab, setSelectedTab] = useState("description");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [currentForm, setCurrentForm] = useState("login"); // 'login', 'register', 'forgotPassword'
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -161,8 +165,33 @@ const Detail = () => {
     setShowReviews(false);
   };
 
+  // Xác thực người dùng
+  const checkAuthenticated = () => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    return !!(token && userID);
+  };
+
+  // Xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng"
+  const handleAddToCart = () => {
+    if (!checkAuthenticated()) {
+      // Hiển thị form đăng nhập nếu chưa đăng nhập
+      setIsLoginModalVisible(true);
+      notification.info({
+        message: "Vui lòng đăng nhập",
+        description: "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng",
+        placement: "topRight",
+        duration: 3,
+      });
+    } else {
+      // Nếu đã đăng nhập, thêm vào giỏ hàng
+      addToWishlist();
+    }
+  };
+
   const addToWishlist = async () => {
     const userID = localStorage.getItem("userID"); // Lấy userID từ localStorage
+
     const imageUrl = Array.isArray(product.imageUrl)
       ? product.imageUrl[0]
       : product.imageUrl; // Lấy hình ảnh đầu tiên nếu imageUrl là mảng
@@ -223,6 +252,30 @@ const Detail = () => {
         duration: 3,
       });
     }
+  };
+
+  // Xử lý khi đăng nhập thành công
+  const handleLoginSuccess = (data) => {
+    setIsLoginModalVisible(false);
+
+    // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
+    setTimeout(() => {
+      addToWishlist();
+    }, 500);
+  };
+
+  // Điều khiển modal
+  const openLoginForm = () => {
+    setCurrentForm("login");
+    setIsLoginModalVisible(true);
+  };
+
+  const openRegisterForm = () => {
+    setCurrentForm("register");
+  };
+
+  const openForgotPasswordForm = () => {
+    setCurrentForm("forgotPassword");
   };
 
   const handleZoom = () => {
@@ -491,7 +544,7 @@ const Detail = () => {
 
                 <Button
                   type="primary"
-                  onClick={addToWishlist}
+                  onClick={handleAddToCart}
                   disabled={product.quantity === 0}
                   className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]">
                   THÊM VÀO GIỎ
@@ -679,6 +732,22 @@ const Detail = () => {
         )}
       </div>
       {/* Footer */}
+
+      {/* Thêm Modal đăng nhập */}
+      <Modal
+        open={isLoginModalVisible}
+        footer={null}
+        onCancel={() => setIsLoginModalVisible(false)}
+        width={800}
+        bodyStyle={{ padding: 0 }}
+        destroyOnClose={true}>
+        <LoginForm
+          closeLoginForm={() => setIsLoginModalVisible(false)}
+          openForgotPasswordForm={openForgotPasswordForm}
+          switchToRegister={openRegisterForm}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </Modal>
     </div>
   );
 };

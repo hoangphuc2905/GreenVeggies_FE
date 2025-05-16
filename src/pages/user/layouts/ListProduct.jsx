@@ -10,7 +10,7 @@ import {
   Button,
   Spin,
 } from "antd";
-import axios from "axios";
+
 import PropTypes from "prop-types";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { saveShoppingCarts } from "../../../services/ShoppingCartService";
@@ -18,6 +18,7 @@ import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
+import { getProducts } from "../../../services/ProductService";
 
 // Custom style for notifications
 const customNotificationStyle = `
@@ -83,22 +84,25 @@ const ListProduct = ({
     });
   }, []);
 
-  const API_URL = import.meta.env.VITE_API_PRODUCT_URL;
-
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(`${API_URL}/products`)
-      .then((response) => {
-        setProducts(response.data);
-      })
-      .catch((error) => {
-        console.error("Lỗi khi lấy dữ liệu!", error);
-      })
-      .finally(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await getProducts();
+        if (response && response) {
+          setProducts(response);
+        } else {
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+      } finally {
         setLoading(false);
-      });
-  }, [API_URL]);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const removeAccents = (str) => {
     return str
