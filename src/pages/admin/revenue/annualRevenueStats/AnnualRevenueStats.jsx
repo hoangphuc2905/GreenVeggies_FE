@@ -177,7 +177,9 @@ const RevenueTrendChart = () => {
                 dataSource={revenueData.stats}
                 pagination={false}
                 rowKey="month"
-                scroll={{ x: "max-content", y: 150 }}
+                scroll={{ x: "max-content", y: 350 }}
+                size="small"
+                style={{ maxHeight: "400px", overflowY: "auto" }}
               />
             )
           ) : (
