@@ -483,11 +483,14 @@ const Cart = () => {
             </div>
 
             <div className="col-span-1 flex flex-col justify-end gap-3">
-              <button
-                className="bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-all duration-200 w-full"
-                onClick={clearCart}>
-                Xóa tất cả sản phẩm
-              </button>
+              {/* Only show delete button if there are products in cart */}
+              {wishlist.length > 0 && (
+                <button
+                  className="bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-all duration-200 w-full"
+                  onClick={clearCart}>
+                  Xóa tất cả sản phẩm
+                </button>
+              )}
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-3 px-8 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
                 onClick={handleCheckout}>
