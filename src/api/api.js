@@ -196,56 +196,14 @@ export const handleOrderApi = {
         })),
       };
 
-      // Thêm cơ chế thử lại cho lỗi transaction MongoDB
-      let maxRetries = 3;
-      let retryCount = 0;
-      let lastError = null;
+      const response = await api.post("/orders", formattedData, {
+        headers: getAuthHeader(),
+      });
 
-      while (retryCount < maxRetries) {
-        try {
-          console.log(
-            `Đang thử gửi yêu cầu lần ${retryCount + 1}/${maxRetries}`
-          );
-
-          const response = await api.post("/orders", formattedData, {
-            headers: getAuthHeader(),
-          });
-
-          console.log("Đã tạo đơn hàng thành công:", response.data);
-          return response.data;
-        } catch (error) {
-          lastError = error;
-
-          // Kiểm tra nếu là lỗi transaction MongoDB
-          const errorMsg = error.response?.data?.errors?.server || "";
-          const isTransactionError =
-            typeof errorMsg === "string" &&
-            (errorMsg.includes("Please retry your operation") ||
-              errorMsg.includes("multi-document transaction"));
-
-          if (isTransactionError && retryCount < maxRetries - 1) {
-            // Tăng số lần thử và chờ một lúc trước khi thử lại
-            retryCount++;
-            console.log(
-              `Lỗi transaction, đang thử lại lần ${retryCount}/${maxRetries}`
-            );
-
-            // Chờ 1 giây trước khi thử lại
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            continue;
-          }
-
-          // Nếu không phải lỗi transaction hoặc đã hết số lần thử, ném lỗi
-          console.error("API addOrder - lỗi:", error.response || error);
-          throw error;
-        }
-      }
-
-      // Nếu đã thử hết số lần mà vẫn lỗi
-      console.error("Đã thử lại tối đa nhưng vẫn thất bại:", lastError);
-      throw lastError;
+      console.log("Đã tạo đơn hàng thành công:", response.data);
+      return response.data;
     } catch (error) {
-      console.error("API addOrder - lỗi cuối cùng:", error.response || error);
+      console.error("API addOrder - lỗi:", error.response || error);
       throw error;
     }
   },

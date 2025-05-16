@@ -1,5 +1,12 @@
 // Add notification to imports at the top
-import { Divider, InputNumber, notification, Checkbox, Spin } from "antd";
+import {
+  Divider,
+  InputNumber,
+  notification,
+  Checkbox,
+  Spin,
+  Modal,
+} from "antd";
 import bgImage from "../../../assets/pictures/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -170,6 +177,38 @@ const Cart = () => {
     if (value === null || value < 0) {
       console.error("Invalid value:", value);
       return;
+    }
+
+    // Find the current item
+    const currentItem = wishlist.find((item) => item.productID === productID);
+
+    // Check if quantity exceeds available stock
+    if (currentItem && value > currentItem.quantity) {
+      // Check available stock by fetching latest product data
+      try {
+        const productDetails = await getProductById(productID);
+
+        if (productDetails && value > productDetails.quantity) {
+          // Show modal with warning message
+          Modal.warning({
+            title: "Giới hạn số lượng",
+            content: `Rất tiếc, bạn chỉ có thể mua tối đa ${productDetails.quantity} sản phẩm của chương trình giảm giá này.`,
+            okText: "OK",
+            okButtonProps: {
+              style: {
+                backgroundColor: "#F05123",
+                borderColor: "#F05123",
+              },
+            },
+            centered: true,
+          });
+
+          // Set quantity to maximum available
+          value = productDetails.quantity;
+        }
+      } catch (error) {
+        console.error("Failed to fetch product details:", error);
+      }
     }
 
     try {
