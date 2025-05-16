@@ -82,16 +82,33 @@ const Cart = () => {
       shoppingCartDetailID
     );
 
-    // Call the API to delete the item from the wishlist
-    const result = await deleteShoppingCartDetailById(shoppingCartDetailID);
-    if (result) {
-      // Update local state: remove the deleted item
+    try {
+      // Call the API to delete the item from the wishlist
+      const result = await deleteShoppingCartDetailById(shoppingCartDetailID);
+
+      // Check if the result contains an error
+      if (result && result.error) {
+        notification.error({
+          message: "Lỗi",
+          description: result.error,
+          placement: "topRight",
+          duration: 3,
+        });
+        return false;
+      }
+
+      // If success, update local state: remove the deleted item
       const updatedWishlist = wishlist.filter(
         (item) => item.shoppingCartDetailID !== shoppingCartDetailID
       );
       setWishlist(updatedWishlist);
 
-      // Dispatch cartUpdated event instead of wishlistUpdated
+      // Update selected items list if needed
+      setSelectedItems((prevSelected) =>
+        prevSelected.filter((id) => id !== shoppingCartDetailID)
+      );
+
+      // Dispatch cartUpdated event
       window.dispatchEvent(new Event("cartUpdated"));
 
       // Show success notification
@@ -102,8 +119,8 @@ const Cart = () => {
         duration: 3,
       });
       return true;
-    } else {
-      console.error("Failed to remove item from wishlist");
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
       notification.error({
         message: "Lỗi",
         description: "Không thể xóa sản phẩm khỏi giỏ hàng",
@@ -137,48 +154,8 @@ const Cart = () => {
       );
 
       if (itemToRemove && itemToRemove.shoppingCartDetailID) {
-        try {
-          // Call API to remove the item directly
-          const result = await deleteShoppingCartDetailById(
-            itemToRemove.shoppingCartDetailID
-          );
-
-          if (result) {
-            // Update local state without making another API call
-            setWishlist((prevWishlist) =>
-              prevWishlist.filter(
-                (item) =>
-                  item.shoppingCartDetailID !==
-                  itemToRemove.shoppingCartDetailID
-              )
-            );
-
-            // Dispatch event to notify cart has been updated
-            window.dispatchEvent(new Event("cartUpdated"));
-
-            notification.success({
-              message: "Đã xóa sản phẩm",
-              description: "Sản phẩm đã được xóa khỏi giỏ hàng",
-              placement: "topRight",
-              duration: 3,
-            });
-          } else {
-            notification.error({
-              message: "Lỗi",
-              description: "Không thể xóa sản phẩm khỏi giỏ hàng",
-              placement: "topRight",
-              duration: 3,
-            });
-          }
-        } catch (error) {
-          console.error("Lỗi khi xóa sản phẩm:", error);
-          notification.error({
-            message: "Lỗi",
-            description: "Không thể xóa sản phẩm khỏi giỏ hàng",
-            placement: "topRight",
-            duration: 3,
-          });
-        }
+        await removeFromWishlist(itemToRemove.shoppingCartDetailID);
+        return;
       } else {
         notification.error({
           message: "Lỗi",

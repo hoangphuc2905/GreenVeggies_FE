@@ -348,10 +348,11 @@ export const handleShoppingCartApi = {
       }
     );
   },
-  // Xóa chi tiết giỏ hàng theo shoppingCartDetailID
+  // Xóa chi tiết giỏ hàng theo shoppingCartDetailID - cập nhật theo API mới
   deleteShoppingCartDetailById: async (shoppingCartDetailID) => {
-    return await api.delete(
-      `/shopping-carts/shopping-cart-details/${shoppingCartDetailID}`,
+    return await api.patch(
+      `/shopping-carts/remove-item/${shoppingCartDetailID}`,
+      {},
       {
         headers: getAuthHeader(),
       }
