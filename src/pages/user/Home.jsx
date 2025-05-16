@@ -25,7 +25,7 @@ import { Carousel, Image, Rate } from "antd";
 import Favourite from "./layouts/Favourite";
 import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
 import { ZoomInOutlined } from "@ant-design/icons";
-import { getProducts } from "../../services/ProductService";
+import { getProducts, getProductById } from "../../services/ProductService";
 
 const images = [
   {
@@ -39,19 +39,52 @@ const images = [
 ];
 
 const Home = () => {
-  const [products, setProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
       const data = await getProducts();
-      setProducts(data);
+
+      // Get random products for featured section
+      const randomProductIds = getRandomProducts(data, 6).map(
+        (product) => product.productID
+      );
+
+      // Fetch detailed product information for each featured product
+      const detailedProducts = await Promise.all(
+        randomProductIds.map(async (productID) => {
+          const productDetails = await getProductById(productID);
+          return productDetails;
+        })
+      );
+
+      // Filter out any null results
+      const validProducts = detailedProducts.filter((product) => product);
+      setFeaturedProducts(validProducts);
     };
 
     const fetchReviews = async () => {
       const data = await getAllReviews();
-      setReviews(data);
+
+      // Lấy thông tin chi tiết của sản phẩm cho mỗi đánh giá
+      const reviewsWithProductDetails = await Promise.all(
+        data.map(async (review) => {
+          if (review.productID) {
+            // ProductID nằm trực tiếp trong review, không phải trong object product
+            const productDetails = await getProductById(review.productID);
+            return {
+              ...review,
+              product: productDetails, // Lưu thông tin sản phẩm vào thuộc tính product
+            };
+          }
+          return review;
+        })
+      );
+
+      console.log("Reviews with product details:", reviewsWithProductDetails);
+      setReviews(reviewsWithProductDetails);
     };
 
     fetchProducts();
@@ -68,8 +101,6 @@ const Home = () => {
     const shuffled = products.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   };
-
-  const randomProducts = getRandomProducts(products, 6);
 
   return (
     <div className="h-full w-full bg-white flex flex-col px-[10%]">
@@ -252,7 +283,7 @@ const Home = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4">
-              {randomProducts.map((product, index) => (
+              {featuredProducts.map((product, index) => (
                 <div
                   key={index}
                   className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
@@ -401,15 +432,10 @@ const Home = () => {
                     <p
                       className="mt-4 font-semibold text-black cursor-pointer hover:text-[#82AE46] transition-colors"
                       onClick={() => {
-                        if (review.product?.productID) {
-                          navigate(
-                            `/product/${
-                              review.product._id || review.product.id
-                            }`,
-                            {
-                              state: { productID: review.product.productID },
-                            }
-                          );
+                        if (review.productID) {
+                          navigate(`/product/${review.productID}`, {
+                            state: { productID: review.productID },
+                          });
                         }
                       }}>
                       Tên sản phẩm : {review.product?.name || "Sản phẩm"}
