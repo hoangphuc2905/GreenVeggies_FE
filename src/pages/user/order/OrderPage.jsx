@@ -110,104 +110,215 @@ const OrderPage = () => {
     address
   ) => {
     try {
+      // Đảm bảo dữ liệu đầu vào hợp lệ
+      if (!userID || !cartItems || cartItems.length === 0) {
+        notification.error({
+          message: "Lỗi",
+          description: "Thông tin đơn hàng không hợp lệ. Vui lòng thử lại.",
+          placement: "topRight",
+          duration: 4,
+        });
+        return;
+      }
+
+      // Đảm bảo định dạng số nguyên cho số lượng và tổng tiền
       const orderData = {
         userID,
         orderDetails: cartItems.map((item) => ({
           productID: item.productID,
-          quantity: item.quantity,
+          quantity: parseInt(item.quantity),
         })),
-        totalQuantity,
-        totalAmount,
+        totalQuantity: parseInt(totalQuantity),
+        totalAmount: parseInt(totalAmount),
         address,
         paymentMethod,
+        paymentStatus: paymentMethod === "BANK" ? "Pending" : undefined,
       };
 
+      console.log("Đang gửi dữ liệu đơn hàng:", orderData);
+
       if (paymentMethod === "BANK") {
+        try {
+          const orderResponse = await addOrder(orderData);
+
+          if (
+            orderResponse &&
+            orderResponse.order &&
+            orderResponse.order.orderID
+          ) {
+            console.log("Order created for bank transfer:", orderResponse);
+
+            // Xóa các sản phẩm đã chọn khỏi giỏ hàng
+            for (const item of cartItems) {
+              await deleteShoppingCartDetailById(item.shoppingCartDetailID);
+            }
+
+            // Chỉ phát sự kiện cập nhật giỏ hàng
+            window.dispatchEvent(new Event("cartUpdated"));
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            navigate(
+              `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
+            );
+            return;
+          } else {
+            notification.error({
+              message: "Thất bại",
+              description: "Không thể tạo đơn hàng. Vui lòng thử lại.",
+              placement: "topRight",
+              duration: 4,
+            });
+            return;
+          }
+        } catch (orderError) {
+          console.error("Lỗi khi tạo đơn hàng:", orderError);
+
+          // Hiển thị thông báo lỗi cụ thể từ server nếu có
+          let errorMessage = "Không thể tạo đơn hàng. Vui lòng thử lại.";
+
+          if (orderError.message && orderError.message.includes("quá tải")) {
+            errorMessage = orderError.message;
+
+            // Hiển thị thông báo lỗi với nút thử lại
+            notification.error({
+              message: "Lỗi",
+              description: (
+                <div>
+                  <p>{errorMessage}</p>
+                  <Button
+                    type="primary"
+                    size="small"
+                    style={{ marginTop: "10px" }}
+                    onClick={() =>
+                      handlePlaceOrder(
+                        userID,
+                        cartItems,
+                        totalQuantity,
+                        totalAmount,
+                        paymentMethod,
+                        address
+                      )
+                    }>
+                    Thử lại
+                  </Button>
+                </div>
+              ),
+              placement: "topRight",
+              duration: 8,
+            });
+            return;
+          }
+
+          // Nếu không phải lỗi quá tải, hiển thị thông báo thông thường
+          notification.error({
+            message: "Lỗi",
+            description: orderError.message || errorMessage,
+            placement: "topRight",
+            duration: 4,
+          });
+        }
+      }
+
+      try {
         const orderResponse = await addOrder(orderData);
 
-        if (
-          orderResponse &&
-          orderResponse.order &&
-          orderResponse.order.orderID
-        ) {
-          console.log("Order created for bank transfer:", orderResponse);
+        if (orderResponse) {
+          console.log("Order placed successfully:", orderResponse);
+
+          const notificationDataUser = {
+            senderType: "system",
+            receiverID: userID,
+            title: "Thông báo đơn hàng",
+            message: `Đơn hàng #${orderResponse.order.orderID} đã được đặt thành công.`,
+            type: "order",
+            orderID: orderResponse.order.orderID,
+          };
+
+          const notificationDataAdmin = {
+            senderType: "system",
+            receiverID: "admin",
+            title: "Thông báo đơn hàng",
+            message: `Đơn hàng #${orderResponse.order.orderID} cần được duyệt.`,
+            type: "order",
+            orderID: orderResponse.order.orderID,
+          };
+
+          await createNotify(notificationDataUser);
+          await createNotify(notificationDataAdmin);
 
           // Xóa các sản phẩm đã chọn khỏi giỏ hàng
           for (const item of cartItems) {
             await deleteShoppingCartDetailById(item.shoppingCartDetailID);
           }
 
-          // Chỉ phát sự kiện cập nhật giỏ hàng
+          // Phát sự kiện cập nhật giỏ hàng và thông báo
           window.dispatchEvent(new Event("cartUpdated"));
+          window.dispatchEvent(new Event("orderSuccess"));
 
           // Scroll to top
           window.scrollTo({ top: 0, behavior: "smooth" });
 
-          navigate(
-            `/user/payment?amount=${totalAmount}&orderId=${orderResponse.order.orderID}`
-          );
-          return;
-        } else {
-          notification.error({
-            message: "Thất bại",
-            description: "Không thể tạo đơn hàng. Vui lòng thử lại.",
+          notification.success({
+            message: "Thành công",
+            description: "Đặt hàng thành công!",
             placement: "topRight",
             duration: 4,
           });
+
+          navigate("/user/orders");
+        } else {
+          notification.error({
+            message: "Thất bại",
+            description: "Đặt hàng thất bại. Vui lòng thử lại.",
+            placement: "topRight",
+            duration: 4,
+          });
+        }
+      } catch (orderError) {
+        console.error("Lỗi khi tạo đơn hàng:", orderError);
+
+        // Hiển thị thông báo lỗi cụ thể từ server nếu có
+        let errorMessage = "Không thể tạo đơn hàng. Vui lòng thử lại.";
+
+        if (orderError.message && orderError.message.includes("quá tải")) {
+          errorMessage = orderError.message;
+
+          // Hiển thị thông báo lỗi với nút thử lại
+          notification.error({
+            message: "Lỗi",
+            description: (
+              <div>
+                <p>{errorMessage}</p>
+                <Button
+                  type="primary"
+                  size="small"
+                  style={{ marginTop: "10px" }}
+                  onClick={() =>
+                    handlePlaceOrder(
+                      userID,
+                      cartItems,
+                      totalQuantity,
+                      totalAmount,
+                      paymentMethod,
+                      address
+                    )
+                  }>
+                  Thử lại
+                </Button>
+              </div>
+            ),
+            placement: "topRight",
+            duration: 8,
+          });
           return;
         }
-      }
 
-      const orderResponse = await addOrder(orderData);
-
-      if (orderResponse) {
-        console.log("Order placed successfully:", orderResponse);
-
-        const notificationDataUser = {
-          senderType: "system",
-          receiverID: userID,
-          title: "Thông báo đơn hàng",
-          message: `Đơn hàng #${orderResponse.order.orderID} đã được đặt thành công.`,
-          type: "order",
-          orderID: orderResponse.order.orderID,
-        };
-
-        const notificationDataAdmin = {
-          senderType: "system",
-          receiverID: "admin",
-          title: "Thông báo đơn hàng",
-          message: `Đơn hàng #${orderResponse.order.orderID} cần được duyệt.`,
-          type: "order",
-          orderID: orderResponse.order.orderID,
-        };
-
-        await createNotify(notificationDataUser);
-        await createNotify(notificationDataAdmin);
-
-        // Xóa các sản phẩm đã chọn khỏi giỏ hàng
-        for (const item of cartItems) {
-          await deleteShoppingCartDetailById(item.shoppingCartDetailID);
-        }
-
-        // Phát sự kiện cập nhật giỏ hàng và thông báo
-        window.dispatchEvent(new Event("cartUpdated"));
-        window.dispatchEvent(new Event("orderSuccess"));
-
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: "smooth" });
-
-        notification.success({
-          message: "Thành công",
-          description: "Đặt hàng thành công!",
-          placement: "topRight",
-          duration: 4,
-        });
-
-        navigate("/user/orders");
-      } else {
+        // Nếu không phải lỗi quá tải, hiển thị thông báo thông thường
         notification.error({
-          message: "Thất bại",
-          description: "Đặt hàng thất bại. Vui lòng thử lại.",
+          message: "Lỗi",
+          description: orderError.message || errorMessage,
           placement: "topRight",
           duration: 4,
         });
