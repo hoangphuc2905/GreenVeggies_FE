@@ -489,6 +489,7 @@ const ListOrder = () => {
       const unavailableOrders = [];
       const approvedOrders = [];
 
+      // Kiểm tra sản phẩm ngưng bán trước khi hỏi xác nhận
       for (const orderID of selectedOrders) {
         const order = orders.find((o) => o.orderID === orderID);
         if (!order) continue;
@@ -500,13 +501,9 @@ const ListOrder = () => {
           unavailableOrders.push({ orderID, productName });
           continue;
         }
-
-        // Approve the order
-        await updateStatus(orderID, "Shipped");
-        await handleSendNotification(orderID, order.userID);
-        approvedOrders.push(orderID);
       }
 
+      // Nếu có đơn hàng có sản phẩm ngưng bán, hỏi xác nhận
       if (unavailableOrders.length > 0) {
         Modal.confirm({
           title: "Một số sản phẩm đã ngưng bán",
@@ -516,12 +513,12 @@ const ListOrder = () => {
               <ul>
                 {unavailableOrders.map((order) => (
                   <li key={order.orderID}>
-                    Đơn hàng {order.orderID}: Sản phẩm `{order.productName}`
+                    Đơn hàng {order.orderID}: Sản phẩm "{order.productName}"
                   </li>
                 ))}
               </ul>
               <p>
-                Bạn có muốn bỏ qua các đơn này và tiếp tục duyệt các đơn khác
+                Bạn có muốn bỏ qua các đơn này và tiếp tục duyệt các đơn còn lại
                 không?
               </p>
             </div>
@@ -529,6 +526,55 @@ const ListOrder = () => {
           okText: "Tiếp tục",
           cancelText: "Hủy",
           onOk: async () => {
+            // Lọc ra các đơn hợp lệ để duyệt
+            const validOrderIDs = selectedOrders.filter(
+              (orderID) => !unavailableOrders.some((u) => u.orderID === orderID)
+            );
+            if (validOrderIDs.length === 0) {
+              Modal.info({
+                content: "Không có đơn hàng nào hợp lệ để duyệt.",
+              });
+              setSelectedRowKeys([]);
+              setSelectedOrders([]);
+              return;
+            }
+            // Hỏi xác nhận duyệt các đơn hợp lệ
+            Modal.confirm({
+              title: `Bạn có chắc chắn muốn duyệt ${validOrderIDs.length} đơn hàng hợp lệ?`,
+              okText: "Duyệt",
+              cancelText: "Hủy",
+              onOk: async () => {
+                for (const orderID of validOrderIDs) {
+                  const order = orders.find((o) => o.orderID === orderID);
+                  if (!order) continue;
+                  await updateStatus(orderID, "Shipped");
+                  await handleSendNotification(orderID, order.userID);
+                  approvedOrders.push(orderID);
+                }
+                Modal.success({
+                  content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+                });
+                setSelectedRowKeys([]);
+                setSelectedOrders([]);
+                refreshOrders();
+              },
+            });
+          },
+        });
+      } else {
+        // Nếu không có đơn nào ngưng bán, hỏi xác nhận duyệt tất cả
+        Modal.confirm({
+          title: `Bạn có chắc chắn muốn duyệt ${selectedOrders.length} đơn hàng đã chọn?`,
+          okText: "Duyệt",
+          cancelText: "Hủy",
+          onOk: async () => {
+            for (const orderID of selectedOrders) {
+              const order = orders.find((o) => o.orderID === orderID);
+              if (!order) continue;
+              await updateStatus(orderID, "Shipped");
+              await handleSendNotification(orderID, order.userID);
+              approvedOrders.push(orderID);
+            }
             Modal.success({
               content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
             });
@@ -537,13 +583,6 @@ const ListOrder = () => {
             refreshOrders();
           },
         });
-      } else {
-        Modal.success({
-          content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
-        });
-        setSelectedRowKeys([]);
-        setSelectedOrders([]);
-        refreshOrders();
       }
     } catch (error) {
       Modal.error({
