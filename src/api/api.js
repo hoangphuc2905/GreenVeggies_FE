@@ -207,7 +207,7 @@ export const handleOrderApi = {
             `Đang thử gửi yêu cầu lần ${retryCount + 1}/${maxRetries}`
           );
 
-          const response = await orderAPI.post("/orders", formattedData, {
+          const response = await api.post("/orders", formattedData, {
             headers: getAuthHeader(),
           });
 
@@ -372,7 +372,7 @@ export const handlePaymentApi = {
 
       console.log("Gửi request tạo payment:", requestData);
 
-      const response = await paymentAPI.post("/payments/create", requestData, {
+      const response = await api.post("/payments/create", requestData, {
         headers: getAuthHeader(),
       });
 
@@ -390,7 +390,7 @@ export const handlePaymentApi = {
   // Kiểm tra trạng thái thanh toán
   checkPaymentStatus: async (paymentID) => {
     try {
-      const response = await paymentAPI.post(
+      const response = await api.post(
         "/payments/update-status",
         {
           paymentID: paymentID,
