@@ -4,6 +4,7 @@ import { Button, Spin, Result, notification, Divider, Typography } from "antd";
 import { createPaymentQR } from "../../../services/PaymentService";
 import { createNotify } from "../../../services/NotifyService";
 import { updateStatus } from "../../../services/OrderService";
+import { deleteShoppingCartDetailById } from "../../../services/ShoppingCartService";
 
 const { Text, Paragraph } = Typography;
 
@@ -159,10 +160,44 @@ const PaymentPage = () => {
         console.log("Cập nhật trạng thái cho payment ID:", paymentId);
       }
 
-      // Cập nhật trạng thái đơn hàng
+      // Xóa các sản phẩm đã chọn khỏi giỏ hàng
       try {
-        await updateStatus(orderId, "Pending");
-        console.log("Đã cập nhật trạng thái đơn hàng:", orderId);
+        // Lấy danh sách sản phẩm từ localStorage
+        const pendingCartItems = JSON.parse(
+          localStorage.getItem(`pendingCartItems_${orderId}`) || "[]"
+        );
+
+        if (pendingCartItems && pendingCartItems.length > 0) {
+          console.log("Removing items from cart:", pendingCartItems);
+
+          // Xóa từng sản phẩm khỏi giỏ hàng
+          for (const shoppingCartDetailID of pendingCartItems) {
+            await deleteShoppingCartDetailById(shoppingCartDetailID);
+          }
+
+          // Xóa danh sách đã lưu sau khi xử lý xong
+          localStorage.removeItem(`pendingCartItems_${orderId}`);
+
+          // Phát sự kiện cập nhật giỏ hàng
+          window.dispatchEvent(new Event("cartUpdated"));
+
+          console.log("All items have been removed from shopping cart");
+        } else {
+          console.warn("No pending cart items found for order:", orderId);
+        }
+      } catch (cartError) {
+        console.error("Error removing items from cart:", cartError);
+        // Continue anyway, don't block the flow
+      }
+
+      // Cập nhật trạng thái đơn hàng và giảm số lượng trong kho
+      try {
+        // Cập nhật với reduceInventory = true để giảm số lượng trong kho
+        await updateStatus(orderId, "Pending", true);
+        console.log(
+          "Đã cập nhật trạng thái đơn hàng và giảm số lượng trong kho:",
+          orderId
+        );
       } catch (updateError) {
         console.error("Error updating order status:", updateError);
         // Continue anyway, don't block the flow

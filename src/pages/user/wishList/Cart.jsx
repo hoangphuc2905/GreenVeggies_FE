@@ -1,5 +1,12 @@
 // Add notification to imports at the top
-import { Divider, InputNumber, notification, Checkbox, Spin } from "antd";
+import {
+  Divider,
+  InputNumber,
+  notification,
+  Checkbox,
+  Spin,
+  Modal,
+} from "antd";
 import bgImage from "../../../assets/pictures/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
@@ -11,6 +18,7 @@ import {
   deleteShoppingCartDetailById,
   getShoppingCartByUserId,
   updateCartQuantity,
+  deleteShoppingCartById,
 } from "../../../services/ShoppingCartService";
 const Cart = () => {
   const navigate = useNavigate();
@@ -82,15 +90,33 @@ const Cart = () => {
       shoppingCartDetailID
     );
 
-    // Call the API to delete the item from the wishlist
-    const result = await deleteShoppingCartDetailById(shoppingCartDetailID);
-    if (result) {
+    try {
+      // Call the API to delete the item from the wishlist
+      const result = await deleteShoppingCartDetailById(shoppingCartDetailID);
+
+      // Check if the result contains an error
+      if (result && result.error) {
+        notification.error({
+          message: "Lỗi",
+          description: result.error,
+          placement: "topRight",
+          duration: 3,
+        });
+        return false;
+      }
+
+      // If success, update local state: remove the deleted item
       const updatedWishlist = wishlist.filter(
         (item) => item.shoppingCartDetailID !== shoppingCartDetailID
       );
       setWishlist(updatedWishlist);
 
-      // Dispatch cartUpdated event instead of wishlistUpdated
+      // Update selected items list if needed
+      setSelectedItems((prevSelected) =>
+        prevSelected.filter((id) => id !== shoppingCartDetailID)
+      );
+
+      // Dispatch cartUpdated event
       window.dispatchEvent(new Event("cartUpdated"));
 
       // Show success notification
@@ -100,14 +126,16 @@ const Cart = () => {
         placement: "topRight",
         duration: 3,
       });
-    } else {
-      console.error("Failed to remove item from wishlist");
+      return true;
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
       notification.error({
         message: "Lỗi",
         description: "Không thể xóa sản phẩm khỏi giỏ hàng",
         placement: "topRight",
         duration: 3,
       });
+      return false;
     }
   };
 
@@ -132,11 +160,14 @@ const Cart = () => {
       const itemToRemove = wishlist.find(
         (item) => item.productID === productID
       );
+
       if (itemToRemove && itemToRemove.shoppingCartDetailID) {
-        removeFromWishlist(itemToRemove.shoppingCartDetailID);
-        notification.success({
-          message: "Đã xóa sản phẩm",
-          description: "Sản phẩm đã được xóa khỏi giỏ hàng",
+        await removeFromWishlist(itemToRemove.shoppingCartDetailID);
+        return;
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: "Không tìm thấy thông tin chi tiết sản phẩm cần xóa",
           placement: "topRight",
           duration: 3,
         });
@@ -147,6 +178,38 @@ const Cart = () => {
     if (value === null || value < 0) {
       console.error("Invalid value:", value);
       return;
+    }
+
+    // Find the current item
+    const currentItem = wishlist.find((item) => item.productID === productID);
+
+    // Check if quantity exceeds available stock
+    if (currentItem && value > currentItem.quantity) {
+      // Check available stock by fetching latest product data
+      try {
+        const productDetails = await getProductById(productID);
+
+        if (productDetails && value > productDetails.quantity) {
+          // Show modal with warning message
+          Modal.warning({
+            title: "Giới hạn số lượng",
+            content: `Rất tiếc, bạn chỉ có thể mua tối đa ${productDetails.quantity} sản phẩm của chương trình giảm giá này.`,
+            okText: "OK",
+            okButtonProps: {
+              style: {
+                backgroundColor: "#F05123",
+                borderColor: "#F05123",
+              },
+            },
+            centered: true,
+          });
+
+          // Set quantity to maximum available
+          value = productDetails.quantity;
+        }
+      } catch (error) {
+        console.error("Failed to fetch product details:", error);
+      }
     }
 
     try {
@@ -217,6 +280,75 @@ const Cart = () => {
       selectedItems.includes(item.shoppingCartDetailID)
     );
     navigate("/order", { state: { selectedProducts } });
+  };
+
+  // Add function to clear entire cart
+  const clearCart = async () => {
+    if (wishlist.length === 0) {
+      notification.info({
+        message: "Giỏ hàng trống",
+        description: "Giỏ hàng của bạn hiện đang trống.",
+        placement: "topRight",
+        duration: 3,
+      });
+      return;
+    }
+
+    // Confirm before deleting
+    Modal.confirm({
+      title: "Xác nhận xóa giỏ hàng",
+      content: "Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?",
+      okText: "Xóa tất cả",
+      cancelText: "Hủy",
+      okButtonProps: {
+        style: {
+          backgroundColor: "#F05123",
+          borderColor: "#F05123",
+        },
+      },
+      onOk: async () => {
+        try {
+          // Get shoppingCartID from first item
+          if (wishlist.length > 0) {
+            const shoppingCartID = wishlist[0].shoppingCartID;
+
+            const result = await deleteShoppingCartById(shoppingCartID);
+
+            if (result && result.error) {
+              notification.error({
+                message: "Lỗi",
+                description: result.error,
+                placement: "topRight",
+                duration: 3,
+              });
+              return;
+            }
+
+            // Update local state
+            setWishlist([]);
+            setSelectedItems([]);
+
+            // Trigger cart update event
+            window.dispatchEvent(new Event("cartUpdated"));
+
+            notification.success({
+              message: "Xóa thành công",
+              description: "Đã xóa tất cả sản phẩm trong giỏ hàng",
+              placement: "topRight",
+              duration: 3,
+            });
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa giỏ hàng:", error);
+          notification.error({
+            message: "Lỗi",
+            description: "Không thể xóa giỏ hàng, vui lòng thử lại sau",
+            placement: "topRight",
+            duration: 3,
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -350,7 +482,15 @@ const Cart = () => {
               <p className="mb-4">{subtotal.toLocaleString()} VND</p>
             </div>
 
-            <div className="col-span-1 flex justify-end items-center">
+            <div className="col-span-1 flex flex-col justify-end gap-3">
+              {/* Only show delete button if there are products in cart */}
+              {wishlist.length > 0 && (
+                <button
+                  className="bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-all duration-200 w-full"
+                  onClick={clearCart}>
+                  Xóa tất cả sản phẩm
+                </button>
+              )}
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-3 px-8 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
                 onClick={handleCheckout}>

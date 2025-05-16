@@ -17,37 +17,78 @@ import { useEffect, useState } from "react";
 import CategoryPage from "../pages/user/Category/CategoryPage";
 import Header from "../pages/user/layouts/Header";
 import UserFooter from "../pages/user/layouts/UserFooter";
-import { App } from "antd";
+import { App, notification } from "antd";
 import { fetchUser } from "../redux/userSlice";
-import { getUserInfo } from "../services/UserService";
 import OrderPage from "../pages/user/order/OrderPage";
 import ChangePassword from "../pages/user/profile/ChangePassword";
 import PaymentPage from "../pages/user/payment/PaymentPage";
+import LoginForm from "../components/login/login";
 
 const UserRouter = () => {
   const [wishlist, setWishlist] = useState([]);
-  const [userInfo, setUserInfo] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Kiểm tra xem người dùng đã đăng nhập chưa
+  const checkAuthenticated = () => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    return !!(token && userID);
+  };
+
+  // Xử lý khi đăng nhập thành công
+  const handleLoginSuccess = (data) => {
+    setIsLoginModalVisible(false);
+
+    if (data && data.token) {
+      localStorage.setItem("token", data.token);
+      if (data.userID) {
+        localStorage.setItem("userID", data.userID);
+        dispatch(fetchUser({ userID: data.userID, token: data.token }));
+      }
+    }
+
+    // Cập nhật trạng thái đăng nhập và chuyển hướng người dùng đến trang yêu cầu ban đầu
+    window.location.reload();
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userID = localStorage.getItem("userID");
     const role = localStorage.getItem("role");
+
     if (token && userID) {
       dispatch(fetchUser({ userID, token }));
-      getUserInfo(userID, token).then((userInfo) => {
-        setUserInfo(userInfo);
-        if (role === "admin") {
-          navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
-        } else {
-          setIsAdmin(false);
-        }
-      });
+
+      if (role === "admin") {
+        navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
+      } else {
+        setIsAdmin(false);
+      }
     } else {
-      navigate("/");
+      // Kiểm tra xem người dùng có đang cố truy cập vào các route yêu cầu đăng nhập không
+      const path = window.location.pathname;
+      const publicRoutes = ["/", "/product", "/news", "/contact", "/category"];
+      const isPublicRoute = publicRoutes.some((route) =>
+        path.startsWith(route)
+      );
+      const isProductDetail = /^\/product\/[\w-]+$/.test(path);
+
+      // Nếu đang cố truy cập các route yêu cầu đăng nhập, chuyển hướng về trang chủ
+      if (!isPublicRoute && !isProductDetail) {
+        navigate("/");
+        // Hiển thị thông báo đăng nhập khi cố truy cập trang cần xác thực
+        setIsLoginModalVisible(true);
+        notification.info({
+          message: "Vui lòng đăng nhập",
+          description: "Bạn cần đăng nhập để truy cập trang này",
+          placement: "topRight",
+          duration: 3,
+        });
+      }
     }
   }, [dispatch, navigate]);
 
@@ -69,17 +110,37 @@ const UserRouter = () => {
         />
         <Route
           path="/wishlist"
-          element={<Wishlist wishlist={wishlist} setWishlist={setWishlist} />}
+          element={
+            checkAuthenticated() ? (
+              <Wishlist wishlist={wishlist} setWishlist={setWishlist} />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
         <Route path="/contact" element={<Contact />} />
         <Route path="/news" element={<News />} />
         <Route path="/news/:id" element={<NewsDetail />} />
         <Route path="/category/:id" element={<CategoryPage />} />
-        <Route path="/order" element={<OrderPage />} />
-        <Route path="/payment" element={<PaymentPage />} />
+        <Route
+          path="/order"
+          element={
+            checkAuthenticated() ? <OrderPage /> : <Navigate to="/" replace />
+          }
+        />
+        <Route
+          path="/payment"
+          element={
+            checkAuthenticated() ? <PaymentPage /> : <Navigate to="/" replace />
+          }
+        />
 
         {/* Các route liên quan đến user */}
-        <Route path="/user" element={<ProfilePage />}>
+        <Route
+          path="/user"
+          element={
+            checkAuthenticated() ? <ProfilePage /> : <Navigate to="/" replace />
+          }>
           <Route path="profile" element={<Profile />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="address" element={<Address />} />
@@ -93,6 +154,18 @@ const UserRouter = () => {
       </Routes>
 
       <UserFooter />
+
+      {/* Hiển thị form đăng nhập trực tiếp khi cần */}
+      {isLoginModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <LoginForm
+            closeLoginForm={() => setIsLoginModalVisible(false)}
+            openForgotPasswordForm={() => {}}
+            switchToRegister={() => {}}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+      )}
     </App>
   );
 };

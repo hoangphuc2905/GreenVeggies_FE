@@ -12,6 +12,7 @@ import {
   Typography,
   Image,
   notification,
+  Spin,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
@@ -23,6 +24,7 @@ import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
+import LoginForm from "../../../components/login/login";
 
 const Detail = () => {
   const location = useLocation();
@@ -34,6 +36,8 @@ const Detail = () => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const zoomCarouselRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const carouselRef = useRef(null); // thêm dòng này
   const navigate = useNavigate();
@@ -46,9 +50,11 @@ const Detail = () => {
   const [selectedTab, setSelectedTab] = useState("description");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
+      setLoading(true);
       try {
         const productData = await getProductById(id);
         setProduct(productData);
@@ -61,6 +67,8 @@ const Detail = () => {
         window.scrollTo(0, 0);
       } catch (error) {
         console.error("Failed to fetch product:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -71,6 +79,7 @@ const Detail = () => {
     const fetchUserNames = async () => {
       if (!product?.reviews) return;
 
+      setReviewsLoading(true);
       const uniqueUserIDs = [...new Set(product.reviews.map((r) => r.userID))];
 
       try {
@@ -102,6 +111,8 @@ const Detail = () => {
         setUserData((prev) => ({ ...prev, ...newUserData }));
       } catch (error) {
         console.error("Lỗi khi lấy danh sách user:", error);
+      } finally {
+        setReviewsLoading(false);
       }
     };
 
@@ -161,8 +172,33 @@ const Detail = () => {
     setShowReviews(false);
   };
 
+  // Xác thực người dùng
+  const checkAuthenticated = () => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    return !!(token && userID);
+  };
+
+  // Xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng"
+  const handleAddToCart = () => {
+    if (!checkAuthenticated()) {
+      // Hiển thị form đăng nhập nếu chưa đăng nhập
+      setIsLoginModalVisible(true);
+      notification.info({
+        message: "Vui lòng đăng nhập",
+        description: "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng",
+        placement: "topRight",
+        duration: 3,
+      });
+    } else {
+      // Nếu đã đăng nhập, thêm vào giỏ hàng
+      addToWishlist();
+    }
+  };
+
   const addToWishlist = async () => {
     const userID = localStorage.getItem("userID"); // Lấy userID từ localStorage
+
     const imageUrl = Array.isArray(product.imageUrl)
       ? product.imageUrl[0]
       : product.imageUrl; // Lấy hình ảnh đầu tiên nếu imageUrl là mảng
@@ -225,12 +261,55 @@ const Detail = () => {
     }
   };
 
+  // Xử lý khi đăng nhập thành công
+  const handleLoginSuccess = (data) => {
+    // Lưu thông tin người dùng nếu cần
+    if (data && data.token) {
+      localStorage.setItem("token", data.token);
+    }
+
+    setIsLoginModalVisible(false);
+
+    // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
+    setTimeout(() => {
+      addToWishlist();
+    }, 500);
+  };
+
+  const openRegisterForm = () => {
+    // Thay vì sử dụng setCurrentForm, hãy thực hiện logic chuyển đổi trực tiếp
+    // Logic chuyển đổi sang form đăng ký sẽ được xử lý trong component LoginForm
+  };
+
+  const openForgotPasswordForm = () => {
+    // Thay vì sử dụng setCurrentForm, hãy thực hiện logic chuyển đổi trực tiếp
+    // Logic chuyển đổi sang form quên mật khẩu sẽ được xử lý trong component LoginForm
+  };
+
   const handleZoom = () => {
     setIsZoomed((prev) => !prev); // Toggle zoom
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Spin
+          size="large"
+          tip="Đang tải thông tin sản phẩm..."
+          className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]"
+        />
+      </div>
+    );
+  }
+
   if (!product) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Typography.Text type="danger">
+          Không thể tải thông tin sản phẩm. Vui lòng thử lại sau.
+        </Typography.Text>
+      </div>
+    );
   }
 
   // Thêm itemRender để tùy chỉnh giao diện số trang
@@ -491,7 +570,7 @@ const Detail = () => {
 
                 <Button
                   type="primary"
-                  onClick={addToWishlist}
+                  onClick={handleAddToCart}
                   disabled={product.quantity === 0}
                   className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]">
                   THÊM VÀO GIỎ
@@ -597,88 +676,106 @@ const Detail = () => {
           <div className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
             <Typography.Title level={2}>Đánh giá sản phẩm</Typography.Title>
 
-            {product.reviews
-              // Sort by date, newest first
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-              .map((review, index) => (
-                <div key={index} className="mt-4">
-                  <Space direction="vertical" size="small" className="w-full">
-                    <Space align="center">
-                      <Typography.Text strong>
-                        {userData[review.userID] || "Người dùng ẩn danh"}
-                      </Typography.Text>
-                      <Typography.Text type="secondary">
-                        {new Date(review.createdAt).toLocaleDateString(
-                          "vi-VN",
-                          {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          }
-                        )}
-                      </Typography.Text>
-                    </Space>
-                    <Rate disabled defaultValue={review.rating} />
-                    <Typography.Paragraph>
-                      {review.comment}
-                    </Typography.Paragraph>
-
-                    {/* Display review images if available */}
-                    {review.imageUrl && review.imageUrl.length > 0 && (
-                      <div className="mt-2">
-                        <Typography.Text className="text-sm mb-1 block text-gray-500">
-                          Hình ảnh đánh giá:
+            <Spin
+              spinning={reviewsLoading}
+              tip="Đang tải đánh giá..."
+              className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
+              {product.reviews
+                // Sort by date, newest first
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                .map((review, index) => (
+                  <div key={index} className="mt-4">
+                    <Space direction="vertical" size="small" className="w-full">
+                      <Space align="center">
+                        <Typography.Text strong>
+                          {userData[review.userID] || "Người dùng ẩn danh"}
                         </Typography.Text>
-                        <Image.PreviewGroup>
-                          <div className="flex flex-wrap gap-2">
-                            {review.imageUrl.map((img, imgIndex) => (
-                              <div
-                                key={imgIndex}
-                                className="w-16 h-16 rounded overflow-hidden border border-gray-200">
-                                <Image
-                                  src={img}
-                                  alt={`Review image ${imgIndex + 1}`}
-                                  className="w-full h-full object-cover"
-                                  preview={{
-                                    mask: (
-                                      <div className="flex items-center justify-center w-full h-full bg-black bg-opacity-20 group hover:bg-opacity-40 transition-all duration-300">
-                                        <ZoomInOutlined className="text-white text-lg" />
-                                      </div>
-                                    ),
-                                  }}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </Image.PreviewGroup>
-                      </div>
-                    )}
+                        <Typography.Text type="secondary">
+                          {new Date(review.createdAt).toLocaleDateString(
+                            "vi-VN",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            }
+                          )}
+                        </Typography.Text>
+                      </Space>
+                      <Rate disabled defaultValue={review.rating} />
+                      <Typography.Paragraph>
+                        {review.comment}
+                      </Typography.Paragraph>
 
-                    <Divider style={{ margin: "12px 0" }} />
-                  </Space>
-                </div>
-              ))}
+                      {/* Display review images if available */}
+                      {review.imageUrl && review.imageUrl.length > 0 && (
+                        <div className="mt-2">
+                          <Typography.Text className="text-sm mb-1 block text-gray-500">
+                            Hình ảnh đánh giá:
+                          </Typography.Text>
+                          <Image.PreviewGroup>
+                            <div className="flex flex-wrap gap-2">
+                              {review.imageUrl.map((img, imgIndex) => (
+                                <div
+                                  key={imgIndex}
+                                  className="w-16 h-16 rounded overflow-hidden border border-gray-200">
+                                  <Image
+                                    src={img}
+                                    alt={`Review image ${imgIndex + 1}`}
+                                    className="w-full h-full object-cover"
+                                    preview={{
+                                      mask: (
+                                        <div className="flex items-center justify-center w-full h-full bg-black bg-opacity-20 group hover:bg-opacity-40 transition-all duration-300">
+                                          <ZoomInOutlined className="text-white text-lg" />
+                                        </div>
+                                      ),
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </Image.PreviewGroup>
+                        </div>
+                      )}
 
-            {/* Phân trang */}
-            <div className="flex justify-center mt-4">
-              <Pagination
-                current={currentPage}
-                pageSize={pageSize}
-                total={product.reviews.length}
-                onChange={(page) => {
-                  setCurrentPage(page);
-                  // Cuộn lên đầu trang khi thay đổi trang
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                itemRender={itemRender}
-                className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
-              />
-            </div>
+                      <Divider style={{ margin: "12px 0" }} />
+                    </Space>
+                  </div>
+                ))}
+
+              {/* Phân trang */}
+              <div className="flex justify-center mt-4">
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={product.reviews.length}
+                  onChange={(page) => {
+                    setCurrentPage(page);
+                    // Cuộn lên đầu trang khi thay đổi trang
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  itemRender={itemRender}
+                  className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
+                />
+              </div>
+            </Spin>
           </div>
         )}
       </div>
       {/* Footer */}
+
+      {/* Hiển thị form đăng nhập trực tiếp thay vì dùng Modal */}
+      {isLoginModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          {/* Không cần thêm CSS cho div này vì LoginForm đã có CSS đầy đủ */}
+          <LoginForm
+            closeLoginForm={() => setIsLoginModalVisible(false)}
+            openForgotPasswordForm={openForgotPasswordForm}
+            switchToRegister={openRegisterForm}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+      )}
     </div>
   );
 };
