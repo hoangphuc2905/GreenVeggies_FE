@@ -18,6 +18,7 @@ import {
   deleteShoppingCartDetailById,
   getShoppingCartByUserId,
   updateCartQuantity,
+  deleteShoppingCartById,
 } from "../../../services/ShoppingCartService";
 const Cart = () => {
   const navigate = useNavigate();
@@ -281,6 +282,75 @@ const Cart = () => {
     navigate("/order", { state: { selectedProducts } });
   };
 
+  // Add function to clear entire cart
+  const clearCart = async () => {
+    if (wishlist.length === 0) {
+      notification.info({
+        message: "Giỏ hàng trống",
+        description: "Giỏ hàng của bạn hiện đang trống.",
+        placement: "topRight",
+        duration: 3,
+      });
+      return;
+    }
+
+    // Confirm before deleting
+    Modal.confirm({
+      title: "Xác nhận xóa giỏ hàng",
+      content: "Bạn có chắc chắn muốn xóa tất cả sản phẩm trong giỏ hàng?",
+      okText: "Xóa tất cả",
+      cancelText: "Hủy",
+      okButtonProps: {
+        style: {
+          backgroundColor: "#F05123",
+          borderColor: "#F05123",
+        },
+      },
+      onOk: async () => {
+        try {
+          // Get shoppingCartID from first item
+          if (wishlist.length > 0) {
+            const shoppingCartID = wishlist[0].shoppingCartID;
+
+            const result = await deleteShoppingCartById(shoppingCartID);
+
+            if (result && result.error) {
+              notification.error({
+                message: "Lỗi",
+                description: result.error,
+                placement: "topRight",
+                duration: 3,
+              });
+              return;
+            }
+
+            // Update local state
+            setWishlist([]);
+            setSelectedItems([]);
+
+            // Trigger cart update event
+            window.dispatchEvent(new Event("cartUpdated"));
+
+            notification.success({
+              message: "Xóa thành công",
+              description: "Đã xóa tất cả sản phẩm trong giỏ hàng",
+              placement: "topRight",
+              duration: 3,
+            });
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa giỏ hàng:", error);
+          notification.error({
+            message: "Lỗi",
+            description: "Không thể xóa giỏ hàng, vui lòng thử lại sau",
+            placement: "topRight",
+            duration: 3,
+          });
+        }
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col  px-[10%]">
       <div className="container mx-auto mt-14">
@@ -412,7 +482,12 @@ const Cart = () => {
               <p className="mb-4">{subtotal.toLocaleString()} VND</p>
             </div>
 
-            <div className="col-span-1 flex justify-end items-center">
+            <div className="col-span-1 flex flex-col justify-end gap-3">
+              <button
+                className="bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-all duration-200 w-full"
+                onClick={clearCart}>
+                Xóa tất cả sản phẩm
+              </button>
               <button
                 className="bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] text-white font-bold py-3 px-8 rounded-md hover:shadow-xl hover:scale-105 active:scale-105 active:shadow-lg transition-all duration-200 w-full"
                 onClick={handleCheckout}>

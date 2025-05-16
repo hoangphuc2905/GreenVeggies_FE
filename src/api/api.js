@@ -316,6 +316,12 @@ export const handleShoppingCartApi = {
       }
     );
   },
+  // Xóa giỏ hàng theo ID
+  deleteShoppingCartById: async (shoppingCartID) => {
+    return await api.delete(`/shopping-carts/${shoppingCartID}`, {
+      headers: getAuthHeader(),
+    });
+  },
 };
 //THANH TOÁN
 export const handlePaymentApi = {
