@@ -164,10 +164,10 @@ export const handleOrderApi = {
       headers: getAuthHeader(),
     });
   },
-  updateStatus: async (orderID, status) => {
+  updateStatus: async (orderID, status, reduceInventory = false) => {
     return await api.put(
       `/orders/${orderID}`,
-      { status },
+      { status, reduceInventory },
       {
         headers: getAuthHeader(),
       }
