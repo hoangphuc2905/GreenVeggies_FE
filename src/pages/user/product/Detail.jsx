@@ -12,7 +12,6 @@ import {
   Typography,
   Image,
   notification,
-  Modal,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
@@ -49,7 +48,6 @@ const Detail = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
-  const [currentForm, setCurrentForm] = useState("login"); // 'login', 'register', 'forgotPassword'
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -256,6 +254,11 @@ const Detail = () => {
 
   // Xử lý khi đăng nhập thành công
   const handleLoginSuccess = (data) => {
+    // Lưu thông tin người dùng nếu cần
+    if (data && data.token) {
+      localStorage.setItem("token", data.token);
+    }
+
     setIsLoginModalVisible(false);
 
     // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
@@ -264,18 +267,14 @@ const Detail = () => {
     }, 500);
   };
 
-  // Điều khiển modal
-  const openLoginForm = () => {
-    setCurrentForm("login");
-    setIsLoginModalVisible(true);
-  };
-
   const openRegisterForm = () => {
-    setCurrentForm("register");
+    // Thay vì sử dụng setCurrentForm, hãy thực hiện logic chuyển đổi trực tiếp
+    // Logic chuyển đổi sang form đăng ký sẽ được xử lý trong component LoginForm
   };
 
   const openForgotPasswordForm = () => {
-    setCurrentForm("forgotPassword");
+    // Thay vì sử dụng setCurrentForm, hãy thực hiện logic chuyển đổi trực tiếp
+    // Logic chuyển đổi sang form quên mật khẩu sẽ được xử lý trong component LoginForm
   };
 
   const handleZoom = () => {
@@ -733,21 +732,18 @@ const Detail = () => {
       </div>
       {/* Footer */}
 
-      {/* Thêm Modal đăng nhập */}
-      <Modal
-        open={isLoginModalVisible}
-        footer={null}
-        onCancel={() => setIsLoginModalVisible(false)}
-        width={800}
-        bodyStyle={{ padding: 0 }}
-        destroyOnClose={true}>
-        <LoginForm
-          closeLoginForm={() => setIsLoginModalVisible(false)}
-          openForgotPasswordForm={openForgotPasswordForm}
-          switchToRegister={openRegisterForm}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      </Modal>
+      {/* Hiển thị form đăng nhập trực tiếp thay vì dùng Modal */}
+      {isLoginModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          {/* Không cần thêm CSS cho div này vì LoginForm đã có CSS đầy đủ */}
+          <LoginForm
+            closeLoginForm={() => setIsLoginModalVisible(false)}
+            openForgotPasswordForm={openForgotPasswordForm}
+            switchToRegister={openRegisterForm}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+      )}
     </div>
   );
 };
