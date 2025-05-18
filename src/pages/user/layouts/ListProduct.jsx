@@ -10,10 +10,7 @@ import {
   Button,
   Spin,
 } from "antd";
-<<<<<<< HEAD
-=======
 
->>>>>>> b57e7a7545f7ab2161ad89771058936ca68252b8
 import PropTypes from "prop-types";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { saveShoppingCarts } from "../../../services/ShoppingCartService";
@@ -22,10 +19,7 @@ import {
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import { getProducts } from "../../../services/ProductService";
-<<<<<<< HEAD
-=======
 import LoginForm from "../../../components/login/login";
->>>>>>> b57e7a7545f7ab2161ad89771058936ca68252b8
 
 // Custom style for notifications
 const customNotificationStyle = `
