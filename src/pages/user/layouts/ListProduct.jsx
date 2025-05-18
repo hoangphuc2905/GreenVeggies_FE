@@ -10,6 +10,10 @@ import {
   Button,
   Spin,
 } from "antd";
+<<<<<<< HEAD
+=======
+
+>>>>>>> b57e7a7545f7ab2161ad89771058936ca68252b8
 import PropTypes from "prop-types";
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import { saveShoppingCarts } from "../../../services/ShoppingCartService";
@@ -18,6 +22,10 @@ import {
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import { getProducts } from "../../../services/ProductService";
+<<<<<<< HEAD
+=======
+import LoginForm from "../../../components/login/login";
+>>>>>>> b57e7a7545f7ab2161ad89771058936ca68252b8
 
 // Custom style for notifications
 const customNotificationStyle = `
@@ -73,6 +81,8 @@ const ListProduct = ({
   const [products, setProducts] = useState([]);
   const [pageSize] = useState(24);
   const [loading, setLoading] = useState(true);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const navigate = useNavigate();
 
   // Configure notification globally
@@ -134,6 +144,43 @@ const ListProduct = ({
     setCurrentPage(page);
     // Cuộn lên đầu trang khi thay đổi trang
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Kiểm tra xem người dùng đã đăng nhập chưa
+  const checkAuthenticated = () => {
+    const token = localStorage.getItem("token");
+    const userID = localStorage.getItem("userID");
+    return !!(token && userID);
+  };
+
+  // Xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng"
+  const handleAddToCart = (product) => {
+    if (!checkAuthenticated()) {
+      // Hiển thị form đăng nhập nếu chưa đăng nhập
+      setSelectedProduct(product);
+      setIsLoginModalVisible(true);
+      notification.info({
+        message: "Vui lòng đăng nhập",
+        description: "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng",
+        placement: "topRight",
+        duration: 3,
+      });
+    } else {
+      // Nếu đã đăng nhập, thêm vào giỏ hàng
+      addToWishlist(product);
+    }
+  };
+
+  // Xử lý khi đăng nhập thành công
+  const handleLoginSuccess = (data) => {
+    setIsLoginModalVisible(false);
+
+    // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
+    if (selectedProduct) {
+      setTimeout(() => {
+        addToWishlist(selectedProduct);
+      }, 500);
+    }
   };
 
   const addToWishlist = async (product) => {
@@ -210,8 +257,7 @@ const ListProduct = ({
               background: "linear-gradient(to right, #82AE46, #5A8E1B)",
               color: "white",
               marginTop: "2px",
-            }}
-          >
+            }}>
             Đi đến giỏ hàng
           </Button>
         ),
@@ -250,8 +296,7 @@ const ListProduct = ({
                   border: "1px solid #82AE46",
                   borderRadius: "4px",
                 }
-          }
-        >
+          }>
           {page}
         </span>
       );
@@ -264,8 +309,7 @@ const ListProduct = ({
       <Spin
         spinning={loading}
         tip="Đang tải sản phẩm..."
-        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]"
-      >
+        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
         <List
           grid={{ gutter: 16, column: 4 }}
           className="px-2"
@@ -284,8 +328,7 @@ const ListProduct = ({
                 <Badge.Ribbon
                   text={`${product.discount}%`}
                   color="#82AE46"
-                  style={{ display: product.discount ? "block" : "none" }}
-                >
+                  style={{ display: product.discount ? "block" : "none" }}>
                   <Card
                     hoverable={product.status !== "out_of_stock"}
                     className={`h-[300px] relative transition-all duration-300 ${
@@ -309,8 +352,7 @@ const ListProduct = ({
                             <Link
                               to={`/product/${product._id}`}
                               state={{ productID: product.productID }}
-                              className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                            >
+                              className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
                               <EyeOutlined className="text-2xl" />
                               <Typography.Text className="text-xs mt-2 text-center">
                                 Xem chi tiết
@@ -319,15 +361,14 @@ const ListProduct = ({
 
                             <button
                               onClick={() =>
-                                product.quantity > 0 && addToWishlist(product)
+                                product.quantity > 0 && handleAddToCart(product)
                               }
                               disabled={product.quantity === 0}
                               className={`flex flex-col items-center ${
                                 product.quantity === 0
                                   ? "text-gray-300 cursor-not-allowed"
                                   : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                              }`}
-                            >
+                              }`}>
                               <ShoppingCartOutlined className="text-2xl" />
                               <Typography.Text className="text-xs mt-2">
                                 Thêm vào giỏ hàng
@@ -336,15 +377,13 @@ const ListProduct = ({
                           </div>
                         )}
                       </div>
-                    }
-                  >
+                    }>
                     <Card.Meta
                       title={
                         <Typography.Text
                           ellipsis
                           className="font-bold text-center block"
-                          style={{ textAlign: "center", width: "100%" }}
-                        >
+                          style={{ textAlign: "center", width: "100%" }}>
                           {product.name}
                           {product.status === "out_of_stock" && (
                             <div className="text-red-500 text-sm mt-1">
@@ -387,6 +426,18 @@ const ListProduct = ({
           className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
         />
       </div>
+
+      {/* Hiển thị form đăng nhập trực tiếp thay vì dùng Modal */}
+      {isLoginModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <LoginForm
+            closeLoginForm={() => setIsLoginModalVisible(false)}
+            openForgotPasswordForm={() => {}}
+            switchToRegister={() => {}}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+      )}
     </div>
   );
 };

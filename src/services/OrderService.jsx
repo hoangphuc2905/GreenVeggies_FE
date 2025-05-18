@@ -37,9 +37,17 @@ export const getOrdersByUserId = async (userID) => {
   }
 };
 // Cập nhật trạng thái đơn hàng
-export const updateStatus = async (orderID, newStatus) => {
+export const updateStatus = async (
+  orderID,
+  status,
+  reduceInventory = false
+) => {
   try {
-    const response = await handleOrderApi.updateStatus(orderID, newStatus);
+    const response = await handleOrderApi.updateStatus(
+      orderID,
+      status,
+      reduceInventory
+    );
     if (response && response.data) {
       console.log("Cập nhật trạng thái thành công:", response.data); // In ra thông báo thành công
       return response.data; // Trả về dữ liệu cập nhật

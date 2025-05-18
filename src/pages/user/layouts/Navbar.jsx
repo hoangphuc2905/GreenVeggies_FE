@@ -2,13 +2,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import logoImage from "../../../assets/pictures/Green.png";
-import { Badge, Space } from "antd";
+import { Badge, Space, notification } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
   faCartShopping,
   faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
+import LoginForm from "../../../components/login/login";
 
 const Navbar = () => {
   const scrollToTop = () => {
@@ -23,6 +24,7 @@ const Navbar = () => {
   const isCartActive = location.pathname.startsWith("/wishlist");
   const isContactActive = location.pathname.startsWith("/contact");
   const isBlogActive = location.pathname.startsWith("/posts");
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchQuery.trim() !== "") {
@@ -86,7 +88,29 @@ const Navbar = () => {
   };
 
   const displayLoginForm = () => {
-    alert("Bạn cần đăng nhập để xem giỏ hàng!");
+    setIsLoginModalVisible(true);
+    notification.info({
+      message: "Vui lòng đăng nhập",
+      description: "Bạn cần đăng nhập để xem giỏ hàng",
+      placement: "topRight",
+      duration: 3,
+    });
+  };
+
+  // Xử lý khi đăng nhập thành công
+  const handleLoginSuccess = (data) => {
+    setIsLoginModalVisible(false);
+
+    if (data && data.token) {
+      localStorage.setItem("token", data.token);
+      if (data.userID) {
+        localStorage.setItem("userID", data.userID);
+      }
+    }
+
+    // Cập nhật số lượng giỏ hàng và chuyển hướng đến trang giỏ hàng
+    fetchAndUpdateCartCount();
+    navigate("/wishlist");
   };
 
   return (
@@ -197,6 +221,18 @@ const Navbar = () => {
           </ul>
         </nav>
       </div>
+
+      {/* Hiển thị form đăng nhập trực tiếp khi cần */}
+      {isLoginModalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <LoginForm
+            closeLoginForm={() => setIsLoginModalVisible(false)}
+            openForgotPasswordForm={() => {}}
+            switchToRegister={() => {}}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+      )}
     </div>
   );
 };

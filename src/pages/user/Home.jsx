@@ -21,11 +21,11 @@ import bg3Image from "../../../src/assets/pictures/bg_3_1.png";
 
 import Menu from "./layouts/Menu";
 import { useNavigate } from "react-router-dom";
-import { Carousel, Image, Rate } from "antd";
+import { Carousel, Image, Rate, Spin } from "antd";
 import Favourite from "./layouts/Favourite";
 import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
 import { ZoomInOutlined } from "@ant-design/icons";
-import { getProducts } from "../../services/ProductService";
+import { getProducts, getProductById } from "../../services/ProductService";
 
 const images = [
   {
@@ -39,19 +39,69 @@ const images = [
 ];
 
 const Home = () => {
-  const [products, setProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const data = await getProducts();
-      setProducts(data);
+      setProductsLoading(true);
+      try {
+        const data = await getProducts();
+
+        // Get random products for featured section
+        const randomProductIds = getRandomProducts(data, 6).map(
+          (product) => product.productID
+        );
+
+        // Fetch detailed product information for each featured product
+        const detailedProducts = await Promise.all(
+          randomProductIds.map(async (productID) => {
+            const productDetails = await getProductById(productID);
+            return productDetails;
+          })
+        );
+
+        // Filter out any null results
+        const validProducts = detailedProducts.filter((product) => product);
+        setFeaturedProducts(validProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setProductsLoading(false);
+      }
     };
 
     const fetchReviews = async () => {
-      const data = await getAllReviews();
-      setReviews(data);
+      setReviewsLoading(true);
+      try {
+        const data = await getAllReviews();
+
+        // Lấy thông tin chi tiết của sản phẩm cho mỗi đánh giá
+        const reviewsWithProductDetails = await Promise.all(
+          data.map(async (review) => {
+            if (review.productID) {
+              // ProductID nằm trực tiếp trong review, không phải trong object product
+              const productDetails = await getProductById(review.productID);
+              return {
+                ...review,
+                product: productDetails, // Lưu thông tin sản phẩm vào thuộc tính product
+                _id: review._id, // Đảm bảo _id của review được giữ lại
+              };
+            }
+            return review;
+          })
+        );
+
+        console.log("Reviews with product details:", reviewsWithProductDetails);
+        setReviews(reviewsWithProductDetails);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setReviewsLoading(false);
+      }
     };
 
     fetchProducts();
@@ -68,8 +118,6 @@ const Home = () => {
     const shuffled = products.sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   };
-
-  const randomProducts = getRandomProducts(products, 6);
 
   return (
     <div className="h-full w-full bg-white flex flex-col px-[10%]">
@@ -251,42 +299,49 @@ const Home = () => {
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4">
-              {randomProducts.map((product, index) => (
-                <div
-                  key={index}
-                  className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
-                  onClick={() => handleProductClick(product)}>
-                  {product.discount && (
-                    <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
-                      {product.discount}%
+            <Spin
+              spinning={productsLoading}
+              tip="Đang tải sản phẩm..."
+              className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
+              <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-4 min-h-[450px]">
+                {featuredProducts.map((product, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border rounded-lg shadow-md w-full md:w-[fit] h-[300px] m-4 relative cursor-pointer hover:shadow-xl hover:scale-105"
+                    onClick={() => handleProductClick(product)}>
+                    {product.discount && (
+                      <div className="absolute top-0 left-0 bg-[#82AE46] text-white px-2 py-1 rounded-br-lg">
+                        {product.discount}%
+                      </div>
+                    )}
+                    <div className="container mx-auto relative h-[200px]">
+                      <img
+                        src={
+                          Array.isArray(product.imageUrl)
+                            ? product.imageUrl[0]
+                            : product.imageUrl
+                        }
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                  )}
-                  <div className="container mx-auto relative h-[200px]">
-                    <img
-                      src={
-                        Array.isArray(product.imageUrl)
-                          ? product.imageUrl[0]
-                          : product.imageUrl
-                      }
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <p className="text-gray-700 font-bold text-center">
+                      {product.name}
+                    </p>
+                    <p className="text-gray-700 text-center">
+                      {product.oldPrice && (
+                        <span className="line-through">
+                          {product.oldPrice}đ
+                        </span>
+                      )}{" "}
+                      <span className="text-gray-700">
+                        {formattedPrice(product.price)}
+                      </span>
+                    </p>
                   </div>
-                  <p className="text-gray-700 font-bold text-center">
-                    {product.name}
-                  </p>
-                  <p className="text-gray-700 text-center">
-                    {product.oldPrice && (
-                      <span className="line-through">{product.oldPrice}đ</span>
-                    )}{" "}
-                    <span className="text-gray-700">
-                      {formattedPrice(product.price)}
-                    </span>
-                  </p>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </Spin>
           </div>
         </div>
 
@@ -373,97 +428,101 @@ const Home = () => {
             và giàu dinh dưỡng, mang đến bữa ăn chất lượng cho gia đình!
           </h3>
 
-          <Carousel
-            autoplay
-            dots={true}
-            infinite={true}
-            className="mt-10"
-            slidesToShow={3}
-            slidesToScroll={3}>
-            {reviews
-              .filter((review) => review.rating === 5)
-              .map((review, index) => {
-                return (
-                  <div key={index} className="p-4 text-center">
-                    <div className="mx-auto relative h-[200px] w-[200px]">
-                      <img
-                        src={
-                          review.user?.avatar ||
-                          "https://via.placeholder.com/200?text=User"
-                        }
-                        alt={`Ảnh của ${review.user?.username || "Khách hàng"}`}
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    </div>
-                    <p className="mt-4 font-semibold text-black">
-                      Khách hàng : {review.user?.username || "Khách hàng"}
-                    </p>
-                    <p
-                      className="mt-4 font-semibold text-black cursor-pointer hover:text-[#82AE46] transition-colors"
-                      onClick={() => {
-                        if (review.product?.productID) {
-                          navigate(
-                            `/product/${
-                              review.product._id || review.product.id
-                            }`,
-                            {
-                              state: { productID: review.product.productID },
+          <Spin
+            spinning={reviewsLoading}
+            tip="Đang tải đánh giá..."
+            className="mt-10 [&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
+            <div className="min-h-[300px]">
+              <Carousel
+                autoplay
+                dots={true}
+                infinite={true}
+                className="mt-10"
+                slidesToShow={3}
+                slidesToScroll={3}>
+                {reviews
+                  .filter((review) => review.rating === 5)
+                  .map((review, index) => {
+                    return (
+                      <div key={index} className="p-4 text-center">
+                        <div className="mx-auto relative h-[200px] w-[200px]">
+                          <img
+                            src={
+                              review.user?.avatar ||
+                              "https://via.placeholder.com/200?text=User"
                             }
-                          );
-                        }
-                      }}>
-                      Tên sản phẩm : {review.product?.name || "Sản phẩm"}
-                    </p>
-                    <h3 className="text-xl font-semibold mt-4">
-                      Nhận xét : {review.comment}
-                    </h3>
-                    <div className="mt-2 flex justify-center">
-                      <Rate disabled defaultValue={review.rating} />
-                    </div>
-
-                    {/* Display review images if available */}
-                    {review.imageUrl && review.imageUrl.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium mb-2">
-                          Hình ảnh đánh giá:
-                        </p>
-                        <div className="flex justify-center gap-2">
-                          <Image.PreviewGroup>
-                            {review.imageUrl
-                              .slice(0, 3)
-                              .map((img, imgIndex) => (
-                                <div
-                                  key={imgIndex}
-                                  className="w-16 h-16 rounded overflow-hidden">
-                                  <Image
-                                    src={img}
-                                    alt={`Ảnh đánh giá ${imgIndex + 1}`}
-                                    className="w-full h-full object-cover"
-                                    preview={{
-                                      mask: (
-                                        <div className="flex items-center justify-center">
-                                          <ZoomInOutlined className="text-white" />
-                                        </div>
-                                      ),
-                                    }}
-                                  />
-                                </div>
-                              ))}
-                            {review.imageUrl.length > 3 && (
-                              <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-500">
-                                  +{review.imageUrl.length - 3}
-                                </span>
-                              </div>
-                            )}
-                          </Image.PreviewGroup>
+                            alt={`Ảnh của ${
+                              review.user?.username || "Khách hàng"
+                            }`}
+                            className="w-full h-full object-cover rounded-full"
+                          />
                         </div>
+                        <p className="mt-4 font-semibold text-black">
+                          Khách hàng : {review.user?.username || "Khách hàng"}
+                        </p>
+                        <p
+                          className="mt-4 font-semibold text-black cursor-pointer hover:text-[#82AE46] transition-colors"
+                          onClick={() => {
+                            if (review._id && review.productID) {
+                              navigate(`/product/${review._id}`, {
+                                state: { productID: review.productID },
+                              });
+                            }
+                          }}>
+                          Tên sản phẩm : {review.product?.name || "Sản phẩm"}
+                        </p>
+                        <h3 className="text-xl font-semibold mt-4">
+                          Nhận xét : {review.comment}
+                        </h3>
+                        <div className="mt-2 flex justify-center">
+                          <Rate disabled defaultValue={review.rating} />
+                        </div>
+
+                        {/* Display review images if available */}
+                        {review.imageUrl && review.imageUrl.length > 0 && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium mb-2">
+                              Hình ảnh đánh giá:
+                            </p>
+                            <div className="flex justify-center gap-2">
+                              <Image.PreviewGroup>
+                                {review.imageUrl
+                                  .slice(0, 3)
+                                  .map((img, imgIndex) => (
+                                    <div
+                                      key={imgIndex}
+                                      className="w-16 h-16 rounded overflow-hidden">
+                                      <Image
+                                        src={img}
+                                        alt={`Ảnh đánh giá ${imgIndex + 1}`}
+                                        className="w-full h-full object-cover"
+                                        preview={{
+                                          mask: (
+                                            <div className="flex items-center justify-center">
+                                              <ZoomInOutlined className="text-white" />
+                                            </div>
+                                          ),
+                                        }}
+                                      />
+                                    </div>
+                                  ))}
+                                {review.imageUrl.length > 3 && (
+                                  <div className="w-16 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    <span className="text-gray-500">
+                                      +{review.imageUrl.length - 3}
+                                    </span>
+                                  </div>
+                                )}
+                              </Image.PreviewGroup>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-          </Carousel>
+                    );
+                  })}
+              </Carousel>
+            </div>
+          </Spin>
         </div>
       </div>
     </div>

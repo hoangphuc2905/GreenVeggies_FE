@@ -23,6 +23,11 @@ const RoleBasedRouter = () => {
       if (token && userID) {
         try {
           const userInfo = await getUserInfo(userID, token);
+          console.log(
+            "User info retrieved:",
+            userInfo?.username || "Anonymous user"
+          );
+
           const userRole = role || "guest";
 
           localStorage.setItem("role", userRole);
@@ -51,11 +56,13 @@ const RoleBasedRouter = () => {
         } catch (error) {
           console.error("Error fetching user info:", error);
           setRole("guest");
-          navigate("/", { replace: true }); // Redirect to shared homepage for guests
         }
       } else {
         setRole("guest");
-        navigate("/", { replace: true }); // Redirect to shared homepage for guests
+        // Kiểm tra xem người dùng có đang cố truy cập vào trang admin không
+        if (window.location.pathname.startsWith("/admin")) {
+          navigate("/", { replace: true });
+        }
       }
       setIsLoading(false);
     };

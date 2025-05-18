@@ -133,6 +133,7 @@ const OrderPage = () => {
         address,
         paymentMethod,
         paymentStatus: paymentMethod === "BANK" ? "Pending" : undefined,
+        reduceInventory: paymentMethod !== "BANK", // Chỉ giảm số lượng trong kho nếu không phải thanh toán qua ngân hàng
       };
 
       console.log("Đang gửi dữ liệu đơn hàng:", orderData);
@@ -148,12 +149,15 @@ const OrderPage = () => {
           ) {
             console.log("Order created for bank transfer:", orderResponse);
 
-            // Xóa các sản phẩm đã chọn khỏi giỏ hàng
-            for (const item of cartItems) {
-              await deleteShoppingCartDetailById(item.shoppingCartDetailID);
-            }
+            // Lưu danh sách sản phẩm vào localStorage để xử lý sau khi thanh toán
+            localStorage.setItem(
+              `pendingCartItems_${orderResponse.order.orderID}`,
+              JSON.stringify(cartItems.map((item) => item.shoppingCartDetailID))
+            );
 
-            // Chỉ phát sự kiện cập nhật giỏ hàng
+            // Không xóa các sản phẩm đã chọn khỏi giỏ hàng, việc này sẽ được thực hiện sau khi xác nhận thanh toán
+
+            // Phát sự kiện cập nhật giỏ hàng để làm mới UI
             window.dispatchEvent(new Event("cartUpdated"));
 
             // Scroll to top
@@ -248,7 +252,7 @@ const OrderPage = () => {
           await createNotify(notificationDataUser);
           await createNotify(notificationDataAdmin);
 
-          // Xóa các sản phẩm đã chọn khỏi giỏ hàng
+          // Xóa các sản phẩm đã chọn khỏi giỏ hàng (chỉ cho thanh toán tiền mặt)
           for (const item of cartItems) {
             await deleteShoppingCartDetailById(item.shoppingCartDetailID);
           }
