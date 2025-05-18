@@ -29,13 +29,13 @@ const customNotificationStyle = `
   }
   .custom-notification .ant-notification-notice-message {
     margin-bottom: 4px !important;
-    font-size: 18px !important;
+    font-size: 16px !important;
     font-weight: 500 !important;
   }
   .custom-notification .ant-notification-notice-description {
     margin-left: 0 !important;
     margin-right: 0 !important;
-    font-size: 18px !important;
+    font-size: 14px !important;
   }
   .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-message, 
   .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-description {
@@ -51,18 +51,38 @@ const customNotificationStyle = `
   }
   .custom-notification .ant-notification-notice {
     padding: 8px !important;
-    width: 260px !important; /* Giảm từ 280px xuống 260px */
-    max-width: 260px !important; /* Giảm từ 280px xuống 260px */
+    width: 270px !important;
+    max-width: 270px !important;
     margin-right: 8px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   }
   .custom-notification img {
     width: 48px !important;
     height: 48px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
   }
   .custom-notification .ant-btn-sm {
     font-size: 14px !important;
-    height: 24px !important;
-    padding: 0px 8px !important;
+    height: 28px !important;
+    padding: 0px 10px !important;
+    border-radius: 4px !important;
+    margin-top: 6px !important;
+  }
+  .custom-notification .flex-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .custom-notification .product-info {
+    display: flex !important;
+    flex-direction: column !important;
+    font-size: 13px !important;
+  }
+  .custom-notification .product-name {
+    font-weight: 500 !important;
+    margin-bottom: 2px !important;
   }
 `;
 
@@ -229,9 +249,6 @@ const ListProduct = ({
         return;
       }
 
-
-
-
       const imageUrl = Array.isArray(product.imageUrl)
         ? product.imageUrl[0]
         : product.imageUrl;
@@ -273,14 +290,10 @@ const ListProduct = ({
       notification.success({
         message: "Thêm vào giỏ hàng thành công",
         description: (
-          <div className="flex items-center space-x-2">
-            <img
-              src={imageUrl}
-              alt={product.name}
-              className="w-9 h-9 object-cover rounded"
-            />
-            <div className="text-xs">
-              <div className="font-medium">{product.name}</div>
+          <div className="flex-container">
+            <img src={imageUrl} alt={product.name} className="product-image" />
+            <div className="product-info">
+              <div className="product-name">{product.name}</div>
               <div>Số lượng: 1</div>
             </div>
           </div>
@@ -289,7 +302,7 @@ const ListProduct = ({
         key: `open${Date.now()}`,
         placement: "topRight",
         className: "custom-notification",
-        style: { padding: "6px" },
+        style: { padding: "8px" },
         btn: (
           <Button
             type="primary"
@@ -302,7 +315,8 @@ const ListProduct = ({
             style={{
               background: "linear-gradient(to right, #82AE46, #5A8E1B)",
               color: "white",
-              marginTop: "2px",
+              border: "none",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
             }}>
             Đi đến giỏ hàng
           </Button>
