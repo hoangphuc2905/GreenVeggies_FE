@@ -30,6 +30,11 @@ import {
 } from "../../../components/calcSoldPrice/CalcPrice";
 import LoginForm from "../../../components/login/login";
 
+// Kiểm soát thông báo toàn cục
+const notificationShown = {
+  quantityLimit: false,
+};
+
 const Detail = () => {
   const location = useLocation();
   const id = location.state?.productID;
@@ -57,6 +62,15 @@ const Detail = () => {
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [availableQuantity, setAvailableQuantity] = useState(0);
+  const notificationShownRef = useRef(false);
+
+  // Reset notification state when component unmounts
+  useEffect(() => {
+    return () => {
+      notificationShown.quantityLimit = false;
+      notificationShownRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -176,13 +190,28 @@ const Detail = () => {
         const available = Math.max(0, stockQuantity - itemCount);
         setAvailableQuantity(available);
 
-        // Nếu đã đạt giới hạn, hiển thị thông báo
-        if (available === 0 && itemCount > 0) {
+        // Nếu đã đạt giới hạn, hiển thị thông báo chỉ khi chưa hiển thị
+        if (
+          available === 0 &&
+          itemCount > 0 &&
+          !notificationShown.quantityLimit &&
+          !notificationShownRef.current
+        ) {
+          // Đánh dấu đã hiển thị thông báo
+          notificationShown.quantityLimit = true;
+          notificationShownRef.current = true;
+
           notification.warning({
             message: "Đã đạt giới hạn số lượng",
             description: `Bạn đã thêm tối đa ${itemCount} sản phẩm này vào giỏ hàng.`,
-            duration: 5,
+            duration: 3,
             placement: "topRight",
+            onClose: () => {
+              // Sau khi đóng thông báo, đợi 1s rồi reset trạng thái
+              setTimeout(() => {
+                notificationShown.quantityLimit = false;
+              }, 1000);
+            },
           });
         }
       } else {
@@ -198,12 +227,23 @@ const Detail = () => {
   const handleQuantityChange = (value) => {
     // Đảm bảo không vượt quá số lượng có thể thêm
     if (value > availableQuantity) {
-      notification.warning({
-        message: "Vượt quá số lượng cho phép",
-        description: `Bạn chỉ có thể thêm tối đa ${availableQuantity} sản phẩm này vào giỏ hàng.`,
-        duration: 3,
-        placement: "topRight",
-      });
+      // Chỉ hiển thị thông báo nếu chưa hiển thị
+      if (!notificationShown.quantityLimit && !notificationShownRef.current) {
+        notificationShown.quantityLimit = true;
+        notificationShownRef.current = true;
+
+        notification.warning({
+          message: "Vượt quá số lượng cho phép",
+          description: `Bạn chỉ có thể thêm tối đa ${availableQuantity} sản phẩm này vào giỏ hàng.`,
+          duration: 3,
+          placement: "topRight",
+          onClose: () => {
+            setTimeout(() => {
+              notificationShown.quantityLimit = false;
+            }, 1000);
+          },
+        });
+      }
       setQuantity(availableQuantity);
     } else {
       setQuantity(value);
@@ -215,12 +255,23 @@ const Detail = () => {
     if (quantity < availableQuantity) {
       setQuantity(quantity + 1);
     } else {
-      notification.warning({
-        message: "Vượt quá số lượng cho phép",
-        description: `Bạn chỉ có thể thêm tối đa ${availableQuantity} sản phẩm này vào giỏ hàng.`,
-        duration: 3,
-        placement: "topRight",
-      });
+      // Chỉ hiển thị thông báo nếu chưa hiển thị
+      if (!notificationShown.quantityLimit && !notificationShownRef.current) {
+        notificationShown.quantityLimit = true;
+        notificationShownRef.current = true;
+
+        notification.warning({
+          message: "Vượt quá số lượng cho phép",
+          description: `Bạn chỉ có thể thêm tối đa ${availableQuantity} sản phẩm này vào giỏ hàng.`,
+          duration: 3,
+          placement: "topRight",
+          onClose: () => {
+            setTimeout(() => {
+              notificationShown.quantityLimit = false;
+            }, 1000);
+          },
+        });
+      }
     }
   };
 

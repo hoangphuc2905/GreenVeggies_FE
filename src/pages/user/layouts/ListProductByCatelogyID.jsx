@@ -9,7 +9,7 @@ import {
   Typography,
   Empty,
   Spin,
-  Button,
+
 } from "antd";
 import PropTypes from "prop-types";
 
@@ -143,15 +143,6 @@ const ListProductByCatelogyID = ({
         return;
       }
 
-      // Hiển thị cảnh báo nếu sản phẩm sắp hết hàng
-      if (existingQuantity + 1 === product.quantity) {
-        notification.info({
-          message: "Sản phẩm sắp hết hàng",
-          description: `Bạn đã thêm sản phẩm cuối cùng có sẵn trong kho.`,
-          placement: "topRight",
-          duration: 3,
-        });
-      }
 
       const imageUrl = Array.isArray(product.imageUrl)
         ? product.imageUrl[0]
