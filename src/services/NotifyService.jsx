@@ -84,3 +84,22 @@ export const fetchNotifications = async (
     if (setLoading) setLoading(false);
   }
 };
+
+//Lấy thông báo của đơn hàng bị hủy
+export const fetchCancelledOrderNotifications = async (orderID) => {
+  try {
+    const response = await handleNotifyApi.getNotificationsByOrderId(orderID);
+    if (response && response.data) {
+      return response.data; // Trả về danh sách thông báo
+    }
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API getCancelledOrderNotifications:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};

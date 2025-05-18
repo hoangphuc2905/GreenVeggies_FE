@@ -4,11 +4,12 @@ import PropTypes from "prop-types";
 
 const { Title } = Typography;
 
-const OrderCard = ({ title, value, growth, unit, color }) => {
+const OrderCard = ({ title, value, growth, unit, color, onClick }) => {
   return (
     <Card
       className="w-full h-[100px] rounded-lg shadow-md hover:shadow-lg hover:scale-105 hover:cursor-pointer p-0"
       bodyStyle={{ paddingTop: 10 }}
+      onClick={onClick}
     >
       <Title level={5} className="text-gray-700">
         {title}
@@ -52,6 +53,7 @@ OrderCard.propTypes = {
   growth: PropTypes.number,
   unit: PropTypes.string.isRequired,
   color: PropTypes.string.isRequired,
+  onClick: PropTypes.func,
 };
 
 export default OrderCard;

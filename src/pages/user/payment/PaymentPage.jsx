@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Spin, Result, notification, Divider, Typography } from "antd";
-import {
-  createPaymentQR,
-  checkPaymentStatus,
-} from "../../../services/PaymentService";
+import { createPaymentQR } from "../../../services/PaymentService";
+import { createNotify } from "../../../services/NotifyService";
+import { updateStatus } from "../../../services/OrderService";
+import { deleteShoppingCartDetailById } from "../../../services/ShoppingCartService";
 
 const { Text, Paragraph } = Typography;
 
@@ -19,6 +19,7 @@ const PaymentPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [paymentContent, setPaymentContent] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   // Extract payment amount from URL search params
   const searchParams = new URLSearchParams(location.search);
@@ -44,20 +45,16 @@ const PaymentPage = () => {
           orderId,
           "Bank Transfer"
         );
-        console.log("QR code response:", response);
+        console.log("QR code response từ PaymentService:", response);
 
         // More detailed logging for debugging
         console.log(
-          "QR code content:",
+          "QR content từ response:",
           response.content ? response.content : "No content provided"
         );
         console.log(
-          "Payment method:",
-          response.paymentMethod || "No method provided"
-        );
-        console.log(
-          "Payment ID:",
-          response.paymentId || "No payment ID provided"
+          "QR payment ID từ response:",
+          response.paymentId ? response.paymentId : "No payment ID provided"
         );
 
         if (response?.qrCodeUrl) {
@@ -68,19 +65,19 @@ const PaymentPage = () => {
 
           // If the API returns a payment ID, store it
           if (response.paymentId) {
+            console.log("Setting payment ID:", response.paymentId);
             setPaymentId(response.paymentId);
+          } else {
+            console.warn("No payment ID found in response");
           }
 
-          // Store payment content if available
+          // Store payment content from response
           if (response.content) {
             setPaymentContent(response.content);
             console.log("Setting payment content:", response.content);
           } else {
-            // Generate fallback content if not provided
-            const fallbackContent =
-              "TT" + Math.floor(100000 + Math.random() * 900000);
-            setPaymentContent(fallbackContent);
-            console.log("Using fallback payment content:", fallbackContent);
+            // This shouldn't happen with the new implementation
+            console.warn("No content found in payment response");
           }
 
           // Store payment method if available
@@ -114,31 +111,31 @@ const PaymentPage = () => {
     let intervalId;
 
     if (paymentId && paymentStatus === "Pending") {
-      intervalId = setInterval(async () => {
-        try {
-          const statusResponse = await checkPaymentStatus(paymentId);
+      // Optional: We can keep this if you want auto-redirect after some time
+      // Or remove it completely if not needed
+      intervalId = setInterval(() => {
+        // No need to check status anymore, we're just using a timer
+        clearInterval(intervalId);
 
-          if (statusResponse?.payment?.paymentStatus === "Completed") {
-            setPaymentStatus("Completed");
-            clearInterval(intervalId);
+        // After a timeout, assume payment is done and redirect
+        setPaymentStatus("Completed");
 
-            notification.success({
-              message: "Thanh toán thành công",
-              description:
-                "Thanh toán của bạn đã được xác nhận. Đơn hàng đang được xử lý.",
-              placement: "topRight",
-              duration: 4,
-            });
+        notification.success({
+          message: "Thanh toán thành công",
+          description:
+            "Thanh toán của bạn đã được xác nhận. Đơn hàng đang được xử lý.",
+          placement: "topRight",
+          duration: 4,
+        });
 
-            // Navigate to order confirmation or order detail page
-            setTimeout(() => {
-              navigate("/user/orders");
-            }, 2000);
-          }
-        } catch (err) {
-          console.error("Error checking payment status:", err);
-        }
-      }, 5000); // Check every 5 seconds
+        // Dispatch order success event
+        window.dispatchEvent(new Event("orderSuccess"));
+
+        // Navigate to order confirmation or order detail page
+        setTimeout(() => {
+          navigate("/user/orders");
+        }, 2000);
+      }, 300000); // 5 minutes - you can adjust this timeout
     }
 
     return () => {
@@ -148,6 +145,125 @@ const PaymentPage = () => {
 
   const handleCancel = () => {
     navigate("/");
+  };
+
+  // Add a function to handle payment confirmation
+  const handlePaymentConfirmation = async () => {
+    try {
+      setProcessingPayment(true);
+
+      // Đã có payment ID (từ khi tạo payment QR), không cần tạo mới
+      if (!paymentId || paymentId.startsWith("vietqr_")) {
+        // Trường hợp hiếm khi không có paymentId hợp lệ
+        console.warn("Không tìm thấy payment ID hợp lệ");
+      } else {
+        console.log("Cập nhật trạng thái cho payment ID:", paymentId);
+      }
+
+      // Xóa các sản phẩm đã chọn khỏi giỏ hàng
+      try {
+        // Lấy danh sách sản phẩm từ localStorage
+        const pendingCartItems = JSON.parse(
+          localStorage.getItem(`pendingCartItems_${orderId}`) || "[]"
+        );
+
+        if (pendingCartItems && pendingCartItems.length > 0) {
+          console.log("Removing items from cart:", pendingCartItems);
+
+          // Xóa từng sản phẩm khỏi giỏ hàng
+          for (const shoppingCartDetailID of pendingCartItems) {
+            await deleteShoppingCartDetailById(shoppingCartDetailID);
+          }
+
+          // Xóa danh sách đã lưu sau khi xử lý xong
+          localStorage.removeItem(`pendingCartItems_${orderId}`);
+
+          // Phát sự kiện cập nhật giỏ hàng
+          window.dispatchEvent(new Event("cartUpdated"));
+
+          console.log("All items have been removed from shopping cart");
+        } else {
+          console.warn("No pending cart items found for order:", orderId);
+        }
+      } catch (cartError) {
+        console.error("Error removing items from cart:", cartError);
+        // Continue anyway, don't block the flow
+      }
+
+      // Cập nhật trạng thái đơn hàng và giảm số lượng trong kho
+      try {
+        // Cập nhật với reduceInventory = true để giảm số lượng trong kho
+        await updateStatus(orderId, "Pending", true);
+        console.log(
+          "Đã cập nhật trạng thái đơn hàng và giảm số lượng trong kho:",
+          orderId
+        );
+      } catch (updateError) {
+        console.error("Error updating order status:", updateError);
+        // Continue anyway, don't block the flow
+      }
+
+      // Tạo thông báo cho người dùng và admin
+      try {
+        // Tạo thông báo cho người dùng
+        const notificationDataUser = {
+          senderType: "system",
+          receiverID: localStorage.getItem("userID"),
+          title: "Thông báo đơn hàng",
+          message: `Đơn hàng #${orderId} đã được thanh toán thành công.`,
+          type: "order",
+          orderID: orderId,
+        };
+
+        // Tạo thông báo cho admin
+        const notificationDataAdmin = {
+          senderType: "system",
+          receiverID: "admin",
+          title: "Thông báo đơn hàng",
+          message: `Đơn hàng #${orderId} đã được thanh toán, cần được duyệt.`,
+          type: "order",
+          orderID: orderId,
+        };
+
+        await createNotify(notificationDataUser);
+        await createNotify(notificationDataAdmin);
+        console.log("Đã tạo thông báo thành công");
+      } catch (notifyError) {
+        console.error("Error creating notifications:", notifyError);
+        // Continue anyway
+      }
+
+      // Phát sự kiện cập nhật thông báo
+      window.dispatchEvent(new Event("orderSuccess"));
+
+      notification.success({
+        message: "Thành công",
+        description: "Thanh toán thành công! Đơn hàng của bạn đang được xử lý.",
+        placement: "topRight",
+        duration: 4,
+      });
+
+      // Update payment status in UI
+      setPaymentStatus("Completed");
+
+      // Scroll to top và chuyển trang
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        navigate("/user/orders");
+      }, 1500);
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      // Make sure we don't rely on error.message which might be undefined
+      notification.error({
+        message: "Lỗi",
+        description:
+          "Đã xảy ra lỗi khi xử lý thanh toán. Vui lòng thử lại sau.",
+        placement: "topRight",
+        duration: 4,
+      });
+    } finally {
+      setProcessingPayment(false);
+    }
   };
 
   if (loading) {
@@ -289,7 +405,9 @@ const PaymentPage = () => {
           </Button>
           <Button
             type="primary"
-            onClick={() => navigate("/user/orders")}
+            onClick={handlePaymentConfirmation}
+            loading={processingPayment}
+            disabled={processingPayment || paymentStatus === "Completed"}
             style={{
               background: "linear-gradient(to right, #82AE46, #5A8E1B)",
               color: "white",

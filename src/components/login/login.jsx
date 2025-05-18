@@ -31,23 +31,25 @@ const LoginForm = ({
     e.preventDefault();
     setLoading(true);
     setErrors({}); // Reset lỗi trước khi gửi
-  
+
     try {
       // Gọi hàm login từ AuthService
       const data = await login({
         email: formData.username,
         password: formData.password,
       });
-  
+
       const role = data.user.role;
       setUserRole(role);
       onLoginSuccess(data);
-  
+      console.log("Đăng nhập thành công:", data);
+
       // Lưu thông tin người dùng vào localStorage
       localStorage.setItem("token", data.token);
-      localStorage.setItem("userID", data.user.id);
+      localStorage.setItem("userID", data.user.userID);
+      localStorage.setItem("email", data.user.email);
       localStorage.setItem("role", role);
-  
+
       // Hiển thị thông báo đăng nhập thành công
       notification.success({
         message: "Đăng nhập thành công",
@@ -55,9 +57,9 @@ const LoginForm = ({
         placement: "topRight",
         duration: 3,
       });
-  
+
       closeLoginForm();
-  
+
       // Tải lại trang sau khi đăng nhập thành công
       setTimeout(() => {
         window.location.reload();

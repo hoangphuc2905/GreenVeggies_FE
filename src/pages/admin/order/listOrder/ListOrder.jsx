@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import { Button, Input, Space, Table, Tag, Tooltip, Spin, Modal } from "antd";
+import {
+  Button,
+  Input,
+  Space,
+  Table,
+  Tag,
+  Tooltip,
+  Spin,
+  Modal,
+  Select,
+} from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
 import OrderDetail from "./orderDetail/OrderDetail";
@@ -9,7 +19,13 @@ import { getPaymentByOrderId } from "../../../../services/PaymentService";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 import { createNotify } from "../../../../services/NotifyService";
 import { getUserInfo } from "../../../../services/UserService";
-import { getOrders } from "../../../../services/OrderService";
+import { getOrders, updateStatus } from "../../../../services/OrderService";
+import {
+  getProductById,
+  updateProductQuantity,
+} from "../../../../services/ProductService";
+import { useLocation } from "react-router-dom";
+import { getListOrdersStatusByDate } from "../../../../services/StatisticService";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -27,75 +43,13 @@ const useStyle = createStyles(({ css, token }) => {
   };
 });
 
-const fetchOrders = async () => {
-  // Hàm lấy danh sách đơn hàng từ API
-  try {
-    const orders = await getOrders();
-
-    // Lấy thông tin người dùng (số điện thoại) cho từng đơn hàng
-    const ordersWithPhone = await Promise.all(
-      orders.map(async (order) => {
-        const userInfo = await fetchUserInfo(order.userID);
-        return {
-          ...order,
-          phone: userInfo?.phone || "Không có số điện thoại", // Thêm số điện thoại vào đơn hàng
-        };
-      })
-    );
-
-    // Sắp xếp đơn hàng: Ưu tiên trạng thái "Pending", sau đó theo thời gian đặt (trễ nhất -> sớm nhất)
-    ordersWithPhone.sort((a, b) => {
-      if (a.status === "Pending" && b.status !== "Pending") return -1;
-      if (a.status !== "Pending" && b.status === "Pending") return 1;
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-
-    return ordersWithPhone;
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return []; // Trả về mảng rỗng nếu có lỗi
-  }
-};
-
-const fetchUserInfo = async (userID) => {
-  // Hàm lấy thông tin người dùng dựa trên userID
-  try {
-    const response = await getUserInfo(userID);
-    return response;
-  } catch (error) {
-    console.error("Error fetching user info:", error);
-    return null; // Trả về null nếu có lỗi
-  }
-};
-
 const ListOrder = () => {
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 }); // Initialize pagination state
+  const location = useLocation();
+  const { status, day, month, year } = location.state || {}; // Retrieve state parameters
 
-  useEffect(() => {
-    // Hàm tính toán số lượng dòng hiển thị dựa trên chiều cao màn hình
-    const calculatePageSize = () => {
-      const screenHeight = window.innerHeight;
-      if (screenHeight > 1200) return 20; // Màn hình lớn
-      if (screenHeight > 800) return 10; // Màn hình trung bình
-      return 5; // Màn hình nhỏ
-    };
-
-    // Cập nhật pageSize khi tải trang hoặc thay đổi kích thước màn hình
-    const updatePageSize = () => {
-      setPagination((prev) => ({
-        ...prev,
-        pageSize: calculatePageSize(),
-      }));
-    };
-
-    updatePageSize();
-    window.addEventListener("resize", updatePageSize);
-
-    return () => {
-      window.removeEventListener("resize", updatePageSize);
-    };
-  }, []);
-
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedOrders, setSelectedOrders] = useState([]);
   const [visibleColumns, setVisibleColumns] = useState({
     key: true,
     orderID: true,
@@ -104,7 +58,7 @@ const ListOrder = () => {
     totalAmount: true,
     address: true,
     status: true,
-    createdAt: true,
+    updatedAt: true,
     paymentMethod: true,
     paymentContent: true,
     actions: true,
@@ -119,30 +73,87 @@ const ListOrder = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [orders, setOrders] = useState([]);
   const [customer, setCustomer] = useState("");
-  const [paymentContents, setPaymentContents] = useState({}); // Store payment content by order ID
+  const [paymentContents, setPaymentContents] = useState({});
   const [loading, setLoading] = useState(true);
-  const [cancelReason, setCancelReason] = useState(""); // State to hold cancellation reason
+  const [cancelReason, setCancelReason] = useState("");
+
+  const fetchOrders = async (status, day, month, year) => {
+    console.log("Fetching orders with status:", status);
+    // console.log("Fetching orders with date:", date);
+
+    try {
+      let orders;
+      if (!status && !day && !month && !year) {
+        // Fetch all orders if no status or date is provided
+        orders = await getOrders();
+      } else {
+        // Extract day, month, and year from the date
+
+        orders = await getListOrdersStatusByDate({ day, month, year, status });
+        orders = orders.data || []; // Ensure orders is an array
+        console.log("Fetched orders:", orders);
+      }
+
+      const ordersWithPhone = await Promise.all(
+        orders.map(async (order) => {
+          const userInfo = await fetchUserInfo(order.userID);
+          return {
+            ...order,
+            phone: userInfo?.phone || "Không có số điện thoại",
+          };
+        })
+      );
+
+      return ordersWithPhone;
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      return [];
+    }
+  };
+
+  const fetchUserInfo = async (userID) => {
+    try {
+      const response = await getUserInfo(userID);
+      return response;
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const calculatePageSize = () => {
+      const screenHeight = window.innerHeight;
+      if (screenHeight > 1200) return 20;
+      if (screenHeight > 800) return 10;
+      return 8;
+    };
+    const updatePageSize = () => {
+      setPagination((prev) => ({
+        ...prev,
+        pageSize: calculatePageSize(),
+      }));
+    };
+    updatePageSize();
+    window.addEventListener("resize", updatePageSize);
+    return () => {
+      window.removeEventListener("resize", updatePageSize);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const data = await fetchOrders();
+      const data = await fetchOrders(status, day, month, year); // Pass status and date to fetchOrders
       setOrders(data);
-
-      // Fetch payment content for orders with "Chuyển khoản"
       const paymentData = await Promise.all(
         data
           .filter(
-            (order) =>
-              (order.paymentMethod &&
-                order.paymentMethod.toLowerCase() === "bank") ||
-              "string" // Normalize to lowercase
+            (order) => order.paymentMethod?.toLowerCase() === "bank" || "string"
           )
           .map(async (order) => {
             try {
               const paymentDetails = await getPaymentByOrderId(order.orderID);
-              console.log("Thông tin thanh toán", paymentDetails);
-
               return {
                 orderID: order.orderID,
                 content: paymentDetails?.content || "Không có nội dung",
@@ -156,34 +167,28 @@ const ListOrder = () => {
             }
           })
       );
-
-      // Map payment content to order IDs
       const paymentContentMap = paymentData.reduce((acc, item) => {
         acc[item.orderID] = item.content;
         return acc;
       }, {});
       setPaymentContents(paymentContentMap);
-
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [status, day, month, year]); // Add status and date as dependencies
 
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
-    // Hàm xử lý tìm kiếm trong bảng
     confirm();
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
 
   const handleReset = (clearFilters) => {
-    // Hàm đặt lại bộ lọc tìm kiếm
     clearFilters();
     setSearchText("");
   };
 
   const handleCancelFilters = () => {
-    // Hàm hủy tất cả bộ lọc và sắp xếp
     setSearchText("");
     setSearchedColumn("");
     setFilteredInfo({});
@@ -195,7 +200,7 @@ const ListOrder = () => {
       totalAmount: true,
       address: true,
       status: true,
-      createdAt: true,
+      updatedAt: true,
       paymentMethod: true,
       paymentContent: true,
       actions: true,
@@ -203,19 +208,17 @@ const ListOrder = () => {
   };
 
   const showOrderDetail = (order) => {
-    // Hàm hiển thị chi tiết đơn hàng
     setSelectedOrder(order);
     setIsModalVisible(true);
   };
 
   const getUserInfoById = async (userID) => {
-    // Hàm lấy thông tin người dùng dựa trên userID và cập nhật state
     try {
       const response = await fetchUserInfo(userID);
       return setCustomer(response || "Không có tên");
     } catch (error) {
       console.error("Error fetching user info:", error);
-      return null; // Trả về null nếu có lỗi
+      return null;
     }
   };
 
@@ -230,7 +233,6 @@ const ListOrder = () => {
   };
 
   const refreshOrders = async () => {
-    // Hàm làm mới danh sách đơn hàng
     setLoading(true);
     const data = await fetchOrders();
     setOrders(data);
@@ -238,22 +240,17 @@ const ListOrder = () => {
   };
 
   const formattedDate = (dateString) => {
-    // Hàm định dạng ngày tháng từ chuỗi
     const date = new Date(dateString);
-
     const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
-
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
     const seconds = String(date.getSeconds()).padStart(2, "0");
-
     return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
   };
 
   const getColumnSearchProps = (dataIndex, sortable = false) => ({
-    // Hàm hỗ trợ tìm kiếm và sắp xếp cho các cột trong bảng
     filterDropdown: ({
       setSelectedKeys,
       selectedKeys,
@@ -323,6 +320,38 @@ const ListOrder = () => {
       ),
   });
 
+  const getColumnDropdownProps = (dataIndex, options) => ({
+    filters: options.map((option) => ({
+      text: option.label, // Display Vietnamese label
+      value: option.value, // Use English value for filtering
+    })),
+    onFilter: (value, record) => record[dataIndex]?.toString() === value,
+    render: (text) => {
+      const matchedOption = options.find((option) => option.value === text);
+      return <span>{matchedOption ? matchedOption.label : text}</span>; // Display label if matched
+    },
+  });
+
+  const handleSendNotification = async (orderID, customerID) => {
+    try {
+      const formData = {
+        senderType: "admin",
+        senderUserID: localStorage.getItem("userID"),
+        receiverID: customerID,
+        title: "Thông báo đơn hàng",
+        message: `Đơn hàng ${orderID} đã được duyệt.`,
+        type: "order",
+        orderID: orderID,
+      };
+      const response = await createNotify(formData);
+      if (response) {
+        console.log("Thông báo đã được gửi thành công:", response);
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo:", error);
+    }
+  };
+
   const sendCancelNotification = async (orderID, customerID, reason) => {
     try {
       const formData = {
@@ -343,20 +372,236 @@ const ListOrder = () => {
     }
   };
 
-  const handleCancelOrder = async (order, reason) => {
+  const handleCancelOrder = async (order) => {
+    let selectedReason = "";
+    let enteredReason = "";
+
+    Modal.confirm({
+      title: "Xác nhận hủy đơn hàng",
+      content: (
+        <div>
+          <p>Vui lòng chọn hoặc nhập lý do hủy đơn hàng:</p>
+          <Select
+            style={{ width: "100%", marginBottom: "10px" }}
+            placeholder="Chọn lý do hủy (không bắt buộc)"
+            onChange={(value) => {
+              selectedReason = value;
+            }}
+          >
+            {[
+              "Khách hàng yêu cầu hủy",
+              "Hết hàng",
+              "Thông tin giao hàng không chính xác",
+              "Lý do khác",
+            ].map((option) => (
+              <Select.Option key={option} value={option}>
+                {option}
+              </Select.Option>
+            ))}
+          </Select>
+          <Input
+            placeholder="Hoặc nhập lý do hủy"
+            onChange={(e) => {
+              enteredReason = e.target.value;
+            }}
+          />
+        </div>
+      ),
+      okText: "Hủy đơn",
+      cancelText: "Đóng",
+      onOk: async () => {
+        const finalReason = [selectedReason, enteredReason]
+          .filter(Boolean) // Loại bỏ giá trị null hoặc undefined
+          .join("; "); // Kết hợp cả hai lý do bằng dấu chấm phẩy
+
+        if (!finalReason) {
+          Modal.error({
+            content: "Vui lòng chọn hoặc nhập lý do hủy đơn hàng.",
+          });
+          return Promise.reject(); // Ngăn modal đóng
+        }
+
+        try {
+          // Gửi thông báo hủy đơn hàng
+          await sendCancelNotification(
+            order.orderID,
+            order.userID,
+            finalReason
+          );
+
+          // Cập nhật lại số lượng sản phẩm
+          if (order.orderDetails) {
+            await Promise.all(
+              order.orderDetails.map(async (item) => {
+                const product = await getProductById(item.productID);
+                const updatedQuantity = product.quantity + item.quantity;
+
+                await updateProductQuantity(item.productID, {
+                  ...product,
+                  quantity: updatedQuantity,
+                  sold: product.sold - item.quantity,
+                });
+              })
+            );
+          }
+
+          await updateStatus(order.orderID, "Cancelled", {
+            reason: finalReason,
+          });
+
+          Modal.success({
+            content:
+              "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
+          });
+
+          // Làm mới danh sách đơn hàng
+          refreshOrders();
+        } catch (error) {
+          Modal.error({
+            content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+          });
+          console.error("Error cancelling order:", error);
+        }
+      },
+    });
+  };
+
+  const checkProductAvailability = async (orderDetails) => {
     try {
-      // ...existing logic to cancel the order...
-      await sendCancelNotification(order.orderID, order.userID, reason); // Send notification after canceling
-      Modal.success({
-        content: "Đơn hàng đã được hủy thành công và thông báo đã được gửi.",
-      });
-      refreshOrders();
+      for (const item of orderDetails) {
+        const product = await getProductById(item.productID);
+        if (!product || product.status === "unavailable") {
+          return {
+            isAvailable: false,
+            productName: product?.name || "Không xác định",
+          };
+        }
+      }
+      return { isAvailable: true };
+    } catch (error) {
+      console.error("Error checking product availability:", error);
+      return { isAvailable: false, productName: "Không xác định" };
+    }
+  };
+
+  const handleApproveSelectedOrders = async () => {
+    try {
+      const unavailableOrders = [];
+      const approvedOrders = [];
+
+      // Kiểm tra sản phẩm ngưng bán trước khi hỏi xác nhận
+      for (const orderID of selectedOrders) {
+        const order = orders.find((o) => o.orderID === orderID);
+        if (!order) continue;
+
+        const { isAvailable, productName } = await checkProductAvailability(
+          order.orderDetails
+        );
+        if (!isAvailable) {
+          unavailableOrders.push({ orderID, productName });
+          continue;
+        }
+      }
+
+      // Nếu có đơn hàng có sản phẩm ngưng bán, hỏi xác nhận
+      if (unavailableOrders.length > 0) {
+        Modal.confirm({
+          title: "Một số sản phẩm đã ngưng bán",
+          content: (
+            <div>
+              <p>Các đơn hàng sau có sản phẩm ngưng bán:</p>
+              <ul>
+                {unavailableOrders.map((order) => (
+                  <li key={order.orderID}>
+                    Đơn hàng {order.orderID}: Sản phẩm "{order.productName}"
+                  </li>
+                ))}
+              </ul>
+              <p>
+                Bạn có muốn bỏ qua các đơn này và tiếp tục duyệt các đơn còn lại
+                không?
+              </p>
+            </div>
+          ),
+          okText: "Tiếp tục",
+          cancelText: "Hủy",
+          onOk: async () => {
+            // Lọc ra các đơn hợp lệ để duyệt
+            const validOrderIDs = selectedOrders.filter(
+              (orderID) => !unavailableOrders.some((u) => u.orderID === orderID)
+            );
+            if (validOrderIDs.length === 0) {
+              Modal.info({
+                content: "Không có đơn hàng nào hợp lệ để duyệt.",
+              });
+              setSelectedRowKeys([]);
+              setSelectedOrders([]);
+              return;
+            }
+            // Hỏi xác nhận duyệt các đơn hợp lệ
+            Modal.confirm({
+              title: `Bạn có chắc chắn muốn duyệt ${validOrderIDs.length} đơn hàng hợp lệ?`,
+              okText: "Duyệt",
+              cancelText: "Hủy",
+              onOk: async () => {
+                for (const orderID of validOrderIDs) {
+                  const order = orders.find((o) => o.orderID === orderID);
+                  if (!order) continue;
+                  await updateStatus(orderID, "Shipped");
+                  await handleSendNotification(orderID, order.userID);
+                  approvedOrders.push(orderID);
+                }
+                Modal.success({
+                  content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+                });
+                setSelectedRowKeys([]);
+                setSelectedOrders([]);
+                refreshOrders();
+              },
+            });
+          },
+        });
+      } else {
+        // Nếu không có đơn nào ngưng bán, hỏi xác nhận duyệt tất cả
+        Modal.confirm({
+          title: `Bạn có chắc chắn muốn duyệt ${selectedOrders.length} đơn hàng đã chọn?`,
+          okText: "Duyệt",
+          cancelText: "Hủy",
+          onOk: async () => {
+            for (const orderID of selectedOrders) {
+              const order = orders.find((o) => o.orderID === orderID);
+              if (!order) continue;
+              await updateStatus(orderID, "Shipped");
+              await handleSendNotification(orderID, order.userID);
+              approvedOrders.push(orderID);
+            }
+            Modal.success({
+              content: `Đã duyệt thành công ${approvedOrders.length} đơn hàng.`,
+            });
+            setSelectedRowKeys([]);
+            setSelectedOrders([]);
+            refreshOrders();
+          },
+        });
+      }
     } catch (error) {
       Modal.error({
-        content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+        content: "Đã xảy ra lỗi khi duyệt các đơn hàng.",
       });
-      console.error("Error cancelling order:", error);
+      console.error("Error approving selected orders:", error);
     }
+  };
+
+  const rowSelection = {
+    selectedRowKeys, // Controlled selected row keys
+    onChange: (newSelectedRowKeys, selectedRows) => {
+      setSelectedRowKeys(newSelectedRowKeys); // Update selected row keys
+      setSelectedOrders(selectedRows.map((row) => row.orderID)); // Store selected order IDs
+    },
+    getCheckboxProps: (record) => ({
+      disabled: record.status !== "Pending", // Allow selection only for "Pending" rows
+      name: record.orderID,
+    }),
   };
 
   const columns = [
@@ -366,69 +611,63 @@ const ListOrder = () => {
       key: "key",
       width: 50,
       render: (text, record, index) => {
-        return (pagination.current - 1) * pagination.pageSize + index + 1; // Adjust STT based on pagination
+        return (pagination.current - 1) * pagination.pageSize + index + 1;
       },
     },
     {
       title: "Mã đơn hàng",
       dataIndex: "orderID",
       key: "orderID",
-      ellipsis: true, // Hiển thị chữ dạng ... nếu nội dung quá dài
+      ellipsis: true,
       fixed: "left",
       ...getColumnSearchProps("orderID", true),
-      render: (orderID) => {
-        return (
-          <Tooltip placement="topLeft" title={orderID}>
-            {orderID}
-          </Tooltip>
-        );
-      },
+      render: (orderID) => (
+        <Tooltip placement="topLeft" title={orderID}>
+          {orderID}
+        </Tooltip>
+      ),
     },
     {
       title: "Mã khách hàng",
       dataIndex: "userID",
       key: "userID",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("userID", true),
       fixed: "left",
-      render: (userID) => {
-        return (
-          <Tooltip placement="topLeft" title={userID}>
-            {userID}
-          </Tooltip>
-        );
-      },
+      render: (userID) => (
+        <Tooltip placement="topLeft" title={userID}>
+          {userID}
+        </Tooltip>
+      ),
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("phone"),
-      render: (phone) => {
-        return (
-          <Tooltip placement="topLeft" title={phone}>
-            {phone}
-          </Tooltip>
-        );
-      },
+      render: (phone) => (
+        <Tooltip placement="topLeft" title={phone}>
+          {phone}
+        </Tooltip>
+      ),
     },
     {
       title: "Giá tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("totalAmount", true),
       render: (totalAmount) => {
-        const format = formattedPrice(totalAmount); // Sử dụng hàm formattedPrice để định dạng
-        return <span>{format}</span>; // Trả về giá đã định dạng
+        const format = formattedPrice(totalAmount);
+        return <span>{format}</span>;
       },
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
       key: "address",
-      ellipsis: true, // Hiển thị chữ dạng ...
+      ellipsis: true,
       ...getColumnSearchProps("address"),
       render: (address) => (
         <Tooltip placement="topLeft" title={address}>
@@ -440,8 +679,13 @@ const ListOrder = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      ellipsis: true, // Hiển thị chữ dạng ...
-      ...getColumnSearchProps("status", true),
+      ellipsis: true,
+      ...getColumnDropdownProps("status", [
+        { value: "Pending", label: "Đang chờ duyệt" },
+        { value: "Shipped", label: "Đang giao hàng" },
+        { value: "Delivered", label: "Đã giao thành công" },
+        { value: "Cancelled", label: "Đã hủy" },
+      ]),
       render: (status) => {
         let color =
           status === "Pending"
@@ -459,35 +703,36 @@ const ListOrder = () => {
             : status === "Delivered"
             ? "Đã giao thành công"
             : "Đã hủy";
-
         return <Tag color={color}>{statusText}</Tag>;
       },
     },
     {
       title: "Thời gian",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      ellipsis: true, // Hiển thị chữ dạng ...
-      ...getColumnSearchProps("createdAt", true),
-      render: (createdAt) => formattedDate(createdAt), // Sử dụng hàm formattedDate để định dạng
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      ellipsis: true,
+      ...getColumnSearchProps("updatedAt", true),
+      renderWELL: (updatedAt) => formattedDate(updatedAt),
     },
     {
       title: "Phương thức thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
-      ellipsis: true, // Hiển thị chữ dạng ...
-      ...getColumnSearchProps("paymentMethod", true),
+      ellipsis: true,
+      ...getColumnDropdownProps("paymentMethod", [
+        { value: "COD", label: "Thanh toán khi nhận hàng (COD)" },
+        { value: "CASH", label: "Thanh toán tiền mặt" },
+        { value: "BANK", label: "Chuyển khoản" },
+      ]),
       render: (paymentMethod) => {
         let paymentText =
           paymentMethod === "COD" || paymentMethod === "CASH"
             ? "Thanh toán khi nhận hàng"
             : "Chuyển khoản";
-
         let color =
           paymentMethod === "COD" || paymentMethod === "CASH"
             ? "green"
             : "blue";
-
         return (
           <Tag color={color} className="text-white">
             {paymentText}
@@ -501,7 +746,7 @@ const ListOrder = () => {
       key: "paymentContent",
       width: 180,
       ellipsis: true,
-      ...getColumnSearchProps("paymentContent"), // Enable search for payment content
+      ...getColumnSearchProps("paymentContent"),
       render: (orderID) => {
         const content = paymentContents[orderID];
         return content ? (
@@ -523,19 +768,10 @@ const ListOrder = () => {
         <Button
           type="default"
           size="small"
-          onClick={() => {
-            Modal.confirm({
-              title: "Xác nhận hủy đơn hàng",
-              content: (
-                <Input.TextArea
-                  placeholder="Nhập lý do hủy đơn hàng"
-                  onChange={(e) => setCancelReason(e.target.value)}
-                />
-              ),
-              okText: "Hủy đơn",
-              cancelText: "Đóng",
-              onOk: () => handleCancelOrder(record, cancelReason),
-            });
+          onClick={(event) => {
+            event.stopPropagation();
+            handleCancelOrder(record, cancelReason);
+            setCancelReason("");
           }}
         >
           Hủy đơn
@@ -553,6 +789,15 @@ const ListOrder = () => {
       <div className="text-lg font-semibold mb-4 flex justify-between">
         <span>Danh sách đơn hàng</span>
         <Space>
+          {selectedRowKeys.length > 0 && (
+            <Button
+              type="primary"
+              onClick={handleApproveSelectedOrders}
+              className="bg-green-500 text-white"
+            >
+              Duyệt {selectedRowKeys.length} đơn đã chọn
+            </Button>
+          )}
           <Button onClick={handleCancelFilters}>Hủy lọc</Button>
           <FilterButton
             columnsVisibility={visibleColumns}
@@ -567,23 +812,35 @@ const ListOrder = () => {
         <Table
           className={styles.customTable + " hover:cursor-pointer"}
           size="small"
-          columns={filteredColumns}
-          dataSource={orders}
+          dataSource={orders || []} // Ensure dataSource is always an array
+          rowSelection={{
+            ...rowSelection, // Use the updated rowSelection logic
+          }}
+          rowKey="orderID" // Use orderID as the unique key for rows
           pagination={{
-            pageSize: pagination.pageSize,
-            current: pagination.current,
-            onChange: (page, pageSize) => {
-              setPagination({ current: page, pageSize }); // Update pagination state
+            ...pagination,
+            showSizeChanger: true, // Hiển thị bộ chọn số lượng phần tử trên mỗi trang
+            pageSizeOptions: ["5", "10", "20", "50"], // Các tùy chọn số lượng phần tử
+            onShowSizeChange: (current, size) => {
+              setPagination((prev) => ({
+                ...prev,
+                pageSize: size, // Cập nhật số lượng phần tử trên mỗi trang
+              }));
             },
           }}
-          scroll={{ x: filteredColumns.length * 150 }}
           onChange={(pagination, filters, sorter) => {
-            setFilteredInfo(filters);
-            setSortedInfo(sorter);
+            setPagination({
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+            }); // Update pagination state
+            setFilteredInfo(filters || {}); // Ensure filters are handled properly
+            setSortedInfo(sorter || {}); // Ensure sorter is handled properly
           }}
           onRow={(record) => ({
-            onClick: () => showOrderDetail(record),
+            onClick: () => showOrderDetail(record), // Show order details on row click
           })}
+          columns={filteredColumns}
+          scroll={{ x: filteredColumns.length * 150 }}
           filteredInfo={filteredInfo}
           sortedInfo={sortedInfo}
         />

@@ -28,9 +28,6 @@ const RevenueList = ({ selectedDate }) => {
   if (!revenueData?.currentStats || !revenueData?.percentageDifference)
     return null;
 
-  const current = revenueData.currentStats;
-  const change = revenueData.percentageDifference;
-
   const placeholderCards = [
     {
       title: "Doanh số",

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProducts } from "../../../api/api";
+
 import { List, Avatar } from "antd";
-import { formattedPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { CalcPrice, formattedPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import { getProducts } from "../../../services/ProductService";
 
 const Favourite = () => {
   const [products, setProducts] = useState([]);
@@ -64,7 +65,7 @@ const Favourite = () => {
               }
               description={
                 <span className="text-gray-700">
-                  {formattedPrice(product.price)}
+                  {formattedPrice(CalcPrice(product.price))}
                 </span>
               }
             />

@@ -1,7 +1,18 @@
 import { Button, ConfigProvider, Result } from "antd";
-import useLogout from "../logout/Logout"; // Adjust the import path as necessary
+import { useNavigate } from "react-router-dom";
 
 const UnfoundPage = () => {
+  const navigate = useNavigate();
+
+  const handleBackToHome = () => {
+    const role = localStorage.getItem("role");
+    if (role === "admin") {
+      navigate("/admin/dashboard/revenue"); // Trang chủ cho admin
+    } else {
+      navigate("/"); // Trang chủ cho user hoặc guest
+    }
+  };
+
   return (
     <Result
       status="404"
@@ -12,9 +23,9 @@ const UnfoundPage = () => {
           theme={{
             components: {
               Button: {
-                defaultHoverBg: "#9ed455", // Red for close button hover
-                defaultHoverColor: "#ffffff", // White text color on hover
-                defaultActiveBg: "#486127", // Darker red for active state
+                defaultHoverBg: "#9ed455",
+                defaultHoverColor: "#ffffff",
+                defaultActiveBg: "#486127",
                 defaultActiveColor: "#ffffff",
                 defaultActiveBorderColor: "none",
                 defaultHoverBorderColor: "none",
@@ -25,9 +36,9 @@ const UnfoundPage = () => {
           <Button
             type="default"
             className="bg-primary text-white"
-            onClick={useLogout()} // Gọi trực tiếp hàm trả về từ hook
+            onClick={handleBackToHome} // Gọi hàm điều hướng
           >
-            Đăng xuất
+            Quay lại trang chủ
           </Button>
         </ConfigProvider>
       }

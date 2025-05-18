@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import UnfoundPage from "../components/error/UnfoundPage";
 
 const ErrorRouter = () => {
+  console.log("Rendering ErrorRouter"); // Debug log
   return (
     <App>
       <Routes>

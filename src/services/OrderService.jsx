@@ -79,3 +79,33 @@ export const getOrders = async () => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Thêm đơn hàng mới
+export const addOrder = async (orderData) => {
+  try {
+    // Log dữ liệu trước khi gửi đi để kiểm tra
+    console.log("Dữ liệu đơn hàng gửi đi:", orderData);
+
+    const response = await handleOrderApi.addOrder(orderData);
+    return response;
+  } catch (error) {
+    // Hiển thị chi tiết lỗi từ server (nếu có)
+    if (error.response && error.response.data) {
+      console.error("Chi tiết lỗi từ server:", error.response.data);
+
+      // Kiểm tra xem có phải lỗi transaction MongoDB không
+      const errorMsg = error.response.data.errors?.server;
+      if (
+        errorMsg &&
+        (errorMsg.includes("Please retry your operation") ||
+          errorMsg.includes("multi-document transaction"))
+      ) {
+        throw new Error("Lỗi xử lý đơn hàng do quá tải. Vui lòng thử lại.");
+      }
+
+      throw error.response.data; // Ném lỗi để component xử lý
+    }
+
+    console.error("Lỗi khi thêm đơn đặt hàng:", error);
+    throw new Error("Không thể tạo đơn hàng. Vui lòng thử lại sau.");
+  }
+};
