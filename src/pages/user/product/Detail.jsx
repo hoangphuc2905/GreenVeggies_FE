@@ -174,9 +174,10 @@ const Detail = () => {
 
   // Xác thực người dùng
   const checkAuthenticated = () => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
-    return !!(token && userID);
+    return !!(accessToken && refreshToken && userID);
   };
 
   // Xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng"
@@ -264,8 +265,9 @@ const Detail = () => {
   // Xử lý khi đăng nhập thành công
   const handleLoginSuccess = (data) => {
     // Lưu thông tin người dùng nếu cần
-    if (data && data.token) {
-      localStorage.setItem("token", data.token);
+    if (data && data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
     }
 
     setIsLoginModalVisible(false);
@@ -334,7 +336,8 @@ const Detail = () => {
                   border: "1px solid #82AE46",
                   borderRadius: "4px",
                 }
-          }>
+          }
+        >
           {page}
         </span>
       );
@@ -377,7 +380,8 @@ const Detail = () => {
                     if (Array.isArray(product.imageUrl)) {
                       setSelectedImage(product.imageUrl[current]);
                     }
-                  }}>
+                  }}
+                >
                   {Array.isArray(product.imageUrl) &&
                     product.imageUrl.map((img, index) => (
                       <div key={index}>
@@ -400,14 +404,16 @@ const Detail = () => {
                 <div className="absolute top-1/2 left-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                   <button
                     onClick={() => carouselRef.current.prev()}
-                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125"
+                  >
                     <LeftOutlined />
                   </button>
                 </div>
                 <div className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                   <button
                     onClick={() => carouselRef.current.next()}
-                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125"
+                  >
                     <RightOutlined />
                   </button>
                 </div>
@@ -488,7 +494,8 @@ const Detail = () => {
               <div className="mt-4">
                 <Typography.Paragraph
                   ref={descriptionRef}
-                  ellipsis={{ rows: 3 }}>
+                  ellipsis={{ rows: 3 }}
+                >
                   {product.description}
                 </Typography.Paragraph>
                 {showSeeMore && (
@@ -519,7 +526,8 @@ const Detail = () => {
                         }
                       }, 100);
                     }}
-                    className="text-[#82AE46]">
+                    className="text-[#82AE46]"
+                  >
                     Xem thêm
                   </Button>
                 )}
@@ -527,7 +535,8 @@ const Detail = () => {
 
               <Typography.Text
                 className="text-xl block mt-2"
-                style={{ color: "#FEA837" }}>
+                style={{ color: "#FEA837" }}
+              >
                 {formattedPrice(CalcPrice(product.price))}
               </Typography.Text>
 
@@ -545,7 +554,8 @@ const Detail = () => {
                   <Button
                     onClick={decrementQuantity}
                     disabled={product.quantity === 0 || quantity <= 1}
-                    className="hover:text-[#82AE46] hover:border-[#82AE46] transition-colors">
+                    className="hover:text-[#82AE46] hover:border-[#82AE46] transition-colors"
+                  >
                     -
                   </Button>
                   <InputNumber
@@ -563,7 +573,8 @@ const Detail = () => {
                     disabled={
                       product.quantity === 0 || quantity >= product.quantity
                     }
-                    className="!hover:bg-[#82AE46] !hover:text-white !hover:border-[#82AE46] transition-colors">
+                    className="!hover:bg-[#82AE46] !hover:text-white !hover:border-[#82AE46] transition-colors"
+                  >
                     +
                   </Button>
                 </Space.Compact>
@@ -572,7 +583,8 @@ const Detail = () => {
                   type="primary"
                   onClick={handleAddToCart}
                   disabled={product.quantity === 0}
-                  className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]">
+                  className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]"
+                >
                   THÊM VÀO GIỎ
                 </Button>
               </Space>
@@ -587,7 +599,8 @@ const Detail = () => {
                 boxShadow: "inset 0 0 6px rgba(0, 0, 0, 0.1)",
                 scrollbarWidth: "thin",
                 scrollbarColor: "#82AE46 #f0f0f0",
-              }}>
+              }}
+            >
               <Favourite />
             </div>
           </div>
@@ -604,7 +617,8 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("description");
               toggleDescription();
-            }}>
+            }}
+          >
             MÔ TẢ
           </Button>
           <Button
@@ -617,7 +631,8 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("informations");
               toggleInformations();
-            }}>
+            }}
+          >
             THÔNG TIN LIÊN QUAN
           </Button>
 
@@ -631,14 +646,16 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("reviews");
               toggleReviews();
-            }}>
+            }}
+          >
             ĐÁNH GIÁ
           </Button>
         </div>
         {showDescription && (
           <div
             ref={fullDescriptionRef}
-            className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
+            className="mt-4 p-4 rounded-lg bg-[#f0fdf4]"
+          >
             <Typography.Title level={2}>Mô tả sản phẩm</Typography.Title>
             <Typography.Paragraph className="whitespace-pre-line">
               {product.description}
@@ -679,7 +696,8 @@ const Detail = () => {
             <Spin
               spinning={reviewsLoading}
               tip="Đang tải đánh giá..."
-              className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
+              className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]"
+            >
               {product.reviews
                 // Sort by date, newest first
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -718,7 +736,8 @@ const Detail = () => {
                               {review.imageUrl.map((img, imgIndex) => (
                                 <div
                                   key={imgIndex}
-                                  className="w-16 h-16 rounded overflow-hidden border border-gray-200">
+                                  className="w-16 h-16 rounded overflow-hidden border border-gray-200"
+                                >
                                   <Image
                                     src={img}
                                     alt={`Review image ${imgIndex + 1}`}

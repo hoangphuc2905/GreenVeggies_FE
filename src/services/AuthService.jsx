@@ -84,6 +84,7 @@ export const login = async (formData) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+
 export const forgotPassword = async (emailqmk) => {
   try {
     const response = await handleAuthApi.forgotPassword(emailqmk);
@@ -147,7 +148,11 @@ export const updatePassword = async (emailqmk, newPassword) => {
 };
 export const changePassword = async (email, oldPassword, newPassword) => {
   try {
-    const response = await handleAuthApi.changePassword(email, oldPassword, newPassword);
+    const response = await handleAuthApi.changePassword(
+      email,
+      oldPassword,
+      newPassword
+    );
     if (response && response.message) {
       return response.message; // Trả về thông báo từ backend
     }

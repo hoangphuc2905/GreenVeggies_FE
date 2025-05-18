@@ -30,11 +30,12 @@ const AdminRouter = () => {
   } = theme.useToken();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
     const role = localStorage.getItem("role");
-    if (token && userID) {
-      dispatch(fetchUser({ userID, token }));
+    if (accessToken && refreshToken && userID) {
+      dispatch(fetchUser({ userID, accessToken, refreshToken }));
       getUserInfo(userID).then((userInfo) => {
         setUserInfo(userInfo);
         if (role === "admin") {

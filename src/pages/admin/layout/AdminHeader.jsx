@@ -26,10 +26,11 @@ const AdminHeader = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
-    if (token && userID) {
-      dispatch(fetchUser({ userID, token }));
+    if (accessToken && refreshToken && userID) {
+      dispatch(fetchUser({ userID, accessToken, refreshToken }));
       getUserInfo(userID).then((userInfo) => {
         setUserInfo(userInfo);
       });
@@ -52,7 +53,8 @@ const AdminHeader = () => {
       cancelText: "Hủy",
       onOk() {
         // Xóa thông tin người dùng và token khỏi localStorage
-        localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("userID");
         setUserInfo({});
         message.success("Bạn đã đăng xuất thành công!");
