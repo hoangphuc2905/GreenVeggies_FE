@@ -10,6 +10,7 @@ import {
   Spin,
   Modal,
   Select,
+  DatePicker,
 } from "antd";
 import Highlighter from "react-highlight-words";
 import { createStyles } from "antd-style";
@@ -26,6 +27,7 @@ import {
 } from "../../../../services/ProductService";
 import { useLocation } from "react-router-dom";
 import { getListOrdersStatusByDate } from "../../../../services/StatisticService";
+import dayjs from "dayjs";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -77,6 +79,42 @@ const ListOrder = () => {
   const [loading, setLoading] = useState(true);
   const [cancelReason, setCancelReason] = useState("");
 
+  // State cho filter ngày ở cột "Thời gian"
+  const [dateFilter, setDateFilter] = useState(null);
+
+  // Thêm hàm reset toàn bộ bộ lọc, tìm kiếm, sắp xếp, phân trang về mặc định
+  const handleResetAll = async () => {
+    setSearchText("");
+    setSearchedColumn("");
+    setFilteredInfo({});
+    setSortedInfo({});
+    setVisibleColumns({
+      key: true,
+      orderID: true,
+      userID: true,
+      phone: true,
+      totalAmount: true,
+      address: true,
+      status: true,
+      updatedAt: true,
+      paymentMethod: true,
+      paymentContent: true,
+      actions: true,
+    });
+    setPagination({ current: 1, pageSize: 10 });
+    setDateFilter(null);
+    setSelectedRowKeys([]);
+    setSelectedOrders([]);
+    // Reset danh sách về tất cả hóa đơn
+    setLoading(true);
+    const allOrders = await fetchOrders();
+    setOrders(allOrders);
+    setLoading(false);
+  };
+
+  // Hàm lấy danh sách đơn hàng theo trạng thái và ngày tháng năm
+  // - Nếu không truyền trạng thái/ngày/tháng/năm sẽ lấy tất cả đơn hàng
+  // - Nếu có truyền sẽ gọi API lấy theo bộ lọc
   const fetchOrders = async (status, day, month, year) => {
     console.log("Fetching orders with status:", status);
     // console.log("Fetching orders with date:", date);
@@ -84,13 +122,13 @@ const ListOrder = () => {
     try {
       let orders;
       if (!status && !day && !month && !year) {
-        // Fetch all orders if no status or date is provided
+        // Lấy tất cả đơn hàng nếu không truyền trạng thái hoặc ngày
         orders = await getOrders();
       } else {
-        // Extract day, month, and year from the date
+        // Lấy ngày, tháng, năm từ tham số truyền vào
 
         orders = await getListOrdersStatusByDate({ day, month, year, status });
-        orders = orders.data || []; // Ensure orders is an array
+        orders = orders.data || []; // Đảm bảo orders là một mảng
         console.log("Fetched orders:", orders);
       }
 
@@ -111,6 +149,7 @@ const ListOrder = () => {
     }
   };
 
+  // Hàm lấy thông tin user theo userID (dùng để lấy số điện thoại khách hàng)
   const fetchUserInfo = async (userID) => {
     try {
       const response = await getUserInfo(userID);
@@ -122,6 +161,8 @@ const ListOrder = () => {
   };
 
   useEffect(() => {
+    // Tự động tính số lượng phần tử trên mỗi trang dựa vào chiều cao màn hình
+    // - Lắng nghe sự kiện resize để cập nhật lại pageSize
     const calculatePageSize = () => {
       const screenHeight = window.innerHeight;
       if (screenHeight > 1200) return 20;
@@ -141,10 +182,38 @@ const ListOrder = () => {
     };
   }, []);
 
+  // Hàm tự động cập nhật trạng thái đơn hàng sang "Đã giao thành công" nếu quá 3 ngày kể từ updatedAt
+  const autoUpdateDeliveredStatus = async (orders) => {
+    const now = dayjs();
+    const updatedOrders = await Promise.all(
+      orders.map(async (order) => {
+        if (
+          order.status === "Shipped" &&
+          order.updatedAt &&
+          dayjs(order.updatedAt).isBefore(now.subtract(3, "day"))
+        ) {
+          try {
+            await updateStatus(order.orderID, "Delivered");
+            return { ...order, status: "Delivered" };
+          } catch (err) {
+            return order;
+          }
+        }
+        return order;
+      })
+    );
+    return updatedOrders;
+  };
+
   useEffect(() => {
+    // Hàm lấy dữ liệu danh sách đơn hàng, cập nhật trạng thái tự động, lấy nội dung thanh toán
+    // - Gọi fetchOrders để lấy danh sách đơn hàng
+    // - Gọi autoUpdateDeliveredStatus để cập nhật trạng thái nếu cần
+    // - Lấy nội dung thanh toán cho các đơn chuyển khoản
     const fetchData = async () => {
       setLoading(true);
-      const data = await fetchOrders(status, day, month, year); // Pass status and date to fetchOrders
+      let data = await fetchOrders(status, day, month, year);
+      data = await autoUpdateDeliveredStatus(data); // Tự động cập nhật trạng thái nếu cần
       setOrders(data);
       const paymentData = await Promise.all(
         data
@@ -160,7 +229,7 @@ const ListOrder = () => {
               };
             } catch (error) {
               console.error(
-                `Error fetching payment content for order ${order.orderID}:`,
+                `Lỗi khi lấy nội dung thanh toán cho đơn hàng ${order.orderID}:`,
                 error
               );
               return { orderID: order.orderID, content: "Không có nội dung" };
@@ -175,8 +244,9 @@ const ListOrder = () => {
       setLoading(false);
     };
     fetchData();
-  }, [status, day, month, year]); // Add status and date as dependencies
+  }, [status, day, month, year]); // Thêm status và ngày vào dependencies
 
+  // Hàm tìm kiếm theo cột trong bảng (search/filter)
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
     setSearchText(selectedKeys[0]);
@@ -250,6 +320,7 @@ const ListOrder = () => {
     return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
   };
 
+  // Hàm tìm kiếm theo cột trong bảng (search/filter)
   const getColumnSearchProps = (dataIndex, sortable = false) => ({
     filterDropdown: ({
       setSelectedKeys,
@@ -259,16 +330,31 @@ const ListOrder = () => {
       close,
     }) => (
       <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-        <Input
-          ref={searchInput}
-          placeholder={`Tìm ${dataIndex}`}
-          value={selectedKeys[0]}
-          onChange={(e) =>
-            setSelectedKeys(e.target.value ? [e.target.value] : [])
-          }
-          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-          style={{ marginBottom: 8, display: "block" }}
-        />
+        {dataIndex === "updatedAt" ? (
+          // Nếu là cột thời gian thì dùng DatePicker
+          <DatePicker
+            format="DD/MM/YYYY"
+            value={dateFilter}
+            onChange={(date) => {
+              setDateFilter(date);
+              setSelectedKeys(date ? [date.format("YYYY-MM-DD")] : []);
+            }}
+            style={{ marginBottom: 8, display: "block", width: "100%" }}
+            allowClear
+            placeholder="Chọn ngày"
+          />
+        ) : (
+          <Input
+            ref={searchInput}
+            placeholder={`Tìm ${dataIndex}`}
+            value={selectedKeys[0]}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+        )}
         <Space>
           <Button
             type="primary"
@@ -279,7 +365,10 @@ const ListOrder = () => {
             Tìm
           </Button>
           <Button
-            onClick={() => clearFilters && handleReset(clearFilters)}
+            onClick={() => {
+              if (dataIndex === "updatedAt") setDateFilter(null);
+              clearFilters && handleReset(clearFilters);
+            }}
             size="small"
           >
             Xóa
@@ -297,6 +386,13 @@ const ListOrder = () => {
       if (dataIndex === "paymentContent") {
         const content = paymentContents[record.orderID];
         return content?.toLowerCase().includes(value.toLowerCase());
+      }
+      if (dataIndex === "updatedAt" && value) {
+        // So sánh ngày (YYYY-MM-DD) với ngày trong updatedAt
+        const recordDate = record.updatedAt
+          ? dayjs(record.updatedAt).format("YYYY-MM-DD")
+          : "";
+        return recordDate === value;
       }
       return record[dataIndex]
         ?.toString()
@@ -320,18 +416,20 @@ const ListOrder = () => {
       ),
   });
 
+  // Hàm filter dropdown cho các cột có nhiều lựa chọn (trạng thái, phương thức thanh toán)
   const getColumnDropdownProps = (dataIndex, options) => ({
     filters: options.map((option) => ({
-      text: option.label, // Display Vietnamese label
-      value: option.value, // Use English value for filtering
+      text: option.label, // Hiển thị nhãn tiếng Việt
+      value: option.value, // Sử dụng giá trị tiếng Anh để lọc
     })),
     onFilter: (value, record) => record[dataIndex]?.toString() === value,
     render: (text) => {
       const matchedOption = options.find((option) => option.value === text);
-      return <span>{matchedOption ? matchedOption.label : text}</span>; // Display label if matched
+      return <span>{matchedOption ? matchedOption.label : text}</span>; // Hiển thị nhãn nếu khớp
     },
   });
 
+  // Gửi thông báo duyệt đơn hàng cho khách hàng
   const handleSendNotification = async (orderID, customerID) => {
     try {
       const formData = {
@@ -352,6 +450,7 @@ const ListOrder = () => {
     }
   };
 
+  // Gửi thông báo hủy đơn hàng cho khách hàng
   const sendCancelNotification = async (orderID, customerID, reason) => {
     try {
       const formData = {
@@ -372,6 +471,8 @@ const ListOrder = () => {
     }
   };
 
+  // Xử lý hủy đơn hàng từ bảng (cập nhật trạng thái, cập nhật số lượng sản phẩm, gửi notify)
+  // - Gửi notify cho khách, cập nhật lại số lượng sản phẩm, cập nhật trạng thái đơn trên giao diện
   const handleCancelOrder = async (order) => {
     let selectedReason = "";
     let enteredReason = "";
@@ -422,7 +523,7 @@ const ListOrder = () => {
         }
 
         try {
-          // Gửi thông báo hủy đơn hàng
+          // Gửi thông báo hủy đơn hàng cho khách
           await sendCancelNotification(
             order.orderID,
             order.userID,
@@ -445,17 +546,24 @@ const ListOrder = () => {
             );
           }
 
+          // Cập nhật trạng thái đơn hàng trên server
           await updateStatus(order.orderID, "Cancelled", {
             reason: finalReason,
           });
+
+          // Cập nhật trạng thái đơn hàng trên giao diện (không cần reload toàn bộ)
+          setOrders((prevOrders) =>
+            prevOrders.map((o) =>
+              o.orderID === order.orderID ? { ...o, status: "Cancelled" } : o
+            )
+          );
 
           Modal.success({
             content:
               "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
           });
 
-          // Làm mới danh sách đơn hàng
-          refreshOrders();
+          // Không cần gọi refreshOrders ở đây nữa vì đã cập nhật trực tiếp state
         } catch (error) {
           Modal.error({
             content: "Đã xảy ra lỗi khi hủy đơn hàng.",
@@ -466,6 +574,7 @@ const ListOrder = () => {
     });
   };
 
+  // Kiểm tra tình trạng sản phẩm trong đơn hàng (còn bán hay đã ngưng bán)
   const checkProductAvailability = async (orderDetails) => {
     try {
       for (const item of orderDetails) {
@@ -484,6 +593,8 @@ const ListOrder = () => {
     }
   };
 
+  // Xử lý duyệt nhiều đơn hàng đã chọn (chỉ cho phép duyệt nếu sản phẩm còn bán)
+  // - Nếu có đơn có sản phẩm ngưng bán sẽ hỏi xác nhận bỏ qua các đơn đó
   const handleApproveSelectedOrders = async () => {
     try {
       const unavailableOrders = [];
@@ -513,7 +624,7 @@ const ListOrder = () => {
               <ul>
                 {unavailableOrders.map((order) => (
                   <li key={order.orderID}>
-                    Đơn hàng {order.orderID}: Sản phẩm "{order.productName}"
+                    Đơn hàng {order.orderID}: Sản phẩm `{order.productName}`
                   </li>
                 ))}
               </ul>
@@ -593,17 +704,18 @@ const ListOrder = () => {
   };
 
   const rowSelection = {
-    selectedRowKeys, // Controlled selected row keys
+    selectedRowKeys, // Danh sách các dòng đã chọn (được kiểm soát)
     onChange: (newSelectedRowKeys, selectedRows) => {
-      setSelectedRowKeys(newSelectedRowKeys); // Update selected row keys
-      setSelectedOrders(selectedRows.map((row) => row.orderID)); // Store selected order IDs
+      setSelectedRowKeys(newSelectedRowKeys); // Cập nhật danh sách dòng đã chọn
+      setSelectedOrders(selectedRows.map((row) => row.orderID)); // Lưu các orderID đã chọn
     },
     getCheckboxProps: (record) => ({
-      disabled: record.status !== "Pending", // Allow selection only for "Pending" rows
+      disabled: record.status !== "Pending", // Chỉ cho phép chọn các dòng có trạng thái "Pending"
       name: record.orderID,
     }),
   };
 
+  // Cấu hình các cột cho bảng danh sách đơn hàng
   const columns = [
     {
       title: "STT",
@@ -619,6 +731,7 @@ const ListOrder = () => {
       dataIndex: "orderID",
       key: "orderID",
       ellipsis: true,
+      width: 220,
       fixed: "left",
       ...getColumnSearchProps("orderID", true),
       render: (orderID) => (
@@ -632,6 +745,7 @@ const ListOrder = () => {
       dataIndex: "userID",
       key: "userID",
       ellipsis: true,
+      width: 160,
       ...getColumnSearchProps("userID", true),
       fixed: "left",
       render: (userID) => (
@@ -644,6 +758,7 @@ const ListOrder = () => {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
+      width: 130,
       ellipsis: true,
       ...getColumnSearchProps("phone"),
       render: (phone) => (
@@ -712,7 +827,7 @@ const ListOrder = () => {
       key: "updatedAt",
       ellipsis: true,
       ...getColumnSearchProps("updatedAt", true),
-      renderWELL: (updatedAt) => formattedDate(updatedAt),
+      render: (updatedAt) => formattedDate(updatedAt),
     },
     {
       title: "Phương thức thanh toán",
@@ -784,11 +899,19 @@ const ListOrder = () => {
     (column) => visibleColumns[column.key]
   );
 
+  // Render giao diện danh sách đơn hàng, filter, bảng, modal chi tiết
+  // - Có nút duyệt nhiều đơn, nút hủy lọc, filter ẩn/hiện cột
+  // - Bảng hiển thị danh sách đơn hàng với các cột đã cấu hình
+  // - Khi click vào dòng sẽ mở modal chi tiết đơn hàng
   return (
-    <div className="bg-white mt-6 p-4 rounded-lg shadow-md">
+    <div className="bg-white p-4 rounded-lg shadow-md">
       <div className="text-lg font-semibold mb-4 flex justify-between">
         <span>Danh sách đơn hàng</span>
         <Space>
+          {/* Nút Reset toàn bộ lọc */}
+          <Button onClick={handleResetAll} type="default">
+            Reset
+          </Button>
           {selectedRowKeys.length > 0 && (
             <Button
               type="primary"
@@ -812,11 +935,11 @@ const ListOrder = () => {
         <Table
           className={styles.customTable + " hover:cursor-pointer"}
           size="small"
-          dataSource={orders || []} // Ensure dataSource is always an array
+          dataSource={orders || []} // Đảm bảo dataSource luôn là một mảng
           rowSelection={{
-            ...rowSelection, // Use the updated rowSelection logic
+            ...rowSelection, // Sử dụng logic rowSelection đã cập nhật
           }}
-          rowKey="orderID" // Use orderID as the unique key for rows
+          rowKey="orderID" // Sử dụng orderID làm key duy nhất cho mỗi dòng
           pagination={{
             ...pagination,
             showSizeChanger: true, // Hiển thị bộ chọn số lượng phần tử trên mỗi trang
@@ -832,12 +955,12 @@ const ListOrder = () => {
             setPagination({
               current: pagination.current,
               pageSize: pagination.pageSize,
-            }); // Update pagination state
-            setFilteredInfo(filters || {}); // Ensure filters are handled properly
-            setSortedInfo(sorter || {}); // Ensure sorter is handled properly
+            }); // Cập nhật trạng thái phân trang
+            setFilteredInfo(filters || {}); // Đảm bảo xử lý bộ lọc đúng cách
+            setSortedInfo(sorter || {}); // Đảm bảo xử lý sắp xếp đúng cách
           }}
           onRow={(record) => ({
-            onClick: () => showOrderDetail(record), // Show order details on row click
+            onClick: () => showOrderDetail(record), // Hiển thị chi tiết đơn hàng khi click vào dòng
           })}
           columns={filteredColumns}
           scroll={{ x: filteredColumns.length * 150 }}
