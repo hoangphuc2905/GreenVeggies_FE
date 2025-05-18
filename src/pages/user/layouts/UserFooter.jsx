@@ -18,7 +18,7 @@ const scrollToTop = () => {
 const UserFooter = () => {
   return (
     <footer className="px-[10%] border-t-[10px] border-primary">
-      <div className="container mx-auto relative bg-[#F7F6F2] p-8">
+      {/* <div className="container mx-auto relative bg-[#F7F6F2] p-8">
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 ">
             <h3 className=" text-2xl font-bold text-primary">
@@ -43,7 +43,7 @@ const UserFooter = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
       <div className="container mx-auto relative">
         <div className="grid grid-cols-5 gap-4">
           <div className="p-4  ">
