@@ -174,7 +174,7 @@ const OrderDetail = ({
         senderType: "admin",
         senderUserID: userID,
         receiverID: customerID,
-        title: "Thông báo đơn hàng",
+        title: "Thông báo hủy đơn hàng",
         message: `Đơn hàng ${orderID} của bạn đã bị hủy.\nLý do: ${reason}`,
         type: "order",
         orderID: orderID,
