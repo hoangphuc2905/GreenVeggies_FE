@@ -9,7 +9,7 @@ import {
 } from "antd";
 import PropTypes from "prop-types";
 import logo from "../../../../../assets/pictures/Green.png";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   createNotify,
   fetchCancelledOrderNotifications,
@@ -24,7 +24,17 @@ import {
   updateProductQuantity,
 } from "../../../../../services/ProductService";
 import { formattedPrice } from "../../../../../components/calcSoldPrice/CalcPrice";
+import ExportInvoice from "../ExportInvoice";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
+// Hàm tính phí vận chuyển dựa trên tổng tiền và loại khách hàng
+// - Nếu là VIP: miễn phí vận chuyển
+// - Nếu là khách mới: giảm 50% phí vận chuyển
+// - Nếu tổng >= 600.000đ: miễn phí vận chuyển
+// - Nếu tổng >= 400.000đ: phí 15.000đ
+// - Nếu tổng >= 200.000đ: phí 30.000đ
+// - Dưới 200.000đ: phí 50.000đ
 const calculateShippingFee = (
   orderTotal,
   isNewCustomer = false,
@@ -48,6 +58,8 @@ const calculateShippingFee = (
   return 50000; // Mặc định phí vận chuyển
 };
 
+// Hàm định dạng ngày tháng năm sang dạng DD-MM-YYYY HH:mm:ss
+// Trả về chuỗi ngày/tháng/năm giờ:phút:giây
 const formattedDate = (dateString) => {
   const date = new Date(dateString);
 
@@ -77,6 +89,8 @@ const OrderDetail = ({
   const [customReason, setCustomReason] = useState(""); // State for custom reason input
   const userID = localStorage.getItem("userID");
   const [reason, setReason] = useState(""); // State for cancellation reason
+  const [showInvoice, setShowInvoice] = useState(false);
+  const invoiceRef = useRef();
 
   const cancellationOptions = [
     "Khách hàng yêu cầu hủy",
@@ -85,6 +99,10 @@ const OrderDetail = ({
     "Lý do khác",
   ];
 
+  // Lấy chi tiết sản phẩm, chi tiết thanh toán, lý do hủy đơn (nếu có)
+  // - Gọi API lấy thông tin sản phẩm cho từng sản phẩm trong đơn
+  // - Gọi API lấy thông tin thanh toán nếu có
+  // - Gọi API lấy thông báo hủy đơn nếu trạng thái là Cancelled
   useEffect(() => {
     const fetchDetails = async () => {
       if (!order?.orderDetails?.length) return;
@@ -144,7 +162,8 @@ const OrderDetail = ({
     fetchPaymentDetails(); // Fetch payment details when order changes
   }, [order]);
 
-  //Tạo thông báo đã duyệt đơn hàng thành công
+  // Gửi thông báo đã duyệt đơn hàng thành công cho khách hàng
+  // - Gửi notify với nội dung đơn hàng đã được duyệt
   const sendNotify = async (orderID) => {
     try {
       const formData = {
@@ -167,7 +186,8 @@ const OrderDetail = ({
     }
   };
 
-  //Thông báo hủy đơn
+  // Gửi thông báo hủy đơn hàng cho khách hàng
+  // - Gửi notify với nội dung đơn hàng đã bị hủy và lý do
   const sendCancelNotify = async (orderID, reason) => {
     try {
       const formData = {
@@ -190,7 +210,8 @@ const OrderDetail = ({
     }
   };
 
-  //Kiểm tra tình trạng sản phẩm
+  // Kiểm tra tình trạng sản phẩm trong đơn hàng (còn bán hay đã ngưng bán)
+  // - Trả về false nếu có sản phẩm đã ngưng bán
   const checkProductAvailability = async (orderDetails) => {
     try {
       for (const item of orderDetails) {
@@ -208,7 +229,8 @@ const OrderDetail = ({
       return { isAvailable: false, productName: "Không xác định" }; // Assume unavailable if there's an error
     }
   };
-  //Xử lý duyệt đơn hàng
+  // Xử lý duyệt đơn hàng (chuyển trạng thái sang "Shipped")
+  // - Kiểm tra sản phẩm còn bán, cập nhật trạng thái, gửi notify, reload
   const handleApproveOrder = async () => {
     Modal.confirm({
       title: "Có chắc chắn duyệt đơn hàng này không?",
@@ -246,6 +268,8 @@ const OrderDetail = ({
     });
   };
 
+  // Xác nhận đã nhận tiền và duyệt đơn hàng (chỉ cho thanh toán chuyển khoản)
+  // - Kiểm tra trạng thái thanh toán, nếu đã nhận tiền thì duyệt đơn
   const handleConfirmPaymentAndApprove = async () => {
     Modal.confirm({
       title: "Xác nhận đã nhận được tiền?",
@@ -285,6 +309,8 @@ const OrderDetail = ({
     });
   };
 
+  // Xử lý hủy đơn hàng (cập nhật trạng thái, cập nhật số lượng sản phẩm, gửi thông báo)
+  // - Cập nhật lại số lượng sản phẩm, trạng thái đơn, gửi notify, reload
   const handleCancelOrder = () => {
     let selectedReason = cancelReason;
     let enteredReason = customReason;
@@ -366,6 +392,23 @@ const OrderDetail = ({
         }
       },
     });
+  };
+
+  // In hóa đơn ra file PDF với tên là mã hóa đơn
+  // - Chụp nội dung hóa đơn, xuất ra file PDF tên là mã đơn hàng
+  const handlePrintInvoice = async () => {
+    const invoiceElement = document.getElementById("invoice-content");
+    if (!invoiceElement) return;
+    const canvas = await html2canvas(invoiceElement, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "px",
+      format: [canvas.width, canvas.height],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    const fileName = order?.orderID ? `${order.orderID}.pdf` : "invoice.pdf";
+    pdf.save(fileName);
   };
 
   if (!order) return null;
@@ -458,6 +501,16 @@ const OrderDetail = ({
         footer={[
           order.status === "Pending" && (
             <Button
+              className="bg-blue-500 text-white"
+              key="export-invoice"
+              type="default"
+              onClick={() => setShowInvoice(true)}
+            >
+              Xuất hóa đơn
+            </Button>
+          ),
+          order.status === "Pending" && (
+            <Button
               className="bg-red-500 text-white"
               key="cancel"
               type="default"
@@ -486,20 +539,7 @@ const OrderDetail = ({
                 Duyệt đơn
               </Button>
             )),
-          order.status === "Shipped" && (
-            <Button className="bg-primary text-white" key="ship" type="default">
-              Xác nhận giao hàng
-            </Button>
-          ),
-          order.status === "Cancelled" && (
-            <Button
-              className="bg-primary text-white"
-              key="reorder"
-              type="default"
-            >
-              Đặt lại đơn
-            </Button>
-          ),
+
           order.status === "Delivered" && (
             <>
               <Button
@@ -665,6 +705,28 @@ const OrderDetail = ({
             </span>
           </Descriptions.Item>
         </Descriptions>
+
+        {/* Popup xem trước hóa đơn */}
+        <Modal
+          open={showInvoice}
+          onCancel={() => setShowInvoice(false)}
+          footer={[
+            <Button key="print" type="primary" onClick={handlePrintInvoice}>
+              In hóa đơn
+            </Button>,
+            <Button key="close" onClick={() => setShowInvoice(false)}>
+              Đóng
+            </Button>,
+          ]}
+          width={820}
+          title="Xem trước hóa đơn"
+          bodyStyle={{ padding: 0, display: "flex", justifyContent: "center" }}
+          centered // Thêm thuộc tính này để modal luôn ở giữa màn hình
+        >
+          <div className="flex justify-center items-center w-full">
+            <ExportInvoice order={order} customerName={customerName} />
+          </div>
+        </Modal>
       </Modal>
     </ConfigProvider>
   );
