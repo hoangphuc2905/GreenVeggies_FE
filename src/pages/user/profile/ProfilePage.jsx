@@ -13,7 +13,8 @@ const ProfilePage = () => {
       title: 'Bạn có chắc chắn muốn đăng xuất?',
       onOk() {
         // Xóa thông tin người dùng và token khỏi localStorage
-        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('userID');
         setUser(null);
 

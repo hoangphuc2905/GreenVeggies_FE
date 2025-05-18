@@ -1,9 +1,8 @@
 import axios from "axios";
+import { jwtDecode } from "jwt-decode"; // Sửa import thành named export
 
-const API_REVIEW_URL = import.meta.env.VITE_API_REVIEW_URL;
-
+const API_URL = import.meta.env.VITE_API_REVIEW_URL;
 const OFFICIAL_WEBSITE = import.meta.env.VITE_API;
-
 export const cloundinaryURL = import.meta.env.VITE_CLOUDINARY_CLOUD_URL;
 export const cloundinaryPreset = import.meta.env.VITE_CLOUDINARY_PRESET;
 export const cloundinaryName = import.meta.env.VITE_CLOUDINARY_NAME;
@@ -16,18 +15,104 @@ const api = axios.create({
 });
 
 const reviewAPI = axios.create({
-  baseURL: API_REVIEW_URL,
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-//Authentication
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+const checkTokenExpiration = (token) => {
+  if (!token) return true;
+  try {
+    const decoded = jwtDecode(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    return decoded.exp < currentTime;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return true;
+  }
 };
 
+// Hàm làm mới token
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem("refreshToken");
+  if (!refreshToken || checkTokenExpiration(refreshToken)) {
+    throw new Error("Refresh token is missing or expired");
+  }
+  console.log("Đang gọi refresh-token...");
+  const response = await axios.post(`${OFFICIAL_WEBSITE}/auth/refresh-token`, {
+    refreshToken,
+  });
+  console.log("Full response from refresh-token:", response.data);
+  if (!response.data.accessToken) {
+    throw new Error("No accessToken in response from server");
+  }
+  const { accessToken } = response.data;
+  console.log("Token mới nhận được:", accessToken);
+  localStorage.setItem("accessToken", accessToken);
+  return accessToken;
+};
+
+// Interceptor để kiểm tra token trước khi gửi yêu cầu
+api.interceptors.request.use(
+  async (config) => {
+    let accessToken = localStorage.getItem("accessToken");
+    if (accessToken && checkTokenExpiration(accessToken)) {
+      try {
+        accessToken = await refreshAccessToken();
+      } catch (error) {
+        console.error("Failed to refresh token on request:", error.message);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("role");
+        localStorage.removeItem("email");
+        window.location.href = "/login";
+        throw error;
+      }
+    }
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor xử lý lỗi 401 (dự phòng)
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const accessToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh token on response. Error details:",
+          refreshError.response?.data || refreshError.message
+        );
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("role");
+        localStorage.removeItem("email");
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+const getAuthHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+});
 //SẢN PHẨM
 export const handleProductApi = {
   getListProducts: async (key) => {
@@ -387,6 +472,21 @@ export const handleAuthApi = {
   // Đăng nhập
   login: async (formData) => {
     return await api.post("/auth/login", formData);
+  },
+
+  refreshToken: async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      const response = await api.post("/auth/refresh-token", {
+        refreshToken,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi làm mới token:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
   },
 
   // quên mật khẩu

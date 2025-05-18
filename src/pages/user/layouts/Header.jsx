@@ -92,10 +92,14 @@ const Header = () => {
   // Hàm xử lý đăng nhập thành công
   const handleLoginSuccess = async (userData) => {
     try {
-      const userInfo = await getUserInfo(userData.user.userID, userData.token); // Gọi API lấy thông tin người dùng
+      const userInfo = await getUserInfo(
+        userData.user.userID,
+        userData.accessToken
+      );
       console.log("User info:", userInfo); // Kiểm tra dữ liệu API trả về
       setUser(userInfo); // Cập nhật trạng thái user với thông tin người dùng
-      localStorage.setItem("token", userData.token);
+      localStorage.setItem("accessToken", userData.accessToken); // Lưu accessToken vào localStorage
+      localStorage.setItem("refreshToken", userData.refreshToken); // Lưu refreshToken vào localStorage
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
 
@@ -117,12 +121,12 @@ const Header = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
-    console.log("Token:", token);
-    console.log("userID:", userID);
-    if (token && userID) {
-      getUserInfo(userID, token)
+
+    if (accessToken && refreshToken && userID) {
+      getUserInfo(userID, accessToken)
         .then(async (userInfo) => {
           console.log("Fetched user:", userInfo);
           setUser(userInfo);
@@ -227,7 +231,8 @@ const Header = () => {
                     />
                   }
                   trigger="hover"
-                  placement="bottomRight">
+                  placement="bottomRight"
+                >
                   <Badge count={notificationCount}>
                     <BellOutlined style={{ fontSize: "24px", color: "#fff" }} />
                   </Badge>
@@ -240,7 +245,8 @@ const Header = () => {
                 menu={{
                   items,
                 }}
-                className="ml-2">
+                className="ml-2"
+              >
                 <a onClick={(e) => e.preventDefault()}>
                   <Space>
                     {user?.avatar ? (
@@ -262,7 +268,8 @@ const Header = () => {
           ) : (
             <button
               className="text-white text-l font-bold px-4 rounded hover:cursor-pointer"
-              onClick={() => setShowLoginForm(true)}>
+              onClick={() => setShowLoginForm(true)}
+            >
               <FontAwesomeIcon icon={faUser} className="text-white text-l" />{" "}
               Đăng nhập/ Đăng ký
             </button>

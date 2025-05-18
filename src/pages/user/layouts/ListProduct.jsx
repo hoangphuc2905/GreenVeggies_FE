@@ -185,9 +185,10 @@ const ListProduct = ({
 
   // Kiểm tra xem người dùng đã đăng nhập chưa
   const checkAuthenticated = () => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
-    return !!(token && userID);
+    return !!(accessToken && refreshToken && userID);
   };
 
   // Xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng"
@@ -356,7 +357,8 @@ const ListProduct = ({
                   border: "1px solid #82AE46",
                   borderRadius: "4px",
                 }
-          }>
+          }
+        >
           {page}
         </span>
       );
@@ -369,7 +371,8 @@ const ListProduct = ({
       <Spin
         spinning={loading}
         tip="Đang tải sản phẩm..."
-        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
+        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]"
+      >
         <List
           grid={{ gutter: 16, column: 4 }}
           className="px-2"
@@ -388,7 +391,8 @@ const ListProduct = ({
                 <Badge.Ribbon
                   text={`${product.discount}%`}
                   color="#82AE46"
-                  style={{ display: product.discount ? "block" : "none" }}>
+                  style={{ display: product.discount ? "block" : "none" }}
+                >
                   <Card
                     hoverable={product.status !== "out_of_stock"}
                     className={`h-[300px] relative transition-all duration-300 ${
@@ -412,7 +416,8 @@ const ListProduct = ({
                             <Link
                               to={`/product/${product._id}`}
                               state={{ productID: product.productID }}
-                              className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
+                              className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
+                            >
                               <EyeOutlined className="text-2xl" />
                               <Typography.Text className="text-xs mt-2 text-center">
                                 Xem chi tiết
@@ -428,7 +433,8 @@ const ListProduct = ({
                                 product.quantity === 0
                                   ? "text-gray-300 cursor-not-allowed"
                                   : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                              }`}>
+                              }`}
+                            >
                               <ShoppingCartOutlined className="text-2xl" />
                               <Typography.Text className="text-xs mt-2">
                                 Thêm vào giỏ hàng
@@ -437,13 +443,15 @@ const ListProduct = ({
                           </div>
                         )}
                       </div>
-                    }>
+                    }
+                  >
                     <Card.Meta
                       title={
                         <Typography.Text
                           ellipsis
                           className="font-bold text-center block"
-                          style={{ textAlign: "center", width: "100%" }}>
+                          style={{ textAlign: "center", width: "100%" }}
+                        >
                           {product.name}
                           {product.status === "out_of_stock" && (
                             <div className="text-red-500 text-sm mt-1">
