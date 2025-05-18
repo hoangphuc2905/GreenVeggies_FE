@@ -144,9 +144,10 @@ const ListProductByCatelogyID = ({
 
   // Kiểm tra xem người dùng đã đăng nhập chưa
   const checkAuthenticated = () => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
-    return !!(token && userID);
+    return !!(accessToken && refreshToken && userID);
   };
 
   // Xử lý khi người dùng nhấn nút "Thêm vào giỏ hàng"

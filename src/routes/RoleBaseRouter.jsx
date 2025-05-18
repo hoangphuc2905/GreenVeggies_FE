@@ -16,13 +16,14 @@ const RoleBasedRouter = () => {
 
   useEffect(() => {
     const checkUserRole = async () => {
-      const token = localStorage.getItem("token");
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
       const userID = localStorage.getItem("userID");
       const role = localStorage.getItem("role");
 
-      if (token && userID) {
+      if (accessToken && refreshToken && userID) {
         try {
-          const userInfo = await getUserInfo(userID, token);
+          const userInfo = await getUserInfo(userID, accessToken);
           console.log(
             "User info retrieved:",
             userInfo?.username || "Anonymous user"
@@ -33,7 +34,7 @@ const RoleBasedRouter = () => {
           localStorage.setItem("role", userRole);
           setRole(userRole);
 
-          dispatch(fetchUser({ userID, token }));
+          dispatch(fetchUser({ userID, accessToken, refreshToken }));
 
           // Chỉ chuyển hướng nếu chưa ở đúng route
           if (

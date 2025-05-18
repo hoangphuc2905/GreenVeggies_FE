@@ -13,9 +13,9 @@ export const fetchUser = createAsyncThunk("user/fetchUser", async ({ userID }, {
 });
 
 // Action cập nhật user
-export const updateUser = createAsyncThunk("user/updateUser", async ({ userID, token, updatedData }, { rejectWithValue }) => {
+export const updateUser = createAsyncThunk("user/updateUser", async ({ userID, accessToken, updatedData }, { rejectWithValue }) => {
   try {
-    const response = await updateUserInfo(userID, token, updatedData); // Gọi hàm API updateUserInfo
+    const response = await updateUserInfo(userID, accessToken, updatedData); // Gọi hàm API updateUserInfo
     return response; // Trả về dữ liệu người dùng đã cập nhật
   } catch (error) {
     console.error("Error updating user:", error.message);

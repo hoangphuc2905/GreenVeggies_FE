@@ -10,7 +10,8 @@ const Profile = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
 
-  const token = localStorage.getItem("token");
+  const accessToken = localStorage.getItem("accessToken");
+  const refreshToken = localStorage.getItem("refreshToken");
   const userID = localStorage.getItem("userID");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -23,12 +24,12 @@ const Profile = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (!user && userID && token) {
-      dispatch(fetchUser({ userID, token })).catch((error) => {
+    if (!user && userID && accessToken && refreshToken) {
+      dispatch(fetchUser({ userID, accessToken, refreshToken })).catch((error) => {
         console.error("Failed to fetch user:", error);
       });
     }
-  }, [dispatch, user, userID, token]);
+  }, [dispatch, user, userID, accessToken, refreshToken]);
 
   useEffect(() => {
     if (user) {

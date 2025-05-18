@@ -36,7 +36,7 @@ const Navbar = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
 
   const isLoggedIn = () => {
-    return Boolean(localStorage.getItem("token"));
+    return Boolean(localStorage.getItem("accessToken"));
   };
 
   const fetchAndUpdateCartCount = async () => {
@@ -101,8 +101,9 @@ const Navbar = () => {
   const handleLoginSuccess = (data) => {
     setIsLoginModalVisible(false);
 
-    if (data && data.token) {
-      localStorage.setItem("token", data.token);
+    if (data && data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
       if (data.userID) {
         localStorage.setItem("userID", data.userID);
       }

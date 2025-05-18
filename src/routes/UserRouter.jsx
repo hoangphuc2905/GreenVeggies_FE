@@ -34,20 +34,24 @@ const UserRouter = () => {
 
   // Kiểm tra xem người dùng đã đăng nhập chưa
   const checkAuthenticated = () => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
-    return !!(token && userID);
+    return !!(accessToken && refreshToken && userID);
   };
 
   // Xử lý khi đăng nhập thành công
   const handleLoginSuccess = (data) => {
     setIsLoginModalVisible(false);
 
-    if (data && data.token) {
-      localStorage.setItem("token", data.token);
+    if (data && data.accessToken && data.refreshToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
       if (data.userID) {
         localStorage.setItem("userID", data.userID);
-        dispatch(fetchUser({ userID: data.userID, token: data.token }));
+        dispatch(
+          fetchUser({ userID: data.userID, accessToken: data.accessToken })
+        );
       }
     }
 
@@ -56,12 +60,13 @@ const UserRouter = () => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
     const role = localStorage.getItem("role");
 
-    if (token && userID) {
-      dispatch(fetchUser({ userID, token }));
+    if (accessToken && refreshToken && userID) {
+      dispatch(fetchUser({ userID, accessToken, refreshToken }));
 
       if (role === "admin") {
         navigate("/admin/dashboard/revenue"); // Redirect to admin dashboard
@@ -140,7 +145,8 @@ const UserRouter = () => {
           path="/user"
           element={
             checkAuthenticated() ? <ProfilePage /> : <Navigate to="/" replace />
-          }>
+          }
+        >
           <Route path="profile" element={<Profile />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="address" element={<Address />} />
