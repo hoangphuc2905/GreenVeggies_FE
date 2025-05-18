@@ -37,24 +37,26 @@ export const getOrdersByUserId = async (userID) => {
   }
 };
 // Cập nhật trạng thái đơn hàng
-export const updateStatus = async (orderID, updateData) => {
+export const updateStatus = async (
+  orderID,
+  status,
+  reduceInventory = false
+) => {
   try {
-    // Nếu updateData là string, chuyển thành đối tượng { status: updateData }
-    const payload =
-      typeof updateData === "string" ? { status: updateData } : updateData;
-
-    console.log("Gửi yêu cầu cập nhật trạng thái:", orderID, payload);
-
-    const response = await handleOrderApi.updateStatus(orderID, payload);
-
+    const response = await handleOrderApi.updateStatus(
+      orderID,
+      status,
+      reduceInventory
+    );
     if (response && response.data) {
-      console.log("Cập nhật trạng thái thành công:", response.data);
-      return response.data;
+      console.log("Cập nhật trạng thái thành công:", response.data); // In ra thông báo thành công
+      return response.data; // Trả về dữ liệu cập nhật
     }
     console.error("API không trả về dữ liệu hợp lệ:", response);
     return null;
   } catch (error) {
     if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
       throw error.response.data.errors;
     }
     console.error("Lỗi khi gọi API updateStatus:", error);

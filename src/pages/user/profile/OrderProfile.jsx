@@ -131,7 +131,7 @@ const OrderProfile = () => {
         updateData = newStatus; // Nếu newStatus đã là object
       }
 
-      const result = await updateStatus(orderID, updateData);
+      const result = await updateStatus(orderID, "Cancelled", true);
 
       if (result) {
         setMessage(
