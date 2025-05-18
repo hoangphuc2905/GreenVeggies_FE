@@ -484,8 +484,6 @@ export const handleAuthApi = {
   },
   changePassword: async (email, oldPassword, newPassword) => {
     try {
-      const headers = getAuthHeader();
-
       const response = await api.post(
         `/auth/change-password?email=${encodeURIComponent(
           email
