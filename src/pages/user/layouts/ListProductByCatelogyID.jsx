@@ -9,6 +9,7 @@ import {
   Typography,
   Empty,
   Spin,
+  Button,
 } from "antd";
 import PropTypes from "prop-types";
 
@@ -17,7 +18,10 @@ import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
-import { saveShoppingCarts } from "../../../services/ShoppingCartService";
+import {
+  saveShoppingCarts,
+  getShoppingCartByUserId,
+} from "../../../services/ShoppingCartService";
 import LoginForm from "../../../components/login/login";
 
 const ListProductByCatelogyID = ({
@@ -99,7 +103,7 @@ const ListProductByCatelogyID = ({
   };
 
   // Xử lý khi đăng nhập thành công
-  const handleLoginSuccess = (data) => {
+  const handleLoginSuccess = () => {
     setIsLoginModalVisible(false);
 
     // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
@@ -111,25 +115,62 @@ const ListProductByCatelogyID = ({
   };
 
   const addToWishlist = async (product) => {
-    const userID = localStorage.getItem("userID");
-    const imageUrl = Array.isArray(product.imageUrl)
-      ? product.imageUrl[0]
-      : product.imageUrl;
-    const newWishlistItem = {
-      userID: userID,
-      items: [
-        {
-          productID: product.productID,
-          name: product.name,
-          quantity: 1,
-          description: product.description,
-          price: CalcPrice(product.price),
-          imageUrl: imageUrl,
-        },
-      ],
-      totalPrice: CalcPrice(product.price) * 1,
-    };
     try {
+      const userID = localStorage.getItem("userID");
+
+      // Kiểm tra số lượng sản phẩm hiện có trong giỏ hàng
+      const cartData = await getShoppingCartByUserId(userID);
+      let existingQuantity = 0;
+
+      if (cartData && Array.isArray(cartData.shoppingCartDetails)) {
+        // Tìm sản phẩm trong giỏ hàng
+        const existingItem = cartData.shoppingCartDetails.find(
+          (item) => item.productID === product.productID
+        );
+
+        // Lấy số lượng đã có trong giỏ
+        existingQuantity = existingItem ? existingItem.quantity : 0;
+      }
+
+      // Kiểm tra nếu thêm 1 sản phẩm nữa có vượt quá số lượng trong kho không
+      if (existingQuantity >= product.quantity) {
+        notification.warning({
+          message: "Không thể thêm vào giỏ hàng",
+          description: `Bạn đã có ${existingQuantity} sản phẩm trong giỏ hàng. Không thể thêm nữa vì vượt quá số lượng trong kho (${product.quantity}).`,
+          placement: "topRight",
+          duration: 4,
+        });
+        return;
+      }
+
+      // Hiển thị cảnh báo nếu sản phẩm sắp hết hàng
+      if (existingQuantity + 1 === product.quantity) {
+        notification.info({
+          message: "Sản phẩm sắp hết hàng",
+          description: `Bạn đã thêm sản phẩm cuối cùng có sẵn trong kho.`,
+          placement: "topRight",
+          duration: 3,
+        });
+      }
+
+      const imageUrl = Array.isArray(product.imageUrl)
+        ? product.imageUrl[0]
+        : product.imageUrl;
+      const newWishlistItem = {
+        userID: userID,
+        items: [
+          {
+            productID: product.productID,
+            name: product.name,
+            quantity: 1,
+            description: product.description,
+            price: CalcPrice(product.price),
+            imageUrl: imageUrl,
+          },
+        ],
+        totalPrice: CalcPrice(product.price) * 1,
+      };
+
       await saveShoppingCarts(newWishlistItem);
 
       const currentWishlist =
@@ -153,7 +194,7 @@ const ListProductByCatelogyID = ({
       notification.success({
         message: "Thêm vào giỏ hàng thành công",
         description: `Đã thêm ${product.name} với số lượng 1 vào giỏ hàng`,
-        duration: 4,
+        duration: 3,
         placement: "topRight",
       });
     } catch (error) {
@@ -162,7 +203,7 @@ const ListProductByCatelogyID = ({
       notification.error({
         message: "Lỗi",
         description: "Không thể thêm sản phẩm vào giỏ hàng",
-        duration: 4,
+        duration: 3,
         placement: "topRight",
       });
     }

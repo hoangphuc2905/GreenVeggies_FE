@@ -20,6 +20,7 @@ import {
 } from "../../../components/calcSoldPrice/CalcPrice";
 import { getProducts } from "../../../services/ProductService";
 import LoginForm from "../../../components/login/login";
+import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
 
 // Custom style for notifications
 const customNotificationStyle = `
@@ -188,7 +189,7 @@ const ListProduct = ({
   };
 
   // Xử lý khi đăng nhập thành công
-  const handleLoginSuccess = (data) => {
+  const handleLoginSuccess = () => {
     setIsLoginModalVisible(false);
 
     // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
@@ -200,25 +201,62 @@ const ListProduct = ({
   };
 
   const addToWishlist = async (product) => {
-    const userID = localStorage.getItem("userID");
-    const imageUrl = Array.isArray(product.imageUrl)
-      ? product.imageUrl[0]
-      : product.imageUrl;
-    const newWishlistItem = {
-      userID: userID,
-      items: [
-        {
-          productID: product.productID,
-          name: product.name,
-          quantity: 1,
-          description: product.description,
-          price: CalcPrice(product.price),
-          imageUrl: imageUrl,
-        },
-      ],
-      totalPrice: CalcPrice(product.price) * 1,
-    };
     try {
+      const userID = localStorage.getItem("userID");
+
+      // Kiểm tra số lượng sản phẩm hiện có trong giỏ hàng
+      const cartData = await getShoppingCartByUserId(userID);
+      let existingQuantity = 0;
+
+      if (cartData && Array.isArray(cartData.shoppingCartDetails)) {
+        // Tìm sản phẩm trong giỏ hàng
+        const existingItem = cartData.shoppingCartDetails.find(
+          (item) => item.productID === product.productID
+        );
+
+        // Lấy số lượng đã có trong giỏ
+        existingQuantity = existingItem ? existingItem.quantity : 0;
+      }
+
+      // Kiểm tra nếu thêm 1 sản phẩm nữa có vượt quá số lượng trong kho không
+      if (existingQuantity >= product.quantity) {
+        notification.warning({
+          message: "Không thể thêm vào giỏ hàng",
+          description: `Bạn đã có ${existingQuantity} sản phẩm trong giỏ hàng. Không thể thêm nữa vì vượt quá số lượng trong kho (${product.quantity}).`,
+          placement: "topRight",
+          duration: 4,
+        });
+        return;
+      }
+
+      // Hiển thị cảnh báo nếu sản phẩm sắp hết hàng
+      if (existingQuantity + 1 === product.quantity) {
+        notification.info({
+          message: "Sản phẩm sắp hết hàng",
+          description: `Bạn đã thêm sản phẩm cuối cùng có sẵn trong kho.`,
+          placement: "topRight",
+          duration: 3,
+        });
+      }
+
+      const imageUrl = Array.isArray(product.imageUrl)
+        ? product.imageUrl[0]
+        : product.imageUrl;
+      const newWishlistItem = {
+        userID: userID,
+        items: [
+          {
+            productID: product.productID,
+            name: product.name,
+            quantity: 1,
+            description: product.description,
+            price: CalcPrice(product.price),
+            imageUrl: imageUrl,
+          },
+        ],
+        totalPrice: CalcPrice(product.price) * 1,
+      };
+
       await saveShoppingCarts(newWishlistItem);
 
       const currentWishlist =
@@ -238,8 +276,7 @@ const ListProduct = ({
       // Dispatch cartUpdated event
       window.dispatchEvent(new Event("cartUpdated"));
 
-      // Add notification
-      const key = `open${Date.now()}`;
+      // Add success notification
       notification.success({
         message: "Thêm vào giỏ hàng thành công",
         description: (
@@ -256,7 +293,7 @@ const ListProduct = ({
           </div>
         ),
         duration: 3,
-        key,
+        key: `open${Date.now()}`,
         placement: "topRight",
         className: "custom-notification",
         style: { padding: "6px" },
@@ -284,7 +321,7 @@ const ListProduct = ({
       notification.error({
         message: "Lỗi",
         description: "Không thể thêm sản phẩm vào giỏ hàng",
-        duration: 3,
+        duration: 4,
         placement: "topRight",
       });
     }
