@@ -26,7 +26,7 @@ const AdminHeader = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("token");
+    const accessToken = localStorage.getItem("accessToken");
     const refreshToken = localStorage.getItem("refreshToken");
     const userID = localStorage.getItem("userID");
     if (accessToken && refreshToken && userID) {

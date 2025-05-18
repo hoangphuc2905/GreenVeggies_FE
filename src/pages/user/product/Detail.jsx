@@ -789,6 +789,7 @@ const Detail = () => {
                 <Space.Compact>
                   <Button
                     onClick={decrementQuantity}
+
                     disabled={
                       product.quantity === 0 ||
                       quantity <= 1 ||
