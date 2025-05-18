@@ -127,12 +127,34 @@ const ListProduct = ({
       CalcPrice(product.price) <= maxPrice
   );
 
+  // Sắp xếp sản phẩm: còn hàng lên đầu theo thứ tự bảng chữ cái, hết hàng xuống cuối
+  const sortProducts = (productsToSort) => {
+    return [...productsToSort].sort((a, b) => {
+      // Nếu một sản phẩm hết hàng và sản phẩm khác còn hàng
+      if (a.status === "out_of_stock" && b.status !== "out_of_stock") {
+        return 1; // a đứng sau b
+      }
+      if (a.status !== "out_of_stock" && b.status === "out_of_stock") {
+        return -1; // a đứng trước b
+      }
+
+      // Nếu cả hai cùng trạng thái, sắp xếp theo tên
+      return removeAccents(a.name.toLowerCase()).localeCompare(
+        removeAccents(b.name.toLowerCase())
+      );
+    });
+  };
+
+  // Sắp xếp danh sách đã lọc
+  const sortedBySearch = sortProducts(filteredBySearch);
+  const sortedByPrice = sortProducts(filteredByPrice);
+
   const indexOfLastProduct = currentPage * pageSize;
   const indexOfFirstProduct = indexOfLastProduct - pageSize;
 
   const currentProducts = searchQuery
-    ? filteredBySearch.slice(indexOfFirstProduct, indexOfLastProduct)
-    : filteredByPrice.slice(indexOfFirstProduct, indexOfLastProduct);
+    ? sortedBySearch.slice(indexOfFirstProduct, indexOfLastProduct)
+    : sortedByPrice.slice(indexOfFirstProduct, indexOfLastProduct);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -414,7 +436,7 @@ const ListProduct = ({
         <Pagination
           current={currentPage}
           pageSize={pageSize}
-          total={searchQuery ? filteredBySearch.length : filteredByPrice.length}
+          total={searchQuery ? sortedBySearch.length : sortedByPrice.length}
           onChange={handlePageChange}
           itemRender={itemRender}
           className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
