@@ -196,39 +196,49 @@ const Cart = () => {
       return;
     }
 
-    // Find the current item
-    const currentItem = wishlist.find((item) => item.productID === productID);
-
-    // Check if quantity exceeds available stock
-    if (currentItem && value > currentItem.quantity) {
-      // Check available stock by fetching latest product data
-      try {
-        const productDetails = await getProductById(productID);
-
-        if (productDetails && value > productDetails.quantity) {
-          // Show modal with warning message
-          Modal.warning({
-            title: "Giới hạn số lượng",
-            content: `Rất tiếc, bạn chỉ có thể mua tối đa ${productDetails.quantity} sản phẩm của chương trình giảm giá này.`,
-            okText: "OK",
-            okButtonProps: {
-              style: {
-                backgroundColor: "#F05123",
-                borderColor: "#F05123",
-              },
-            },
-            centered: true,
-          });
-
-          // Set quantity to maximum available
-          value = productDetails.quantity;
-        }
-      } catch (error) {
-        console.error("Failed to fetch product details:", error);
-      }
-    }
-
+    // Trước khi cập nhật, kiểm tra số lượng với kho hàng
     try {
+      // Lấy thông tin sản phẩm mới nhất từ API để có số lượng chính xác
+      const productDetails = await getProductById(productID);
+
+      if (!productDetails) {
+        notification.error({
+          message: "Lỗi",
+          description: "Không thể lấy thông tin sản phẩm",
+          placement: "topRight",
+          duration: 3,
+        });
+        return;
+      }
+
+      // Kiểm tra nếu sản phẩm đã hết hàng
+      if (
+        productDetails.status === "out_of_stock" ||
+        productDetails.quantity <= 0
+      ) {
+        notification.error({
+          message: "Sản phẩm hết hàng",
+          description: "Sản phẩm này đã hết hàng, vui lòng xóa khỏi giỏ hàng",
+          placement: "topRight",
+          duration: 3,
+        });
+        return;
+      }
+
+      // Kiểm tra số lượng yêu cầu có vượt quá số lượng trong kho không
+      if (value > productDetails.quantity) {
+        // Đặt số lượng là tối đa có sẵn trong kho
+        value = productDetails.quantity;
+
+        // Hiển thị thông báo
+        notification.warning({
+          message: "Giới hạn số lượng",
+          description: `Số lượng đã được điều chỉnh xuống ${value} vì đó là số lượng tối đa có sẵn.`,
+          placement: "topRight",
+          duration: 3,
+        });
+      }
+
       // Cập nhật danh sách wishlist
       setWishlist((prevWishlist) => {
         const updatedWishlist = prevWishlist.map((item) =>
@@ -252,11 +262,20 @@ const Cart = () => {
       if (!result) {
         console.error("Failed to update quantity in database.");
       }
+
+      // Dispatch cartUpdated event để cập nhật UI
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error(
         "Failed to update quantity in database or update wishlist:",
         error
       );
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể cập nhật số lượng sản phẩm",
+        placement: "topRight",
+        duration: 3,
+      });
     }
   };
 
