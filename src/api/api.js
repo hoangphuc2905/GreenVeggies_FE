@@ -223,11 +223,13 @@ export const handleStatisticApi = {
     });
   },
   //Thống kê đơn hàng theo trạng thái
-  getOrderStatsByStatus: async (date) => {
-    // statistics/order-status?date
-    return await api.get(`/statistics/order-status?date=${date}`, {
-      headers: getAuthHeader(),
-    });
+  getOrderStatsByStatus: async (day, month, year) => {
+    return await api.get(
+      `/statistics/order-status?day=${day}&month=${month}&year=${year}`,
+      {
+        headers: getAuthHeader(),
+      }
+    );
   },
   //Thống kê doanh thu theo năm
   getYearlyRevenue: async (year) => {

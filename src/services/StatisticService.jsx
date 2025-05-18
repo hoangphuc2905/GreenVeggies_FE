@@ -22,9 +22,13 @@ export const getPaymentStatusByDate = async (date) => {
   }
 };
 //Thống kê đơn hàng theo trạng thái
-export const getOrderStatusByDate = async (date) => {
+export const getOrderStatusByDate = async (day, month, year) => {
   try {
-    const response = await handleStatisticApi.getOrderStatsByStatus(date);
+    const response = await handleStatisticApi.getOrderStatsByStatus(
+      day,
+      month,
+      year
+    );
     return response.data;
   } catch (error) {
     console.error(error);

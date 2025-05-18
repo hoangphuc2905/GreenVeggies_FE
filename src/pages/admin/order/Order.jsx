@@ -10,7 +10,7 @@ const Order = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentDate.month() + 1); // Month is 0-indexed
   const [selectedYear, setSelectedYear] = useState(currentDate.year());
 
-  const handleDayChange = (value) => setSelectedDay(value);
+  // Hàm đồng bộ tháng/năm cho cả OrderList và SuccessOrdersChart
   const handleMonthChange = (value) => setSelectedMonth(value);
   const handleYearChange = (value) => setSelectedYear(value);
 
@@ -20,7 +20,7 @@ const Order = () => {
         <Select
           placeholder="Ngày"
           value={selectedDay}
-          onChange={handleDayChange}
+          onChange={setSelectedDay}
           style={{ width: 80 }}
           allowClear
           onClear={() => setSelectedDay(null)}
@@ -63,15 +63,20 @@ const Order = () => {
           })}
         </Select>
       </Space>
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="col-span-3">
-          <SuccessOrdersChart />
-        </div>
-        <div className="col-span-1">
+      <div className="grid grid-cols-4 gap-4 mb-4 h-full">
+        <div className="col-span-4">
           <OrderList
             selectedDay={selectedDay}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
+          />
+        </div>
+        <div className="col-span-4">
+          <SuccessOrdersChart
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={handleMonthChange}
+            onYearChange={handleYearChange}
           />
         </div>
       </div>

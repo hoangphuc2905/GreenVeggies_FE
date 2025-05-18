@@ -30,9 +30,12 @@ const months = Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`);
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-const SuccessOrdersChart = () => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+const SuccessOrdersChart = ({
+  selectedMonth,
+  selectedYear,
+  onMonthChange,
+  onYearChange,
+}) => {
   const [chartType, setChartType] = useState("Line");
   const [chartData, setChartData] = useState(null);
 
@@ -161,8 +164,8 @@ const SuccessOrdersChart = () => {
         <div className="flex gap-2">
           <select
             className="border p-1 rounded"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            value={selectedMonth || ""}
+            onChange={(e) => onMonthChange(Number(e.target.value))}
           >
             {months.map((_, index) => (
               <option key={index + 1} value={index + 1}>
@@ -172,8 +175,8 @@ const SuccessOrdersChart = () => {
           </select>
           <select
             className="border p-1 rounded"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            value={selectedYear || ""}
+            onChange={(e) => onYearChange(Number(e.target.value))}
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -191,7 +194,7 @@ const SuccessOrdersChart = () => {
           <option value="Bar">Biểu đồ cột</option>
         </select>
       </div>
-      <div className="h-64">
+      <div className="h-3/4 w-full">
         {chartData ? (
           <ChartComponent data={chartData} options={options} />
         ) : (

@@ -31,7 +31,11 @@ const OrderList = ({ selectedDay, selectedMonth, selectedYear }) => {
       }
 
       console.log("Fetching order stats for date:", dateString);
-      const response = await getOrderStatusByDate(dateString);
+      const response = await getOrderStatusByDate(
+        selectedDay,
+        selectedMonth,
+        selectedYear
+      );
       console.log("Order stats response:", response);
       setOrderData(response.stats);
     } catch (error) {
@@ -73,7 +77,7 @@ const OrderList = ({ selectedDay, selectedMonth, selectedYear }) => {
       value: 0,
       growth: 0,
       unit: "đơn",
-      color: "#FF9500",
+      color: "#007BFF",
     },
   ];
 
@@ -113,7 +117,7 @@ const OrderList = ({ selectedDay, selectedMonth, selectedYear }) => {
         value: current.Shipped,
         growth: change.Shipped,
         unit: "đơn",
-        color: "#FF9500",
+        color: "#007BFF",
       },
     ];
   }
@@ -131,7 +135,7 @@ const OrderList = ({ selectedDay, selectedMonth, selectedYear }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-4 gap-4">
       {cards.map((item, index) => (
         <OrderCard
           key={index}
