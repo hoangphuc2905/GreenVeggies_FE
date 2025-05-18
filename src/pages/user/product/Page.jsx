@@ -7,7 +7,6 @@ import ListProduct from "../layouts/ListProduct";
 import FilterPrice from "../layouts/FilterPrice";
 import { getProducts } from "../../../services/ProductService";
 
-
 const Page = () => {
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(Number.MAX_VALUE);
@@ -22,7 +21,22 @@ const Page = () => {
   const fetchProducts = async () => {
     try {
       const data = await getProducts();
-      setProducts(data);
+
+      // Sắp xếp sản phẩm: còn hàng lên đầu theo thứ tự bảng chữ cái, hết hàng xuống cuối
+      const sortedProducts = [...data].sort((a, b) => {
+        // Nếu một sản phẩm hết hàng và sản phẩm khác còn hàng
+        if (a.status === "out_of_stock" && b.status !== "out_of_stock") {
+          return 1; // a đứng sau b
+        }
+        if (a.status !== "out_of_stock" && b.status === "out_of_stock") {
+          return -1; // a đứng trước b
+        }
+
+        // Nếu cả hai cùng trạng thái, sắp xếp theo tên
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      });
+
+      setProducts(sortedProducts);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu!", error);
     }

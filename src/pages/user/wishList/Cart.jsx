@@ -11,7 +11,7 @@ import bgImage from "../../../assets/pictures/bg_1.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { getProductById } from "../../../services/ProductService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
 import {
@@ -20,12 +20,27 @@ import {
   updateCartQuantity,
   deleteShoppingCartById,
 } from "../../../services/ShoppingCartService";
+
+// Kiểm soát thông báo toàn cục
+const notificationShown = {
+  outOfStock: false,
+};
+
 const Cart = () => {
   const navigate = useNavigate();
   const [wishlist, setWishlist] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(true);
+  const isNotificationShownRef = useRef(false); // Sử dụng ref để theo dõi thông báo
+
+  // Reset notification state when component unmounts
+  useEffect(() => {
+    return () => {
+      notificationShown.outOfStock = false;
+      isNotificationShownRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -40,9 +55,22 @@ const Cart = () => {
             fetchedWishlist &&
             Array.isArray(fetchedWishlist.shoppingCartDetails)
           ) {
+            // Tạo mảng để lưu tên các sản phẩm hết hàng
+            const outOfStockProducts = [];
+
             const detailedWishlist = await Promise.all(
               fetchedWishlist.shoppingCartDetails.map(async (item) => {
                 const productDetails = await getProductById(item.productID);
+                // Kiểm tra xem sản phẩm có hết hàng hay không
+                const isOutOfStock =
+                  productDetails.status === "out_of_stock" ||
+                  productDetails.quantity <= 0;
+
+                // Thêm tên sản phẩm vào danh sách các sản phẩm hết hàng
+                if (isOutOfStock) {
+                  outOfStockProducts.push(productDetails.name);
+                }
+
                 return {
                   ...item,
                   ...productDetails,
@@ -50,9 +78,48 @@ const Cart = () => {
                   totalAmount:
                     (item.quantity || 1) *
                     (CalcPrice(productDetails.price) || 0), // Calculate totalAmount
+                  isOutOfStock: isOutOfStock, // Thêm thuộc tính isOutOfStock
                 };
               })
             );
+
+            // Hiển thị một thông báo duy nhất cho tất cả sản phẩm hết hàng
+            // CHỈ khi chưa hiển thị thông báo và có sản phẩm hết hàng
+            if (
+              outOfStockProducts.length > 0 &&
+              !notificationShown.outOfStock &&
+              !isNotificationShownRef.current
+            ) {
+              let description;
+              if (outOfStockProducts.length === 1) {
+                description = `Sản phẩm "${outOfStockProducts[0]}" đã hết hàng. Bạn nên xóa sản phẩm này khỏi giỏ hàng.`;
+              } else {
+                description = `Các sản phẩm sau đã hết hàng:\n${outOfStockProducts
+                  .map((name) => `- ${name}`)
+                  .join(
+                    "\n"
+                  )}\n\nBạn nên xóa những sản phẩm này khỏi giỏ hàng.`;
+              }
+
+              // Đánh dấu đã hiển thị thông báo
+              notificationShown.outOfStock = true;
+              isNotificationShownRef.current = true;
+
+              notification.warning({
+                message: "Sản phẩm hết hàng",
+                description: description,
+                placement: "topRight",
+                duration: 5,
+                style: { whiteSpace: "pre-line" },
+                onClose: () => {
+                  // Sau 5 giây, cho phép hiển thị thông báo lại nếu cần
+                  setTimeout(() => {
+                    notificationShown.outOfStock = false;
+                  }, 1000);
+                },
+              });
+            }
+
             setWishlist(detailedWishlist);
           } else {
             console.error("Fetched wishlist is not an array:", fetchedWishlist);
@@ -180,39 +247,49 @@ const Cart = () => {
       return;
     }
 
-    // Find the current item
-    const currentItem = wishlist.find((item) => item.productID === productID);
-
-    // Check if quantity exceeds available stock
-    if (currentItem && value > currentItem.quantity) {
-      // Check available stock by fetching latest product data
-      try {
-        const productDetails = await getProductById(productID);
-
-        if (productDetails && value > productDetails.quantity) {
-          // Show modal with warning message
-          Modal.warning({
-            title: "Giới hạn số lượng",
-            content: `Rất tiếc, bạn chỉ có thể mua tối đa ${productDetails.quantity} sản phẩm của chương trình giảm giá này.`,
-            okText: "OK",
-            okButtonProps: {
-              style: {
-                backgroundColor: "#F05123",
-                borderColor: "#F05123",
-              },
-            },
-            centered: true,
-          });
-
-          // Set quantity to maximum available
-          value = productDetails.quantity;
-        }
-      } catch (error) {
-        console.error("Failed to fetch product details:", error);
-      }
-    }
-
+    // Trước khi cập nhật, kiểm tra số lượng với kho hàng
     try {
+      // Lấy thông tin sản phẩm mới nhất từ API để có số lượng chính xác
+      const productDetails = await getProductById(productID);
+
+      if (!productDetails) {
+        notification.error({
+          message: "Lỗi",
+          description: "Không thể lấy thông tin sản phẩm",
+          placement: "topRight",
+          duration: 3,
+        });
+        return;
+      }
+
+      // Kiểm tra nếu sản phẩm đã hết hàng
+      if (
+        productDetails.status === "out_of_stock" ||
+        productDetails.quantity <= 0
+      ) {
+        notification.error({
+          message: "Sản phẩm hết hàng",
+          description: "Sản phẩm này đã hết hàng, vui lòng xóa khỏi giỏ hàng",
+          placement: "topRight",
+          duration: 3,
+        });
+        return;
+      }
+
+      // Kiểm tra số lượng yêu cầu có vượt quá số lượng trong kho không
+      if (value > productDetails.quantity) {
+        // Đặt số lượng là tối đa có sẵn trong kho
+        value = productDetails.quantity;
+
+        // Hiển thị thông báo
+        notification.warning({
+          message: "Giới hạn số lượng",
+          description: `Số lượng đã được điều chỉnh xuống ${value} vì đó là số lượng tối đa có sẵn.`,
+          placement: "topRight",
+          duration: 3,
+        });
+      }
+
       // Cập nhật danh sách wishlist
       setWishlist((prevWishlist) => {
         const updatedWishlist = prevWishlist.map((item) =>
@@ -236,11 +313,20 @@ const Cart = () => {
       if (!result) {
         console.error("Failed to update quantity in database.");
       }
+
+      // Dispatch cartUpdated event để cập nhật UI
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error(
         "Failed to update quantity in database or update wishlist:",
         error
       );
+      notification.error({
+        message: "Lỗi",
+        description: "Không thể cập nhật số lượng sản phẩm",
+        placement: "topRight",
+        duration: 3,
+      });
     }
   };
 
@@ -248,14 +334,23 @@ const Cart = () => {
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
     if (checked) {
-      setSelectedItems(mergedWishlist.map((item) => item.shoppingCartDetailID));
+      // Chỉ chọn các sản phẩm còn hàng
+      const availableItems = mergedWishlist
+        .filter((item) => !item.isOutOfStock)
+        .map((item) => item.shoppingCartDetailID);
+      setSelectedItems(availableItems);
     } else {
       setSelectedItems([]);
     }
   };
 
   // Xử lý chọn/bỏ chọn một sản phẩm
-  const handleSelectItem = (shoppingCartDetailID, checked) => {
+  const handleSelectItem = (shoppingCartDetailID, checked, isOutOfStock) => {
+    // Nếu sản phẩm hết hàng, không cho phép chọn
+    if (isOutOfStock) {
+      return; // Không hiển thị thông báo ở đây nữa
+    }
+
     if (checked) {
       setSelectedItems([...selectedItems, shoppingCartDetailID]);
     } else {
@@ -275,6 +370,24 @@ const Cart = () => {
       });
       return;
     }
+
+    // Kiểm tra xem có sản phẩm hết hàng nào được chọn không
+    const selectedOutOfStockItems = mergedWishlist.filter(
+      (item) =>
+        selectedItems.includes(item.shoppingCartDetailID) && item.isOutOfStock
+    );
+
+    if (selectedOutOfStockItems.length > 0) {
+      notification.error({
+        message: "Không thể thanh toán",
+        description:
+          "Một số sản phẩm đã hết hàng. Vui lòng xóa những sản phẩm này khỏi giỏ hàng trước khi thanh toán.",
+        placement: "top",
+        duration: 4,
+      });
+      return;
+    }
+
     // Chỉ chuyển các sản phẩm đã chọn sang trang thanh toán
     const selectedProducts = mergedWishlist.filter((item) =>
       selectedItems.includes(item.shoppingCartDetailID)
@@ -391,7 +504,12 @@ const Cart = () => {
             className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
             {mergedWishlist.map((item, index) => (
               <div key={item.productID}>
-                <div className="grid grid-cols-7 items-center p-4 font-semibold cursor-pointer">
+                <div
+                  className={`grid grid-cols-7 items-center p-4 font-semibold ${
+                    item.isOutOfStock
+                      ? "opacity-50 cursor-not-allowed bg-gray-100"
+                      : "cursor-pointer"
+                  }`}>
                   <div className="col-span-1 flex justify-center">
                     <FontAwesomeIcon
                       icon={faXmark}
@@ -405,7 +523,9 @@ const Cart = () => {
 
                   <div
                     className="col-span-2 flex items-center gap-4"
-                    onClick={() => handleProductClick(item)}>
+                    onClick={() =>
+                      !item.isOutOfStock && handleProductClick(item)
+                    }>
                     <img
                       src={
                         Array.isArray(item.imageUrl) && item.imageUrl.length > 0
@@ -415,9 +535,16 @@ const Cart = () => {
                       alt={item.name}
                       className="w-[80px] h-auto"
                     />
-                    <p className="max-w-[300px] break-words">
-                      {item.name || "No name available"}
-                    </p>
+                    <div>
+                      <p className="max-w-[300px] break-words">
+                        {item.name || "No name available"}
+                      </p>
+                      {item.isOutOfStock && (
+                        <p className="text-red-500 text-sm">
+                          Sản phẩm đã hết hàng
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="col-span-1 text-center">
@@ -427,6 +554,7 @@ const Cart = () => {
                     <InputNumber
                       min={0}
                       value={item.quantity}
+                      disabled={item.isOutOfStock}
                       onChange={(value) => {
                         if (value === null || value < 0) {
                           console.error("Invalid value:", value);
@@ -451,10 +579,12 @@ const Cart = () => {
                       checked={selectedItems.includes(
                         item.shoppingCartDetailID
                       )}
+                      disabled={item.isOutOfStock}
                       onChange={(e) =>
                         handleSelectItem(
                           item.shoppingCartDetailID,
-                          e.target.checked
+                          e.target.checked,
+                          item.isOutOfStock
                         )
                       }
                     />

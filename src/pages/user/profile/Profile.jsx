@@ -25,11 +25,9 @@ const Profile = () => {
 
   useEffect(() => {
     if (!user && userID && accessToken && refreshToken) {
-      dispatch(fetchUser({ userID, accessToken, refreshToken })).catch(
-        (error) => {
-          console.error("Failed to fetch user:", error);
-        }
-      );
+      dispatch(fetchUser({ userID, accessToken, refreshToken })).catch((error) => {
+        console.error("Failed to fetch user:", error);
+      });
     }
   }, [dispatch, user, userID, accessToken, refreshToken]);
 

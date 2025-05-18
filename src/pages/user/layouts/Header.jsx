@@ -216,7 +216,7 @@ const Header = () => {
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPaperPlane} className="text-white text-l" />
           <div className="text-white text-l font-bold ml-2">
-            khoinhokboddy@gmail.com
+          smileshopptit@gmail.com
           </div>
         </div>
         <div className="flex items-center space-x-4 cursor-pointer">

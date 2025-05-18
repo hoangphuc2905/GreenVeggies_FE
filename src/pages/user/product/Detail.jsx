@@ -13,18 +13,91 @@ import {
   Image,
   notification,
   Spin,
+  Tag,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 import Favourite from "../layouts/Favourite";
 import { getUserInfo } from "../../../services/UserService"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 import { getProductById } from "../../../services/ProductService";
-import { saveShoppingCarts } from "../../../services/ShoppingCartService";
+import {
+  saveShoppingCarts,
+  getShoppingCartByUserId,
+} from "../../../services/ShoppingCartService";
 // Change this import
 import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import LoginForm from "../../../components/login/login";
+
+// Custom style for notifications
+const customNotificationStyle = `
+  .custom-notification {
+    margin-top: 50px !important;
+  }
+  .custom-notification .ant-notification-notice-message {
+    margin-bottom: 4px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+  }
+  .custom-notification .ant-notification-notice-description {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    font-size: 14px !important;
+  }
+  .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-message, 
+  .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-description {
+    margin-left: 24px !important;
+  }
+  .custom-notification .ant-notification-notice-icon {
+    margin-left: 8px !important;
+    font-size: 18px !important;
+  }
+  .custom-notification .ant-notification-notice-close {
+    top: 6px !important;
+    right: 6px !important;
+  }
+  .custom-notification .ant-notification-notice {
+    padding: 8px !important;
+    width: 270px !important;
+    max-width: 270px !important;
+    margin-right: 8px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+  .custom-notification img {
+    width: 48px !important;
+    height: 48px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+  }
+  .custom-notification .ant-btn-sm {
+    font-size: 14px !important;
+    height: 28px !important;
+    padding: 0px 10px !important;
+    border-radius: 4px !important;
+    margin-top: 6px !important;
+  }
+  .custom-notification .flex-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .custom-notification .product-info {
+    display: flex !important;
+    flex-direction: column !important;
+    font-size: 13px !important;
+  }
+  .custom-notification .product-name {
+    font-weight: 500 !important;
+    margin-bottom: 2px !important;
+  }
+`;
+
+// Kiểm soát thông báo toàn cục
+const notificationShown = {
+  quantityLimit: false,
+};
 
 const Detail = () => {
   const location = useLocation();
@@ -51,6 +124,17 @@ const Detail = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [availableQuantity, setAvailableQuantity] = useState(0);
+  const notificationShownRef = useRef(false);
+
+  // Reset notification state when component unmounts
+  useEffect(() => {
+    return () => {
+      notificationShown.quantityLimit = false;
+      notificationShownRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -65,6 +149,9 @@ const Detail = () => {
         );
         // Scroll to top when product data is loaded
         window.scrollTo(0, 0);
+
+        // Kiểm tra số lượng đã có trong giỏ hàng
+        await checkCartItemCount(productData.productID, productData.quantity);
       } catch (error) {
         console.error("Failed to fetch product:", error);
       } finally {
@@ -142,12 +229,114 @@ const Detail = () => {
     setShowSeeMore(false);
   }, [id]);
 
-  const handleQuantityChange = (value) => {
-    setQuantity(value);
+  // Kiểm tra số lượng sản phẩm đã có trong giỏ hàng
+  const checkCartItemCount = async (productID, stockQuantity) => {
+    try {
+      const userID = localStorage.getItem("userID");
+      if (!userID) {
+        setAvailableQuantity(stockQuantity);
+        return;
+      }
+
+      const cartData = await getShoppingCartByUserId(userID);
+
+      if (cartData && Array.isArray(cartData.shoppingCartDetails)) {
+        // Tìm sản phẩm trong giỏ hàng
+        const existingItem = cartData.shoppingCartDetails.find(
+          (item) => item.productID === productID
+        );
+
+        // Lấy số lượng đã có trong giỏ
+        const itemCount = existingItem ? existingItem.quantity : 0;
+        setCartItemCount(itemCount);
+
+        // Tính và cập nhật số lượng còn có thể thêm vào
+        const available = Math.max(0, stockQuantity - itemCount);
+        setAvailableQuantity(available);
+
+        // Nếu đã đạt giới hạn, hiển thị thông báo chỉ khi chưa hiển thị
+        if (
+          available === 0 &&
+          itemCount > 0 &&
+          !notificationShown.quantityLimit &&
+          !notificationShownRef.current
+        ) {
+          // Đánh dấu đã hiển thị thông báo
+          notificationShown.quantityLimit = true;
+          notificationShownRef.current = true;
+
+          notification.warning({
+            message: "Đã đạt giới hạn số lượng",
+            description: `Bạn đã thêm tối đa ${itemCount} sản phẩm này vào giỏ hàng.`,
+            duration: 3,
+            placement: "topRight",
+            onClose: () => {
+              // Sau khi đóng thông báo, đợi 1s rồi reset trạng thái
+              setTimeout(() => {
+                notificationShown.quantityLimit = false;
+              }, 1000);
+            },
+          });
+        }
+      } else {
+        setAvailableQuantity(stockQuantity);
+      }
+    } catch (error) {
+      console.error("Lỗi khi kiểm tra giỏ hàng:", error);
+      setAvailableQuantity(stockQuantity);
+    }
   };
 
+  // Sửa hàm handleQuantityChange
+  const handleQuantityChange = (value) => {
+    // Đảm bảo không vượt quá số lượng có thể thêm
+    if (value > availableQuantity) {
+      // Chỉ hiển thị thông báo nếu chưa hiển thị
+      if (!notificationShown.quantityLimit && !notificationShownRef.current) {
+        notificationShown.quantityLimit = true;
+        notificationShownRef.current = true;
+
+        notification.warning({
+          message: "Vượt quá số lượng cho phép",
+          description: `Bạn chỉ có thể thêm tối đa ${availableQuantity} sản phẩm này vào giỏ hàng.`,
+          duration: 3,
+          placement: "topRight",
+          onClose: () => {
+            setTimeout(() => {
+              notificationShown.quantityLimit = false;
+            }, 1000);
+          },
+        });
+      }
+      setQuantity(availableQuantity);
+    } else {
+      setQuantity(value);
+    }
+  };
+
+  // Sửa hàm incrementQuantity
   const incrementQuantity = () => {
-    setQuantity((prevQuantity) => prevQuantity + 1);
+    if (quantity < availableQuantity) {
+      setQuantity(quantity + 1);
+    } else {
+      // Chỉ hiển thị thông báo nếu chưa hiển thị
+      if (!notificationShown.quantityLimit && !notificationShownRef.current) {
+        notificationShown.quantityLimit = true;
+        notificationShownRef.current = true;
+
+        notification.warning({
+          message: "Vượt quá số lượng cho phép",
+          description: `Bạn chỉ có thể thêm tối đa ${availableQuantity} sản phẩm này vào giỏ hàng.`,
+          duration: 3,
+          placement: "topRight",
+          onClose: () => {
+            setTimeout(() => {
+              notificationShown.quantityLimit = false;
+            }, 1000);
+          },
+        });
+      }
+    }
   };
 
   const decrementQuantity = () => {
@@ -241,12 +430,41 @@ const Detail = () => {
       // Phát ra sự kiện cập nhật giỏ hàng
       window.dispatchEvent(new Event("cartUpdated"));
 
-      // Hiển thị thông báo thành công
+      // Hiển thị thông báo thành công với giao diện cải tiến
       notification.success({
         message: "Thêm vào giỏ hàng thành công",
-        description: "Sản phẩm đã được thêm vào giỏ hàng của bạn",
-        placement: "topRight",
+        description: (
+          <div className="flex-container">
+            <img src={imageUrl} alt={product.name} className="product-image" />
+            <div className="product-info">
+              <div className="product-name">{product.name}</div>
+              <div>Số lượng: {quantity}</div>
+            </div>
+          </div>
+        ),
         duration: 3,
+        key: `open${Date.now()}`,
+        placement: "topRight",
+        className: "custom-notification",
+        style: { padding: "8px" },
+        btn: (
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => {
+              // Close all notifications then navigate
+              notification.destroy();
+              navigate("/wishlist");
+            }}
+            style={{
+              background: "linear-gradient(to right, #82AE46, #5A8E1B)",
+              color: "white",
+              border: "none",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}>
+            Đi đến giỏ hàng
+          </Button>
+        ),
       });
 
       navigate("/wishlist");
@@ -344,6 +562,12 @@ const Detail = () => {
     }
     return originalElement;
   };
+
+  // Add the style tag to the document at the end of the file, just before the export
+  document.head.insertAdjacentHTML(
+    "beforeend",
+    `<style>${customNotificationStyle}</style>`
+  );
 
   return (
     <div className="min-h-screen bg-white flex flex-col mx-[10%]">
@@ -542,8 +766,20 @@ const Detail = () => {
 
               <div className="mt-4">
                 <Typography.Text strong className="block mb-2">
-                  Số lượng: {product.quantity}
+                  Số lượng trong kho: {product.quantity}
                 </Typography.Text>
+
+                {cartItemCount > 0 && (
+                  <div className="mb-4">
+                    <Tag color="blue">
+                      Đã có {cartItemCount} sản phẩm trong giỏ hàng
+                    </Tag>
+                    <Typography.Text type="secondary" className="block mt-1">
+                      Bạn còn có thể thêm tối đa {availableQuantity} sản phẩm
+                    </Typography.Text>
+                  </div>
+                )}
+
                 <Typography.Text strong className="block mb-4">
                   Loại: {product.category.name}
                 </Typography.Text>
@@ -553,25 +789,31 @@ const Detail = () => {
                 <Space.Compact>
                   <Button
                     onClick={decrementQuantity}
-                    disabled={product.quantity === 0 || quantity <= 1}
-                    className="hover:text-[#82AE46] hover:border-[#82AE46] transition-colors"
-                  >
+
+                    disabled={
+                      product.quantity === 0 ||
+                      quantity <= 1 ||
+                      availableQuantity === 0
+                    }
+                    className="hover:text-[#82AE46] hover:border-[#82AE46] transition-colors">
                     -
                   </Button>
                   <InputNumber
                     min={1}
-                    max={product.quantity}
+                    max={availableQuantity}
                     value={quantity}
                     onChange={(value) => handleQuantityChange(value)}
                     className="w-16 hover:border-[#82AE46] "
-                    disabled={product.quantity === 0}
+                    disabled={product.quantity === 0 || availableQuantity === 0}
                     controls={false}
                     style={{ textAlign: "center" }}
                   />
                   <Button
                     onClick={incrementQuantity}
                     disabled={
-                      product.quantity === 0 || quantity >= product.quantity
+                      product.quantity === 0 ||
+                      quantity >= availableQuantity ||
+                      availableQuantity === 0
                     }
                     className="!hover:bg-[#82AE46] !hover:text-white !hover:border-[#82AE46] transition-colors"
                   >
@@ -582,9 +824,8 @@ const Detail = () => {
                 <Button
                   type="primary"
                   onClick={handleAddToCart}
-                  disabled={product.quantity === 0}
-                  className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]"
-                >
+                  disabled={product.quantity === 0 || availableQuantity === 0}
+                  className="!bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] hover:scale-105 !hover:from-[#82AE46] !hover:to-[#5A8E1B]">
                   THÊM VÀO GIỎ
                 </Button>
               </Space>

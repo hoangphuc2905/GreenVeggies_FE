@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Pagination,
   notification,
@@ -9,6 +9,7 @@ import {
   Typography,
   Empty,
   Spin,
+  Button,
 } from "antd";
 import PropTypes from "prop-types";
 
@@ -17,8 +18,75 @@ import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
-import { saveShoppingCarts } from "../../../services/ShoppingCartService";
+import {
+  saveShoppingCarts,
+  getShoppingCartByUserId,
+} from "../../../services/ShoppingCartService";
 import LoginForm from "../../../components/login/login";
+
+// Custom style for notifications
+const customNotificationStyle = `
+  .custom-notification {
+    margin-top: 50px !important;
+  }
+  .custom-notification .ant-notification-notice-message {
+    margin-bottom: 4px !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+  }
+  .custom-notification .ant-notification-notice-description {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    font-size: 14px !important;
+  }
+  .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-message, 
+  .custom-notification .ant-notification-notice-with-icon .ant-notification-notice-description {
+    margin-left: 24px !important;
+  }
+  .custom-notification .ant-notification-notice-icon {
+    margin-left: 8px !important;
+    font-size: 18px !important;
+  }
+  .custom-notification .ant-notification-notice-close {
+    top: 6px !important;
+    right: 6px !important;
+  }
+  .custom-notification .ant-notification-notice {
+    padding: 8px !important;
+    width: 270px !important;
+    max-width: 270px !important;
+    margin-right: 8px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+  .custom-notification img {
+    width: 48px !important;
+    height: 48px !important;
+    object-fit: cover !important;
+    border-radius: 6px !important;
+  }
+  .custom-notification .ant-btn-sm {
+    font-size: 14px !important;
+    height: 28px !important;
+    padding: 0px 10px !important;
+    border-radius: 4px !important;
+    margin-top: 6px !important;
+  }
+  .custom-notification .flex-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .custom-notification .product-info {
+    display: flex !important;
+    flex-direction: column !important;
+    font-size: 13px !important;
+  }
+  .custom-notification .product-name {
+    font-weight: 500 !important;
+    margin-bottom: 2px !important;
+  }
+`;
 
 const ListProductByCatelogyID = ({
   allProducts,
@@ -33,6 +101,7 @@ const ListProductByCatelogyID = ({
   const [loading, setLoading] = useState(true);
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const filterProductsByCategory = () => {
@@ -45,7 +114,22 @@ const ListProductByCatelogyID = ({
           CalcPrice(product.price) <= maxPrice
         );
       });
-      setProducts(filteredProducts);
+
+      // Sắp xếp sản phẩm: còn hàng lên đầu theo thứ tự bảng chữ cái, hết hàng xuống cuối
+      const sortedProducts = [...filteredProducts].sort((a, b) => {
+        // Nếu một sản phẩm hết hàng và sản phẩm khác còn hàng
+        if (a.status === "out_of_stock" && b.status !== "out_of_stock") {
+          return 1; // a đứng sau b
+        }
+        if (a.status !== "out_of_stock" && b.status === "out_of_stock") {
+          return -1; // a đứng trước b
+        }
+
+        // Nếu cả hai cùng trạng thái, sắp xếp theo tên
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      });
+
+      setProducts(sortedProducts);
       setLoading(false);
     };
 
@@ -85,7 +169,7 @@ const ListProductByCatelogyID = ({
   };
 
   // Xử lý khi đăng nhập thành công
-  const handleLoginSuccess = (data) => {
+  const handleLoginSuccess = () => {
     setIsLoginModalVisible(false);
 
     // Sau khi đăng nhập thành công, tự động thêm sản phẩm vào giỏ hàng
@@ -97,25 +181,52 @@ const ListProductByCatelogyID = ({
   };
 
   const addToWishlist = async (product) => {
-    const userID = localStorage.getItem("userID");
-    const imageUrl = Array.isArray(product.imageUrl)
-      ? product.imageUrl[0]
-      : product.imageUrl;
-    const newWishlistItem = {
-      userID: userID,
-      items: [
-        {
-          productID: product.productID,
-          name: product.name,
-          quantity: 1,
-          description: product.description,
-          price: CalcPrice(product.price),
-          imageUrl: imageUrl,
-        },
-      ],
-      totalPrice: CalcPrice(product.price) * 1,
-    };
     try {
+      const userID = localStorage.getItem("userID");
+
+      // Kiểm tra số lượng sản phẩm hiện có trong giỏ hàng
+      const cartData = await getShoppingCartByUserId(userID);
+      let existingQuantity = 0;
+
+      if (cartData && Array.isArray(cartData.shoppingCartDetails)) {
+        // Tìm sản phẩm trong giỏ hàng
+        const existingItem = cartData.shoppingCartDetails.find(
+          (item) => item.productID === product.productID
+        );
+
+        // Lấy số lượng đã có trong giỏ
+        existingQuantity = existingItem ? existingItem.quantity : 0;
+      }
+
+      // Kiểm tra nếu thêm 1 sản phẩm nữa có vượt quá số lượng trong kho không
+      if (existingQuantity >= product.quantity) {
+        notification.warning({
+          message: "Không thể thêm vào giỏ hàng",
+          description: `Bạn đã có ${existingQuantity} sản phẩm trong giỏ hàng. Không thể thêm nữa vì vượt quá số lượng trong kho (${product.quantity}).`,
+          placement: "topRight",
+          duration: 4,
+        });
+        return;
+      }
+
+      const imageUrl = Array.isArray(product.imageUrl)
+        ? product.imageUrl[0]
+        : product.imageUrl;
+      const newWishlistItem = {
+        userID: userID,
+        items: [
+          {
+            productID: product.productID,
+            name: product.name,
+            quantity: 1,
+            description: product.description,
+            price: CalcPrice(product.price),
+            imageUrl: imageUrl,
+          },
+        ],
+        totalPrice: CalcPrice(product.price) * 1,
+      };
+
       await saveShoppingCarts(newWishlistItem);
 
       const currentWishlist =
@@ -135,12 +246,41 @@ const ListProductByCatelogyID = ({
       // Dispatch cartUpdated event
       window.dispatchEvent(new Event("cartUpdated"));
 
-      // Add success notification
+      // Add success notification with improved UI
       notification.success({
         message: "Thêm vào giỏ hàng thành công",
-        description: `Đã thêm ${product.name} với số lượng 1 vào giỏ hàng`,
-        duration: 4,
+        description: (
+          <div className="flex-container">
+            <img src={imageUrl} alt={product.name} className="product-image" />
+            <div className="product-info">
+              <div className="product-name">{product.name}</div>
+              <div>Số lượng: 1</div>
+            </div>
+          </div>
+        ),
+        duration: 3,
+        key: `open${Date.now()}`,
         placement: "topRight",
+        className: "custom-notification",
+        style: { padding: "8px" },
+        btn: (
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => {
+              // Close all notifications then navigate
+              notification.destroy();
+              navigate("/wishlist");
+            }}
+            style={{
+              background: "linear-gradient(to right, #82AE46, #5A8E1B)",
+              color: "white",
+              border: "none",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}>
+            Đi đến giỏ hàng
+          </Button>
+        ),
       });
     } catch (error) {
       console.error("Failed to save order:", error);
@@ -148,7 +288,7 @@ const ListProductByCatelogyID = ({
       notification.error({
         message: "Lỗi",
         description: "Không thể thêm sản phẩm vào giỏ hàng",
-        duration: 4,
+        duration: 3,
         placement: "topRight",
       });
     }
@@ -184,6 +324,12 @@ const ListProductByCatelogyID = ({
     }
     return originalElement;
   };
+
+  // Add the style tag to the document
+  document.head.insertAdjacentHTML(
+    "beforeend",
+    `<style>${customNotificationStyle}</style>`
+  );
 
   return (
     <div className="flex flex-col w-full">
