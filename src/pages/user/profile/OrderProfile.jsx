@@ -1,24 +1,42 @@
-import { getProductById } from "../../../services/ProductService"; // Moved to the top
-import { useState, useEffect } from "react";
+import { Input, Modal, Radio, Space } from "antd"; // Thêm Radio, Input và Space từ Ant Design
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { createNotify } from "../../../services/NotifyService";
 import {
   getOrdersByUserId,
   updateStatus,
 } from "../../../services/OrderService";
-import ReviewModal from "./ReviewModal"; // Import the ReviewModal component
-import { Modal } from "antd"; // Import Modal from Ant Design
+import { getProductById } from "../../../services/ProductService";
+import ReviewModal from "./ReviewModal";
 
 const OrderProfile = () => {
+  // State cũ giữ nguyên...
   const [filter, setFilter] = useState("Tất cả");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null); // Thêm state cho thông báo
-  const [selectedOrder, setSelectedOrder] = useState(null); // State for selected order
-  const [showReviewDialog, setShowReviewDialog] = useState(false); // State for dialog visibility
-  const [productDetails, setProductDetails] = useState({}); // Cache for product details
-  const [showReviewModal, setShowReviewModal] = useState(false); // State for modal visibility
-  const [selectedProduct, setSelectedProduct] = useState(null); // State for selected product
+  const [message, setMessage] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [productDetails, setProductDetails] = useState({});
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Thêm state mới cho phần hủy đơn hàng
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelOrderID, setCancelOrderID] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [otherReason, setOtherReason] = useState("");
+
+  // Danh sách lý do hủy đơn hàng
+  const cancelReasons = [
+    "Đổi ý, không muốn mua nữa",
+    "Tìm thấy sản phẩm rẻ hơn ở nơi khác",
+    "Đặt nhầm sản phẩm",
+    "Đặt trùng đơn hàng",
+    "Thời gian giao hàng quá lâu",
+    "Khác",
+  ];
 
   const statusMapping = {
     Pending: "Chờ xử lý",
@@ -34,8 +52,47 @@ const OrderProfile = () => {
         if (userID) {
           const response = await getOrdersByUserId(userID);
           if (response && response.orders) {
-            // Sort orders by createdAt in descending order
-            const sortedOrders = response.orders.sort(
+            // Log full response for debugging
+            console.log("Full orders response:", response);
+
+            // Check for cancelled orders and their structure
+            const cancelledOrder = response.orders.find(
+              (order) => order.status === "Cancelled"
+            );
+            if (cancelledOrder) {
+              console.log("Cancelled order structure:", cancelledOrder);
+              // Log all properties to find where the cancel reason is stored
+              console.log("All properties:", Object.keys(cancelledOrder));
+            }
+
+            // Process orders - check for various possible field names for cancel reason
+            const processedOrders = response.orders.map((order) => {
+              // Log thông tin chi tiết về đơn hàng đã hủy để debug
+              if (order.status === "Cancelled") {
+                console.log(`Cancelled order ${order.orderID}:`, order);
+                console.log(
+                  "Cancel reason from API:",
+                  order.cancelReason || order.cancel_reason
+                );
+              }
+
+              // Check all possible field names where cancelReason might be stored
+              const reason =
+                order.cancelReason ||
+                order.cancel_reason ||
+                order.reasonForCancellation ||
+                order.cancelDetails?.reason ||
+                order.cancelInfo; // Thêm các trường có thể chứa lý do hủy
+
+              return {
+                ...order,
+                // Store the reason in a consistent field name
+                cancelReason: reason || null,
+              };
+            });
+
+            // Sort and set the processed orders
+            const sortedOrders = processedOrders.sort(
               (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
             );
             setOrders(sortedOrders);
@@ -47,6 +104,7 @@ const OrderProfile = () => {
           setOrders([]);
         }
       } catch (error) {
+        console.error("Error fetching orders:", error);
         setError("Lỗi khi tải danh sách đơn hàng.");
         setOrders([]);
       } finally {
@@ -57,14 +115,48 @@ const OrderProfile = () => {
     fetchOrders();
   }, []);
 
-  const handleUpdateStatus = async (orderID, newStatus) => {
+  // Cập nhật hàm handleUpdateStatus để thêm lý do hủy đơn
+  const handleUpdateStatus = async (orderID, newStatus, cancelReason = "") => {
     try {
-      const result = await updateStatus(orderID, newStatus);
+      // Chuẩn bị dữ liệu để gửi đến API
+      let updateData;
+
+      if (typeof newStatus === "string") {
+        if (newStatus === "Cancelled" && cancelReason) {
+          updateData = { status: newStatus, cancelReason };
+        } else {
+          updateData = { status: newStatus };
+        }
+      } else {
+        updateData = newStatus; // Nếu newStatus đã là object
+      }
+
+      const result = await updateStatus(orderID, updateData);
+
       if (result) {
-        setMessage("Cập nhật trạng thái thành công!");
+        setMessage(
+          newStatus === "Cancelled" ||
+            (typeof newStatus === "object" && newStatus.status === "Cancelled")
+            ? "Đơn hàng đã được hủy thành công!"
+            : "Cập nhật trạng thái thành công!"
+        );
+
         setOrders((prev) =>
           prev.map((order) =>
-            order.orderID === orderID ? { ...order, status: newStatus } : order
+            order.orderID === orderID
+              ? {
+                  ...order,
+                  status:
+                    typeof newStatus === "string"
+                      ? newStatus
+                      : newStatus.status,
+                  cancelReason:
+                    cancelReason ||
+                    (typeof newStatus === "object"
+                      ? newStatus.cancelReason
+                      : undefined),
+                }
+              : order
           )
         );
       } else {
@@ -72,10 +164,69 @@ const OrderProfile = () => {
       }
     } catch (error) {
       setMessage("Lỗi khi cập nhật trạng thái đơn hàng.");
+      console.error("Error updating order status:", error);
     }
 
     // Tự động ẩn thông báo sau 3 giây
     setTimeout(() => setMessage(null), 3000);
+  };
+  //Thông báo hủy đơn
+  const sendCancelNotify = async (orderID, reason) => {
+    try {
+      const formData = {
+        senderType: "system",
+        senderUserID: localStorage.getItem("userID"),
+        receiverID: "admin",
+        title: "Thông báo hủy đơn hàng",
+        message: `Thông báo đơn hàng ${orderID} đã bị hủy.\nLý do: ${reason}`,
+        type: "order",
+        orderID: orderID,
+      };
+      const response = await createNotify(formData);
+      if (response) {
+        console.log("Thông báo đã được gửi thành công:", response);
+      }
+      // Thực hiện các hành động khác nếu cần
+    } catch (error) {
+      console.error("Lỗi khi gửi thông báo:", error);
+      // Xử lý lỗi nếu cần
+    }
+  };
+  // Thay đổi hàm handleCancelOrder
+  const handleCancelOrder = (orderID) => {
+    setCancelOrderID(orderID);
+    setCancelReason("");
+    setOtherReason("");
+    setShowCancelModal(true);
+  };
+
+  // Hàm xử lý xác nhận hủy đơn hàng
+  // Cập nhật trong hàm confirmCancelOrder
+  // Hàm xử lý xác nhận hủy đơn hàng
+  const confirmCancelOrder = () => {
+    // Xác định lý do cuối cùng dựa trên lựa chọn
+    const finalReason =
+      cancelReason === "Khác"
+        ? `Khác: ${otherReason}` // Thêm tiền tố "Khác:" để biết đây là lý do tùy chỉnh
+        : cancelReason;
+
+    if (!finalReason || (cancelReason === "Khác" && !otherReason)) {
+      setMessage("Vui lòng chọn hoặc nhập lý do hủy đơn hàng!");
+      return;
+    }
+
+    console.log("Sending cancel reason to API:", finalReason); // Log để kiểm tra
+
+    // Gửi đối tượng với status và cancelReason
+    handleUpdateStatus(cancelOrderID, {
+      status: "Cancelled",
+      cancelReason: finalReason,
+    });
+
+    // Gửi thông báo hủy đơn hàng cho admin
+    sendCancelNotify(cancelOrderID, finalReason);
+
+    setShowCancelModal(false);
   };
 
   const fetchProductDetails = async (productId) => {
@@ -111,26 +262,6 @@ const OrderProfile = () => {
   const closeReviewDialog = () => {
     setShowReviewDialog(false);
     setSelectedOrder(null);
-  };
-
-  const handleCancelOrder = (orderID) => {
-    Modal.confirm({
-      title: "Xác nhận hủy đơn hàng",
-      content: "Bạn có chắc chắn muốn hủy đơn hàng này không?",
-      okText: "Đồng ý",
-      cancelText: "Hủy",
-      onOk: () => handleUpdateStatus(orderID, "Cancelled"),
-    });
-  };
-
-  const handleConfirmReceived = (orderID) => {
-    Modal.confirm({
-      title: "Xác nhận nhận hàng",
-      content: "Bạn có chắc chắn đã nhận được hàng?",
-      okText: "Đồng ý",
-      cancelText: "Hủy",
-      onOk: () => handleUpdateStatus(orderID, "Delivered"),
-    });
   };
 
   const filteredOrders =
@@ -191,6 +322,19 @@ const OrderProfile = () => {
               <p className="text-sm text-gray-700">
                 Trạng thái: {statusMapping[order.status]}
               </p>
+
+              {/* Hiển thị lý do hủy đơn nếu đã hủy */}
+              {order.status === "Cancelled" && (
+                <p className="text-sm text-red-500">
+                  Lý do hủy:{" "}
+                  {order.cancelReason
+                    ? order.cancelReason.startsWith("Khác:")
+                      ? order.cancelReason // Hiển thị nguyên chuỗi nếu đã có tiền tố
+                      : order.cancelReason
+                    : "Không có lý do"}
+                </p>
+              )}
+
               <div className="mt-2">
                 <h4 className="text-md font-semibold">Sản phẩm:</h4>
                 <ul className="list-disc list-inside">
@@ -290,6 +434,47 @@ const OrderProfile = () => {
           onClose={() => setShowReviewModal(false)}
           onSubmit={handleSubmitReview}
         />
+      )}
+
+      {/* Thêm Modal chọn lý do hủy đơn hàng */}
+      {showCancelModal && (
+        <Modal
+          title="Lý do hủy đơn hàng"
+          open={showCancelModal}
+          onOk={confirmCancelOrder}
+          onCancel={() => setShowCancelModal(false)}
+          okText="Xác nhận hủy"
+          cancelText="Đóng"
+          okButtonProps={{
+            disabled:
+              !cancelReason || (cancelReason === "Khác" && !otherReason),
+          }}
+        >
+          <p className="mb-4">Vui lòng chọn lý do hủy đơn hàng:</p>
+
+          <Radio.Group
+            onChange={(e) => setCancelReason(e.target.value)}
+            value={cancelReason}
+          >
+            <Space direction="vertical">
+              {cancelReasons.map((reason) => (
+                <Radio key={reason} value={reason}>
+                  {reason}
+                </Radio>
+              ))}
+            </Space>
+          </Radio.Group>
+
+          {/* Hiển thị input text khi chọn lý do "Khác" */}
+          {cancelReason === "Khác" && (
+            <Input
+              placeholder="Vui lòng nhập lý do của bạn"
+              value={otherReason}
+              onChange={(e) => setOtherReason(e.target.value)}
+              className="mt-3"
+            />
+          )}
+        </Modal>
       )}
     </div>
   );

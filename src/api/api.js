@@ -177,8 +177,15 @@ export const handleOrderApi = {
   getOrdersByUserId: async (userID) => {
     return await orderAPI.get(`/orders/user/${userID}`);
   },
-  updateStatus: async (orderID, status) => {
-    return await orderAPI.put(`/orders/${orderID}`, { status });
+   updateStatus: async (orderID, updateData) => {
+    try {
+      // Truyền toàn bộ updateData trong body request
+      const response = await orderAPI.put(`/orders/${orderID}`, updateData);
+      return response;
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái đơn hàng:", error);
+      throw error;
+    }
   },
   //Lấy danh sách tất cva3 đơn hàng
   getAllOrders: async () => {
@@ -693,7 +700,11 @@ export const handleAuthApi = {
   changePassword: async (email, oldPassword, newPassword) => {
     try {
       const response = await auth.post(
-        `/auth/change-password?email=${encodeURIComponent(email)}&oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`
+        `/auth/change-password?email=${encodeURIComponent(
+          email
+        )}&oldPassword=${encodeURIComponent(
+          oldPassword
+        )}&newPassword=${encodeURIComponent(newPassword)}`
       );
       return response.data; // Trả về dữ liệu từ API
     } catch (error) {
