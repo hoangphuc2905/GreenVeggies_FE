@@ -25,7 +25,6 @@ export const updateUserInfo = async (userID, userData) => {
   }
 };
 
-
 //Lấy danh sách người dùng
 export const getListUsers = async () => {
   try {
@@ -57,6 +56,19 @@ export const addNewAddress = async (addressData) => {
     return newAddress; // Trả về địa chỉ mới
   } catch (error) {
     console.error("Lỗi khi gọi API addNewAddress:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
+
+//Cập nhật trạng thái người dùng
+export const updateUserStatus = async (userID, status) => {
+  try {
+    const response = await handleUserApi.updateUserStatus(userID, status);
+    if (response && response.data) {
+      return response.data; // Trả về dữ liệu người dùng đã cập nhật
+    }
+  } catch (error) {
+    console.error("Lỗi khi gọi API updateUserStatus:", error);
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };

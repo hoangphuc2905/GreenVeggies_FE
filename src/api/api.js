@@ -201,6 +201,17 @@ export const handleUserApi = {
       headers: getAuthHeader(),
     });
   },
+
+  //Cập nhật trạng thái người dùng
+  updateUserStatus: async (userID, status) => {
+    return await api.patch(
+      `/user/${userID}/account-status`,
+      { status },
+      {
+        headers: getAuthHeader(),
+      }
+    );
+  },
 };
 
 //THÔNG BÁO
