@@ -277,7 +277,7 @@ const OrderProfile = () => {
         );
       }
 
-      // Gửi thông báo hủy đơn hàng cho admin
+      // Gửi thông báo hủy đơn hàng cho admin.
       await sendCancelNotify(cancelOrderID, finalReason);
 
       setMessage(
