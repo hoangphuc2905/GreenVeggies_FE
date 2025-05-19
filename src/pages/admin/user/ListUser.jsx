@@ -1,16 +1,25 @@
-import { Button, Flex, Input, Layout, Select, Space, Table, Tag } from "antd";
-import Column from "antd/es/table/Column";
-import { useEffect, useState } from "react";
-import DefaultAVT from "../../../assets/pictures/default.png";
-import userRender from "../userRender/UserRender";
 import {
-  DeleteFilled,
-  EditFilled,
-  PlusCircleOutlined,
+  Button,
+  Flex,
+  Input,
+  Layout,
+  message,
+  Modal,
+  Space,
+  Table,
+  Tag,
+} from "antd";
+import { useEffect, useRef, useState } from "react";
+import DefaultAVT from "../../../assets/pictures/default.png";
+import {
+  EyeInvisibleOutlined,
+  EyeOutlined, // Thêm icon mở khóa
+  SearchOutlined,
 } from "@ant-design/icons";
 import UserDetailModal from "./UserDetailModal";
-import { getListUsers } from "../../../services/UserService";
+import { getListUsers, updateUserStatus } from "../../../services/UserService";
 import { getOrdersByUserId } from "../../../services/OrderService"; // Import the function
+import Highlighter from "react-highlight-words"; // Thêm thư viện highlight nếu chưa có
 
 const { Search } = Input;
 
@@ -29,120 +38,416 @@ const ListUser = () => {
   const [originalUsers, setOriginalUsers] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedOptions, setSelectedOptions] = useState(["Tất cả"]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [orderCounts, setOrderCounts] = useState({}); // State to store order counts
   const [pagination, setPagination] = useState({ current: 1, pageSize: 5 }); // Add pagination state
+  // State cho tìm kiếm và sắp xếp
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const [sortedInfo, setSortedInfo] = useState({});
+  const searchInput = useRef(null);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const data = await getUsers();
+  /**
+   * Lấy danh sách người dùng từ API.
+   * Sắp xếp admin lên đầu, lưu vào state.
+   * Đồng thời lấy số lượng đơn hàng cho từng user.
+   */
+  const fetchUsers = async () => {
+    const apiUsers = await getListUsers();
+    const sortedData = apiUsers.sort((a, b) => {
+      if (a.role === "admin" && b.role !== "admin") return -1;
+      if (a.role !== "admin" && b.role === "admin") return 1;
+      return 0;
+    });
 
-      // Sort users to place Admins at the top
-      const sortedData = data.sort((a, b) => {
-        if (a.role === "admin" && b.role !== "admin") return -1;
-        if (a.role !== "admin" && b.role === "admin") return 1;
-        return 0;
-      });
-
-      setUsers(sortedData);
-      setOriginalUsers(sortedData);
-      console.log("Sorted Users: ", sortedData);
-
-      // Fetch order counts for each user
-      const counts = {};
-      for (const user of sortedData) {
-        try {
-          console.log("User ID: ", user.userID); // Log the user ID
-          const { orders } = await getOrdersByUserId(user.userID);
-          counts[user.userID] = orders.length;
-          console.log(
-            `User ID: ${user.userID}, Order Count: ${counts[user.userID]}`
-          ); // Log the order count for each user
-        } catch (error) {
-          console.error(
-            `Failed to fetch orders for user ${user.userID}:`,
-            error
-          );
-          counts[user.userID] = 0; // Default to 0 if there's an error
-        }
+    // Lấy số lượng đơn hàng cho từng user
+    const counts = {};
+    for (const user of sortedData) {
+      try {
+        const { orders } = await getOrdersByUserId(user.userID);
+        counts[user.userID] = orders.length;
+      } catch (error) {
+        counts[user.userID] = 0;
       }
-      setOrderCounts(counts);
-      console.log("Order Counts: ", counts); // Log the final order counts
-    };
+    }
+    setOrderCounts(counts);
 
+    // Đặt users sau khi đã có orderCounts để Table luôn cập nhật lại
+    setUsers([...sortedData]);
+    setOriginalUsers([...sortedData]);
+  };
+  useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [loading]); // Khi loading đổi (reset, reload), luôn fetch lại dữ liệu
 
-  const start = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setSelectedRowKeys([]);
-      setLoading(false);
-    }, 1000);
+  /**
+   * Hàm xử lý cập nhật trạng thái tài khoản người dùng.
+   * Nếu thành công sẽ cập nhật lại danh sách users trong state.
+   * @param {string} userID - ID người dùng cần cập nhật.
+   * @param {string} status - Trạng thái mới ("Suspended" để khóa, "Active" để mở khóa).
+   */
+  const handleStatusUser = async (userID, status) => {
+    try {
+      const response = await updateUserStatus(userID, status);
+      if (response) {
+        // Cập nhật lại danh sách users sau khi thay đổi trạng thái
+        const updatedUsers = users.map((user) =>
+          user.userID === userID ? { ...user, accountStatus: status } : user
+        );
+        setUsers(updatedUsers);
+        setOriginalUsers(updatedUsers);
+      }
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi cập nhật trạng thái tài khoản!");
+    }
   };
 
   const hasSelected = selectedRowKeys.length > 0;
-  const options = [
-    {
-      value: "Tất cả",
-    },
-    {
-      value: "Admin",
-    },
-    {
-      value: "User",
-    },
-  ];
 
-  const handlerFilter = (value) => {
-    if (selectedOptions.includes("Tất cả") && value.length > 1) {
-      setSelectedOptions(value.filter((v) => v !== "Tất cả"));
-    } else if (value.includes("Tất cả")) {
-      setSelectedOptions(["Tất cả"]);
-    } else {
-      setSelectedOptions(value);
-    }
-    applyFilters(value, searchQuery);
-  };
-
-  const onSearch = (value) => {
-    setSearchQuery(value);
-    applyFilters(selectedOptions, value);
-  };
-
-  const applyFilters = (roles, query) => {
-    let filteredUsers = originalUsers;
-
-    if (!roles.includes("Tất cả")) {
-      const upperCaseRoles = roles.map((item) => item.toUpperCase());
-      filteredUsers = filteredUsers.filter((user) =>
-        upperCaseRoles.includes(user.role.toUpperCase())
-      );
-    }
-    if (query) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.username.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-
-    setUsers(filteredUsers);
-  };
-
-  useEffect(() => {
-    applyFilters(selectedOptions, searchQuery);
-  }, [selectedOptions, searchQuery]);
-
+  /**
+   * Hiển thị modal chi tiết người dùng khi click vào dòng.
+   */
   const showUserDetails = (user) => {
     setSelectedUser(user);
     setIsModalOpen(true);
   };
 
-  const handleTableChange = (pagination) => {
-    setPagination(pagination); // Update pagination state when the page changes
+  /**
+   * Hàm xử lý tìm kiếm theo cột cho bảng.
+   * @param {string} dataIndex - Tên trường dữ liệu.
+   * @param {boolean} sortable - Có cho phép sắp xếp không.
+   */
+  const getColumnSearchProps = (dataIndex, sortable = false) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Tìm kiếm ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{ marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+          >
+            Tìm
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+          >
+            Xóa
+          </Button>
+          <Button type="link" size="small" onClick={close}>
+            Đóng
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
+    sorter: sortable
+      ? (a, b) =>
+          a[dataIndex]?.toString().localeCompare(b[dataIndex]?.toString(), "vi")
+      : undefined,
+    sortDirections: ["ascend", "descend"],
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
+
+  /**
+   * Hàm xử lý khi nhấn nút "Tìm" trong filterDropdown của từng cột.
+   * @param {Array} selectedKeys - Giá trị nhập vào ô tìm kiếm.
+   * @param {Function} confirm - Hàm xác nhận filter.
+   * @param {string} dataIndex - Tên trường dữ liệu của cột.
+   */
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
   };
+
+  /**
+   * Hàm reset bộ lọc/tìm kiếm cho filterDropdown.
+   * @param {Function} clearFilters - Hàm xóa filter.
+   */
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
+
+  /**
+   * Đưa trang về trạng thái ban đầu: xóa filter, sắp xếp, phân trang, reload danh sách user.
+   * Lưu ý: setUsers phải lấy đúng dữ liệu đã phân trang/filter/sort nếu muốn đồng bộ với Table.
+   * Tuy nhiên, ở đây setUsers luôn là toàn bộ danh sách từ API (không bị filter ngoài bảng).
+   */
+  const handleResetAll = async () => {
+    setSearchText("");
+    setSearchedColumn("");
+    setFilteredInfo({});
+    setSortedInfo({});
+    setPagination({ current: 1, pageSize: 5 });
+    setSelectedRowKeys([]);
+    setLoading((prev) => !prev); // Trigger reload
+    setUsers([]);
+  };
+
+  // Định nghĩa các cột cho bảng người dùng
+  const columns = [
+    {
+      title: "#",
+      key: "index",
+      align: "center",
+      // Tìm kiếm số thứ tự: so sánh với index thực tế trên trang hiện tại
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+        close,
+      }) => (
+        <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+          <Input
+            ref={searchInput}
+            placeholder="Tìm số thứ tự"
+            value={selectedKeys[0]}
+            onChange={(e) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => {
+              confirm();
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn("index");
+            }}
+            style={{ marginBottom: 8, display: "block" }}
+            type="number"
+            min={1}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                confirm();
+                setSearchText(selectedKeys[0]);
+                setSearchedColumn("index");
+              }}
+              icon={<SearchOutlined />}
+              size="small"
+            >
+              Tìm
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                setSearchText("");
+              }}
+              size="small"
+            >
+              Xóa
+            </Button>
+            <Button type="link" size="small" onClick={close}>
+              Đóng
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+      ),
+      onFilter: (value, record, index) => {
+        // index là thứ tự dòng trên trang hiện tại
+        const rowIndex =
+          (pagination.current - 1) * pagination.pageSize + index + 1;
+        return rowIndex === Number(value);
+      },
+      render: (_, __, index) =>
+        index + 1 + (pagination.current - 1) * pagination.pageSize,
+    },
+    {
+      title: "Tên",
+      dataIndex: "username",
+      key: "username",
+      align: "center",
+      ...getColumnSearchProps("username", true),
+    },
+    {
+      title: "Hình đại diện",
+      dataIndex: "avatar",
+      key: "avatar",
+      align: "center",
+      render: (avatar) => (
+        <div className="flex justify-center items-center">
+          <img
+            src={avatar || DefaultAVT}
+            alt="avatar"
+            className="rounded-full w-12 h-12 object-cover radius-full"
+          />
+        </div>
+      ),
+    },
+    {
+      title: "Vai trò",
+      dataIndex: "role",
+      key: "role",
+      align: "center",
+      filters: [
+        { text: "Admin", value: "admin" },
+        { text: "Người dùng", value: "user" },
+      ],
+      onFilter: (value, record) => record.role === value || (value === "user" && record.role === "user"),
+      sorter: (a, b) => a.role.localeCompare(b.role, "vi"),
+      render: (role) => {
+        const roleVN = role === "admin" ? "Admin" : "Người dùng";
+        return searchedColumn === "role" ? (
+          <Highlighter
+            highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+            searchWords={[searchText]}
+            autoEscape
+            textToHighlight={roleVN}
+          />
+        ) : (
+          roleVN
+        );
+      },
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      align: "center",
+      ...getColumnSearchProps("email", true),
+    },
+    {
+      title: "Đơn hàng",
+      dataIndex: "userID",
+      key: "orders",
+      align: "center",
+      // Cho phép tìm kiếm theo số lượng đơn hàng đã đặt
+      ...getColumnSearchProps("orders", true),
+      sorter: (a, b) =>
+        (orderCounts[a.userID] || 0) - (orderCounts[b.userID] || 0),
+      render: (userID) => orderCounts[userID] || "--|--",
+      // Ghi chú: Có thể nhập số vào ô tìm kiếm để lọc user theo số lượng đơn hàng đã đặt.
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "accountStatus",
+      key: "accountStatus",
+      align: "center",
+      filters: [
+        { text: "Hoạt động", value: "Active" },
+        { text: "Ngưng hoạt động", value: "Inactive" },
+        { text: "Đã khóa", value: "Suspended" },
+      ],
+      onFilter: (value, record) => record.accountStatus === value,
+      sorter: (a, b) =>
+        (a.accountStatus || "").localeCompare(b.accountStatus || "", "vi"),
+      render: (accountStatus) => {
+        let color = "green";
+        let statusVN = "Hoạt động";
+        if (accountStatus === "Inactive") {
+          color = "yellow";
+          statusVN = "Ngưng hoạt động";
+        }
+        if (accountStatus === "Suspended") {
+          color = "volcano";
+          statusVN = "Đã khóa";
+        }
+        return <Tag color={color}>{statusVN}</Tag>;
+      },
+    },
+    {
+      title: "Tác vụ",
+      key: "action",
+      align: "center",
+      render: (_, record) => {
+        // Không hiển thị nút tác vụ cho tài khoản admin
+        if (record.role === "admin") {
+          return null;
+        }
+        // Nếu tài khoản đã bị khóa, hiển thị nút mở khóa (EyeOutlined) màu xanh lá với tooltip tiếng Việt
+        if (record.accountStatus === "Suspended") {
+          return (
+            <Space size="middle">
+              <Button
+                size="medium"
+                type="primary"
+                icon={<EyeOutlined style={{ color: "#52c41a" }} />}
+                className="bg-[#E6FFFB] text-[#52c41a] font-bold border-[#52c41a]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  Modal.confirm({
+                    title: "Xác nhận mở khóa tài khoản",
+                    content:
+                      "Bạn có chắc chắn muốn mở khóa tài khoản này không?",
+                    okText: "Mở khóa",
+                    cancelText: "Hủy",
+                    onOk: async () => {
+                      await handleStatusUser(record.userID, "Active");
+                      message.success("Đã mở khóa tài khoản thành công!");
+                    },
+                  });
+                }}
+                title="Mở khóa tài khoản"
+              />
+            </Space>
+          );
+        }
+        // Nếu tài khoản đang hoạt động, hiển thị nút khóa (EyeInvisibleOutlined) với tooltip tiếng Việt
+        return (
+          <Space size="middle">
+            <Button
+              size="medium"
+              type="primary"
+              icon={<EyeInvisibleOutlined />}
+              className="bg-[#D63847] text-[#FFFDFF] font-bold hover:!bg-[#A02B35]"
+              onClick={(e) => {
+                e.stopPropagation();
+                Modal.confirm({
+                  title: "Xác nhận khóa tài khoản",
+                  content: "Bạn có chắc chắn muốn khóa tài khoản này không?",
+                  okText: "Khóa",
+                  cancelText: "Hủy",
+                  onOk: async () => {
+                    await handleStatusUser(record.userID, "Suspended");
+                    message.success("Đã khóa tài khoản thành công!");
+                  },
+                });
+              }}
+              title="Khóa tài khoản"
+            />
+          </Space>
+        );
+      },
+    },
+  ];
 
   return (
     <Layout className="overflow-hidden">
@@ -154,136 +459,37 @@ const ListUser = () => {
             </div>
           </Flex>
           <Flex gap="middle">
-            <Select
-              mode="multiple"
-              tagRender={userRender}
-              value={selectedOptions}
-              className="w-72"
-              options={options}
-              onChange={handlerFilter}
-            />
-            <Search
-              placeholder="Tìm kiếm"
-              onSearch={onSearch}
-              className="w-2/3"
-            />
             <Button
-              type="primary"
-              className="bg-[#EAF3FE] text-[#689CF8] font-bold"
-              icon={<PlusCircleOutlined />}
+              onClick={handleResetAll}
+              type="default"
+              className="font-bold"
             >
-              Thêm người dùng
-            </Button>
-            <Button
-              type="primary"
-              onClick={start}
-              disabled={!hasSelected}
-              loading={loading}
-              className="bg-[#82AE46] text-[#FFFFDF] font-bold"
-            >
-              Reload
+              Reset
             </Button>
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
           <Table
             size="small"
-            dataSource={users || []} // Ensure dataSource is always an array
+            dataSource={users || []}
             rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
             rowKey="_id"
-            pagination={pagination} // Pass pagination state to the Table
-            onChange={handleTableChange} // Handle page changes
+            pagination={pagination}
+            onChange={(pagination, filters, sorter) => {
+              setPagination({
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+              });
+              setFilteredInfo(filters || {});
+              setSortedInfo(sorter || {});
+            }}
+            filteredInfo={filteredInfo}
+            sortedInfo={sortedInfo}
             className="text-sm font-thin hover:cursor-pointer "
             onRow={(record) => ({
               onClick: () => showUserDetails(record),
             })}
-          >
-            <Column
-              title="#"
-              key="index"
-              align="center"
-              render={(_, __, index) =>
-                index + 1 + (pagination.current - 1) * pagination.pageSize
-              } // Adjust index based on current page
-            />
-            <Column
-              title="Tên"
-              dataIndex="username"
-              key="username"
-              align="center"
-            />
-            <Column
-              title="Hình đại diện"
-              dataIndex="avatar"
-              key="avatar"
-              align="center"
-              render={(avatar) => (
-                <div className="flex justify-center items-center">
-                  <img
-                    src={avatar || DefaultAVT}
-                    alt="avatar"
-                    className="rounded-full w-12 h-12 object-cover radius-full"
-                  />
-                </div>
-              )}
-            />
-            <Column
-              title="Vai trò"
-              dataIndex="role"
-              key="role"
-              align="center"
-            />
-            <Column
-              title="Email"
-              dataIndex="email"
-              key="email"
-              align="center"
-            />
-            <Column
-              title="Đơn hàng"
-              dataIndex="userID" // Ensure this matches the key used in `orderCounts`
-              key="orders"
-              align="center"
-              render={(userID) => {
-                console.log("Rendering Order Count for User ID: ", userID); // Debug log
-                return orderCounts[userID] || "--|--"; // Display order count or default value
-              }}
-            />
-            <Column
-              title="Trạng thái"
-              dataIndex="accountStatus"
-              key="accountStatus"
-              align="center"
-              render={(accountStatus) => {
-                let color = "green";
-                if (accountStatus === "Inactive") color = "yellow";
-                if (accountStatus === "Suspended") color = "volcano";
-
-                return <Tag color={color}>{accountStatus.toUpperCase()}</Tag>;
-              }}
-            />
-            <Column
-              title="Tác vụ"
-              key="action"
-              align="center"
-              render={() => (
-                <Space size="middle">
-                  <Button
-                    type="primary"
-                    variant="solid"
-                    icon={<EditFilled />}
-                    className="bg-[#27A743] text-[#FFFDFF] font-bold hover:!bg-[#1E7D32]"
-                  />
-                  <Button
-                    type="primary"
-                    variant="solid"
-                    icon={<DeleteFilled />}
-                    className="bg-[#D63847] text-[#FFFDFF] font-bold hover:!bg-[#A02B35]"
-                  />
-                </Space>
-              )}
-            />
-          </Table>
-
+            columns={columns}
+          />
           <UserDetailModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}

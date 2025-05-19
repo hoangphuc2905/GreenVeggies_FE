@@ -14,7 +14,7 @@ import {
   Spin,
 } from "antd";
 import Column from "antd/es/table/Column";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   DeleteFilled,
   EditFilled,
@@ -35,6 +35,9 @@ import {
   getCategories,
   updateProductStatus,
 } from "../../../services/ProductService";
+import Highlighter from "react-highlight-words";
+import { SearchOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 
 const { Search } = Input;
 
@@ -192,11 +195,29 @@ const Page = () => {
     onChange={handlerFilter}
   />;
 
-  const onSearch = (value) => {
-    setSearchQuery(value);
-    applyFilters(selectedOptions, value); // Gọi lại hàm lọc sản phẩm sau khi tìm kiếm
+  // Hàm chuyển đổi đơn vị sang tiếng Việt (chỉ các đơn vị cho phép)
+  const getUnitVN = (unit) => {
+    switch (unit) {
+      case "kg":
+        return "Kg";
+      case "gram":
+        return "Gam";
+      case "liter":
+        return "Lít";
+      case "ml":
+        return "Ml";
+      case "piece":
+        return "Cái";
+      default:
+        return unit || "";
+    }
   };
 
+  /**
+   * Hàm lọc sản phẩm theo danh mục và từ khóa tìm kiếm.
+   * Nếu chọn "Tất cả" thì hiển thị toàn bộ sản phẩm.
+   * Có thể lọc thêm theo các trường khác nếu cần.
+   */
   const applyFilters = (categories, query) => {
     let filteredProducts = products;
 
@@ -244,6 +265,10 @@ const Page = () => {
   const navigate = useNavigate();
   const handlerClickUpdate = useHandlerClickUpdate();
 
+  /**
+   * Hàm xử lý khi click vào một sản phẩm trong bảng.
+   * Điều hướng sang trang chi tiết sản phẩm.
+   */
   const handlerClickProduct = (product) => {
     navigate(`/admin/products/${product._id}`, {
       state: { productID: product.productID },
@@ -254,6 +279,10 @@ const Page = () => {
     navigate(`/admin/add-product`);
   };
 
+  /**
+   * Hàm xử lý khi nhấn nút "Ngừng bán" sản phẩm.
+   * Hiển thị xác nhận, cập nhật trạng thái sản phẩm nếu đồng ý.
+   */
   const handlerStopSell = async (value) => {
     try {
       if (value.status === "unavailable") {
@@ -303,6 +332,10 @@ const Page = () => {
     }
   };
 
+  /**
+   * Hàm tính điểm đánh giá trung bình của sản phẩm.
+   * Nếu không có đánh giá thì trả về 0.
+   */
   const calculateAverageRating = (reviews) => {
     if (!reviews || reviews.length === 0) return 0;
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
@@ -325,6 +358,349 @@ const Page = () => {
     }
   }, [warningMessage, successMessage]);
 
+  // --- SEARCH/FILTER/SORT LOGIC ---
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const [sortedInfo, setSortedInfo] = useState({});
+  const searchInput = useRef(null);
+
+  /**
+   * Hàm xử lý tìm kiếm theo từng cột trong bảng.
+   * Khi nhấn Enter hoặc nút Tìm, sẽ lọc dữ liệu theo giá trị nhập vào.
+   */
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
+  /**
+   * Hàm reset bộ lọc/tìm kiếm cho filterDropdown của từng cột.
+   */
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText("");
+  };
+
+  /**
+   * Hàm xử lý khi nhấn nút Reset: Đưa bảng về trạng thái ban đầu,
+   * xóa filter, sort, phân trang, và bỏ chọn các dòng.
+   */
+  const handleResetAll = () => {
+    setSearchText("");
+    setSearchedColumn("");
+    setFilteredInfo({});
+    setSortedInfo({});
+    setCurrentPage(1);
+    setPageSize(10);
+    setSelectedRowKeys([]);
+    setSelectedOptions(["Tất cả"]);
+    setFilteredProducts(products);
+    setSearchQuery("");
+  };
+
+  // Cấu hình filter/search cho từng cột
+  const getColumnSearchProps = (dataIndex, sortable = false) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+      close,
+    }) => (
+      <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Tìm kiếm ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{ marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+          >
+            Tìm
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+          >
+            Xóa
+          </Button>
+          <Button type="link" size="small" onClick={close}>
+            Đóng
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+    ),
+    onFilter: (value, record) => {
+      if (dataIndex === "price") {
+        // So sánh giá đã chia cho 1.5 khi tìm kiếm (theo yêu cầu)
+        const price = Number(record.price) * 1.5;
+        return price.toString().toLowerCase().includes(value.toLowerCase());
+      }
+      if (dataIndex === "reviews") {
+        // Tìm kiếm theo điểm đánh giá trung bình
+        const avg = calculateAverageRating(record.reviews);
+        return avg.toString().toLowerCase().includes(value.toLowerCase());
+      }
+      return record[dataIndex]
+        ?.toString()
+        .toLowerCase()
+        .includes(value.toLowerCase());
+    },
+    sorter: sortable
+      ? (a, b) =>
+          a[dataIndex]?.toString().localeCompare(b[dataIndex]?.toString(), "vi")
+      : undefined,
+    sortDirections: ["ascend", "descend"],
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ""}
+        />
+      ) : (
+        text
+      ),
+  });
+
+  // Cấu hình các cột cho bảng sản phẩm
+  const productColumns = [
+    {
+      title: "STT",
+      key: "index",
+      align: "center",
+      width: 60,
+      render: (text, record, index) => (currentPage - 1) * pageSize + index + 1,
+      fixed: "left",
+    },
+    columnsVisibility.productID && {
+      title: "Mã sản phẩm",
+      dataIndex: "productID",
+      key: "productID",
+      align: "center",
+      width: 120,
+      ...getColumnSearchProps("productID", true),
+      sorter: (a, b) => a.productID.localeCompare(b.productID),
+      render: (productID) => (
+        <Tooltip placement="topLeft" title={productID}>
+          {productID}
+        </Tooltip>
+      ),
+    },
+    columnsVisibility.name && {
+      title: "Tên sản phẩm",
+      dataIndex: "name",
+      key: "name",
+      align: "center",
+      width: 180,
+      ...getColumnSearchProps("name", true),
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      render: (name) => (
+        <Tooltip placement="topLeft" title={name}>
+          {name}
+        </Tooltip>
+      ),
+      fixed: "left",
+    },
+    columnsVisibility.imageUrl && {
+      title: "Hình ảnh",
+      dataIndex: "imageUrl",
+      key: "imageUrl",
+      align: "center",
+      width: 80,
+      render: (imageUrl) => {
+        const firstImage = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
+        return (
+          <div className="flex justify-center items-center">
+            {firstImage ? (
+              <Image
+                width={50}
+                height={50}
+                src={firstImage}
+                alt="product"
+                className="object-cover"
+                style={{ borderRadius: "50%" }}
+              />
+            ) : (
+              <span>Không có ảnh</span>
+            )}
+          </div>
+        );
+      },
+    },
+    columnsVisibility.category && {
+      title: "Danh mục",
+      dataIndex: "category",
+      key: "category",
+      align: "center",
+      width: 120,
+      filters: categories
+        .filter((cat) => cat.value !== "Tất cả")
+        .map((cat) => ({
+          text: cat.label,
+          value: cat.value,
+        })),
+      onFilter: (value, record) => record.category?._id === value,
+      sorter: (a, b) =>
+        (a.category?.name || "").localeCompare(b.category?.name || ""),
+      render: (category) => category?.name || "--|--",
+    },
+    columnsVisibility.price && {
+      title: "Giá (VNĐ)",
+      dataIndex: "price",
+      key: "price",
+      align: "center",
+      width: 120,
+      ...getColumnSearchProps("price", true),
+      sorter: (a, b) => a.price - b.price,
+      render: (text, record) =>
+        `${formattedPrice(CalcPrice(record.price))} / ${getUnitVN(
+          record.unit
+        )}`,
+    },
+    columnsVisibility.origin && {
+      title: "Xuất xứ",
+      dataIndex: "origin",
+      key: "origin",
+      align: "center",
+      width: 100,
+      ...getColumnSearchProps("origin", true),
+      render: (origin) => origin || "--|--",
+    },
+    columnsVisibility.quantity && {
+      title: "SL còn lại",
+      dataIndex: "quantity",
+      key: "quantity",
+      align: "center",
+      width: 100,
+      ...getColumnSearchProps("quantity", true),
+      sorter: (a, b) => a.quantity - b.quantity,
+      render: (text, record) =>
+        `${text.toLocaleString()} ${getUnitVN(record.unit)}`,
+    },
+    columnsVisibility.sold && {
+      title: "Đã bán",
+      dataIndex: "sold",
+      key: "sold",
+      align: "center",
+      width: 100,
+      ...getColumnSearchProps("sold", true),
+      sorter: (a, b) => a.sold - b.sold,
+      render: (text, record) =>
+        `${text.toLocaleString()} ${getUnitVN(record.unit)}`,
+    },
+    columnsVisibility.reviews && {
+      title: "Đánh giá",
+      dataIndex: "reviews",
+      key: "reviews",
+      align: "center",
+      width: 90,
+      // Cho phép tìm kiếm theo điểm đánh giá trung bình
+      ...getColumnSearchProps("reviews", true),
+      sorter: (a, b) =>
+        calculateAverageRating(a.reviews) - calculateAverageRating(b.reviews),
+      render: (reviews) => <div>{calculateAverageRating(reviews)}</div>,
+    },
+    columnsVisibility.status && {
+      title: "Tình trạng",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      width: 110,
+      filters: productStatuses.map((status) => ({
+        text: status.label,
+        value: status.value,
+      })),
+      onFilter: (value, record) => record.status === value,
+      render: (status) => (
+        <Tag color={statusMapping[status]?.color}>
+          {statusMapping[status]?.text}
+        </Tag>
+      ),
+    },
+    columnsVisibility.action && {
+      title: "Tác vụ",
+      key: "action",
+      align: "center",
+      width: 120,
+      fixed: "right",
+      render: (text, record) => (
+        <Space size="small">
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: {
+                  defaultHoverBg: "bg-opacity",
+                  defaultHoverColor: "white",
+                  defaultHoverBorderColor: "none",
+                  onlyIconSize: "8px",
+                },
+              },
+            }}
+          >
+            <Button
+              size="small"
+              type="default"
+              icon={<EditFilled />}
+              className="bg-[#27A743] text-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlerClickUpdate(record);
+              }}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = "#15803d")}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = "#15803d")}
+            />
+            <Button
+              size="small"
+              type="default"
+              icon={<TagFilled />}
+              className="bg-[#138cff] text-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                openInsertStockEntry(record);
+              }}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = "#107bff")}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = "#138cff")}
+            />
+            <Button
+              size="small"
+              type="default"
+              icon={<DeleteFilled />}
+              className="bg-red-500 text-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlerStopSell(record);
+              }}
+              onMouseEnter={(e) => (e.target.style.backgroundColor = "#991b1b")}
+              onMouseLeave={(e) => (e.target.style.backgroundColor = "#dc2626")}
+            />
+          </ConfigProvider>
+        </Space>
+      ),
+    },
+  ].filter(Boolean);
+
+  // Row selection giống ListOrder
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: setSelectedRowKeys,
+  };
+
   return (
     <Layout className="over">
       <div className="bg-[#ffff] h-fit px-6 overflow-hidden rounded-[20px] shadow-md">
@@ -333,21 +709,6 @@ const Page = () => {
             Danh sách sản phẩm
           </div>
           <Flex gap="middle">
-            <Select
-              mode="multiple"
-              tagRender={UserRender}
-              value={selectedOptions}
-              className="w-72"
-              options={categories}
-              onChange={handlerFilter}
-            />
-            <Search
-              placeholder="Tìm kiếm sản phẩm"
-              onSearch={onSearch}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-2/3"
-            />
             <Button
               type="primary"
               className="bg-[#EAF3FE] text-[#689CF8] font-medium"
@@ -356,6 +717,9 @@ const Page = () => {
             >
               Thêm sản phẩm
             </Button>
+            <Button onClick={handleResetAll} type="default">
+              Reset
+            </Button>
             <FilterButton
               columnsVisibility={columnsVisibility}
               handleColumnVisibilityChange={handleColumnVisibilityChange}
@@ -363,280 +727,38 @@ const Page = () => {
               title="Ẩn"
               typeFilter="column"
             />
-            {/* <FilterButton
-              columnsVisibility={columnsVisibility}
-              handleColumnVisibilityChange={handleColumnVisibilityChange}
-              columnNames={columns}
-              filters={filters}
-              setFilters={setFilters}
-              title="Lọc"
-              typeFilter="filter"
-            /> */}
           </Flex>
           <Spin spinning={loading} tip="Đang tải dữ liệu...">
             <Table
               size="small"
-              scroll={{ x: "max-content" }}
+              scroll={{ x: productColumns.length * 120 }}
               dataSource={filteredProducts}
               rowKey="productID"
               className="text-sm font-thin hover:cursor-pointer"
+              columns={productColumns}
+              rowSelection={rowSelection}
               pagination={{
-                pageSize, // Số lượng sản phẩm trên mỗi trang
-                current: currentPage, // Trang hiện tại
+                pageSize,
+                current: currentPage,
                 onChange: (page, pageSize) => {
                   setCurrentPage(page);
                   setPageSize(pageSize);
                 },
+                showSizeChanger: true,
+                pageSizeOptions: ["5", "10", "20", "50"],
               }}
-              rowSelection={{
-                selectedRowKeys,
-                onChange: setSelectedRowKeys,
+              onChange={(pagination, filters, sorter) => {
+                setCurrentPage(pagination.current);
+                setPageSize(pagination.pageSize);
+                setFilteredInfo(filters || {});
+                setSortedInfo(sorter || {});
               }}
+              filteredInfo={filteredInfo}
+              sortedInfo={sortedInfo}
               onRow={(record) => ({
                 onClick: () => handlerClickProduct(record),
               })}
-              onChange={(pagination, filters, sorter) => {
-                const { order, columnKey } = sorter;
-                const sortedData = [...filteredProducts];
-
-                if (order === "ascend") {
-                  sortedData.sort((a, b) =>
-                    a[columnKey] > b[columnKey] ? 1 : -1
-                  );
-                } else if (order === "descend") {
-                  sortedData.sort((a, b) =>
-                    a[columnKey] < b[columnKey] ? 1 : -1
-                  );
-                }
-
-                setFilteredProducts(sortedData);
-              }}
-            >
-              <Column
-                title="#"
-                key="index"
-                align="center"
-                render={(_, __, index) =>
-                  (currentPage - 1) * pageSize + index + 1
-                }
-              />
-              {columnsVisibility.productID && (
-                <Column
-                  title="Mã sản phẩm"
-                  dataIndex="productID"
-                  key="productID"
-                  align="center"
-                  sorter={(a, b) => a.productID.localeCompare(b.productID)}
-                />
-              )}
-              {columnsVisibility.name && (
-                <Column
-                  title="Tên sản phẩm"
-                  dataIndex="name"
-                  ellipsis={true}
-                  key="name"
-                  align="center"
-                  fixed="left"
-                  sorter={(a, b) => a.name.localeCompare(b.name)}
-                />
-              )}
-              {columnsVisibility.imageUrl && (
-                <Column
-                  title="Hình ảnh"
-                  dataIndex="imageUrl"
-                  key="imageUrl"
-                  align="center"
-                  onClick={(e) => e.stopPropagation()}
-                  render={(imageUrl) => {
-                    const firstImage = Array.isArray(imageUrl)
-                      ? imageUrl[0]
-                      : imageUrl;
-                    return (
-                      <div className="flex justify-center items-center">
-                        {firstImage ? (
-                          <Image
-                            width={50}
-                            height={50}
-                            src={firstImage}
-                            alt="product"
-                            className="object-cover"
-                            style={{ borderRadius: "50%" }}
-                          />
-                        ) : (
-                          <span>Không có ảnh</span>
-                        )}
-                      </div>
-                    );
-                  }}
-                />
-              )}
-              {columnsVisibility.category && (
-                <Column
-                  title="Danh mục"
-                  dataIndex="category"
-                  key="category"
-                  align="center"
-                  render={(category) => category?.name || "--|--"}
-                  sorter={(a, b) =>
-                    a.category?.name.localeCompare(b.category?.name)
-                  }
-                />
-              )}
-              {columnsVisibility.price && (
-                <Column
-                  title="Giá (VNĐ)"
-                  dataIndex="price"
-                  key="price"
-                  align="center"
-                  render={(text, record) =>
-                    `${formattedPrice(CalcPrice(record.price))} / ${
-                      record.unit
-                    }`
-                  }
-                  sorter={(a, b) => a.price - b.price}
-                />
-              )}
-              {columnsVisibility.origin && (
-                <Column
-                  title="Xuất xứ"
-                  dataIndex="origin"
-                  key="origin"
-                  align="center"
-                  render={(origin) => origin || "--|--"}
-                />
-              )}
-              {columnsVisibility.quantity && (
-                <Column
-                  title="SL còn lại"
-                  dataIndex="quantity"
-                  key="quantity"
-                  align="center"
-                  render={(text, record) =>
-                    `${text.toLocaleString()} ${record.unit}`
-                  }
-                  sorter={(a, b) => a.quantity - b.quantity}
-                />
-              )}
-              {columnsVisibility.sold && (
-                <Column
-                  title="Đã bán"
-                  dataIndex="sold"
-                  key="sold"
-                  align="center"
-                  render={(text, record) =>
-                    `${text.toLocaleString()} ${record.unit}`
-                  }
-                  sorter={(a, b) => a.sold - b.sold}
-                />
-              )}
-              {columnsVisibility.reviews && (
-                <Column
-                  title="Đánh giá"
-                  dataIndex="reviews"
-                  key="reviews"
-                  align="center"
-                  render={(reviews) => (
-                    <div>{calculateAverageRating(reviews)}</div>
-                  )}
-                  sorter={(a, b) =>
-                    calculateAverageRating(a.reviews) -
-                    calculateAverageRating(b.reviews)
-                  }
-                />
-              )}
-              {columnsVisibility.status && (
-                <Column
-                  title="Tình trạng"
-                  dataIndex="status"
-                  key="status"
-                  align="center"
-                  render={(status) => (
-                    <Tag color={statusMapping[status]?.color}>
-                      {statusMapping[status]?.text}
-                    </Tag>
-                  )}
-                  filters={productStatuses.map((status) => ({
-                    text: status.label,
-                    value: status.value,
-                  }))}
-                  onFilter={(value, record) => record.status === value}
-                />
-              )}
-
-              {columnsVisibility.action && (
-                <Column
-                  title="Tác vụ"
-                  key="action"
-                  align="center"
-                  fixed="right"
-                  render={(text, record) => (
-                    <Space size="small">
-                      <ConfigProvider
-                        theme={{
-                          components: {
-                            Button: {
-                              defaultHoverBg: "bg-opacity",
-                              defaultHoverColor: "white",
-                              defaultHoverBorderColor: "none",
-                              onlyIconSize: "8px",
-                            },
-                          },
-                        }}
-                      >
-                        <Button
-                          size="small"
-                          type="default"
-                          icon={<EditFilled />}
-                          className="bg-[#27A743] text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlerClickUpdate(record);
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.target.style.backgroundColor = "#15803d")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.target.style.backgroundColor = "#15803d")
-                          }
-                        />
-                        <Button
-                          size="small"
-                          type="default"
-                          icon={<TagFilled />}
-                          className="bg-[#138cff] text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openInsertStockEntry(record);
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.target.style.backgroundColor = "#107bff")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.target.style.backgroundColor = "#138cff")
-                          }
-                        />
-                        <Button
-                          size="small"
-                          type="default"
-                          icon={<DeleteFilled />}
-                          className="bg-red-500 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handlerStopSell(record);
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.target.style.backgroundColor = "#991b1b")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.target.style.backgroundColor = "#dc2626")
-                          }
-                        />
-                      </ConfigProvider>
-                    </Space>
-                  )}
-                />
-              )}
-            </Table>
+            />
           </Spin>
           <InsertStockEntry
             isOpen={isStockEntryOpen}
