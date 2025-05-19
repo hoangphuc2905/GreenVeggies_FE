@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
-import { Button, Divider, List, Modal, message } from "antd";
+import { Button, Divider, List, message } from "antd";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi"; // Import tiếng Việt
+import relativeTime from "dayjs/plugin/relativeTime";
+import { useEffect, useState } from "react";
 import {
   fetchNotifications,
   readNotify,
 } from "../../../services/NotifyService";
 import { getOrderById } from "../../../services/OrderService";
-import OrderDetail from "../order/listOrder/orderDetail/OrderDetail";
 import { getUserInfo } from "../../../services/UserService";
+import OrderDetail from "../order/listOrder/orderDetail/OrderDetail";
 
 dayjs.extend(relativeTime);
 dayjs.locale("vi"); // Đặt ngôn ngữ mặc định là tiếng Việt

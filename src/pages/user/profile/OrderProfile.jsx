@@ -1,12 +1,18 @@
-import { Input, Modal, Radio, Space } from "antd"; // Thêm Radio, Input và Space từ Ant Design
+import { Input, Modal, Radio, Space } from "antd";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";
 import {
+  getOrderById,
   getOrdersByUserId,
   updateStatus,
 } from "../../../services/OrderService";
-import { getProductById } from "../../../services/ProductService";
+import {
+  getProductById,
+  updateProductQuantity, // Add this import for updating product quantities
+} from "../../../services/ProductService";
+// Import the new function to fetch cancelled order notifications
+import { fetchCancelledOrderNotifications } from "../../../services/NotifyService";
 import ReviewModal from "./ReviewModal";
 
 const OrderProfile = () => {
@@ -52,44 +58,68 @@ const OrderProfile = () => {
         if (userID) {
           const response = await getOrdersByUserId(userID);
           if (response && response.orders) {
-            // Log full response for debugging
             console.log("Full orders response:", response);
 
-            // Check for cancelled orders and their structure
-            const cancelledOrder = response.orders.find(
-              (order) => order.status === "Cancelled"
+            // Process orders with async operations using Promise.all
+            const processedOrders = await Promise.all(
+              response.orders.map(async (order) => {
+                // First check for existing cancel reason in order
+                let cancelReason =
+                  order.cancelReason ||
+                  order.cancel_reason ||
+                  order.reasonForCancellation ||
+                  order.cancelDetails?.reason ||
+                  order.cancelInfo;
+
+                // If order is cancelled but no reason found, try to fetch from notifications
+                if (order.status === "Cancelled" && !cancelReason) {
+                  try {
+                    const notifications =
+                      await fetchCancelledOrderNotifications(order.orderID);
+                    console.log(
+                      `Notifications for cancelled order ${order.orderID}:`,
+                      notifications
+                    );
+
+                    if (notifications && notifications.length > 0) {
+                      // Find the cancellation notification
+                      const cancelNotification = notifications.find(
+                        (n) =>
+                          n.type === "order" &&
+                          n.title === "Thông báo hủy đơn hàng"
+                      );
+
+                      if (cancelNotification) {
+                        // Extract reason from the message using regex
+                        // Format: "Thông báo đơn hàng {orderID} đã bị hủy.\nLý do: {reason}"
+                        const reasonMatch =
+                          cancelNotification.message.match(
+                            /Lý do: (.*?)(?:$|\n)/s
+                          );
+                        if (reasonMatch && reasonMatch[1]) {
+                          cancelReason = reasonMatch[1].trim();
+                          console.log(
+                            `Extracted cancellation reason for order ${order.orderID}:`,
+                            cancelReason
+                          );
+                        }
+                      }
+                    }
+                  } catch (notifyError) {
+                    console.error(
+                      `Error fetching notifications for order ${order.orderID}:`,
+                      notifyError
+                    );
+                  }
+                }
+
+                // Return order with enhanced cancellation reason
+                return {
+                  ...order,
+                  cancelReason: cancelReason || null,
+                };
+              })
             );
-            if (cancelledOrder) {
-              console.log("Cancelled order structure:", cancelledOrder);
-              // Log all properties to find where the cancel reason is stored
-              console.log("All properties:", Object.keys(cancelledOrder));
-            }
-
-            // Process orders - check for various possible field names for cancel reason
-            const processedOrders = response.orders.map((order) => {
-              // Log thông tin chi tiết về đơn hàng đã hủy để debug
-              if (order.status === "Cancelled") {
-                console.log(`Cancelled order ${order.orderID}:`, order);
-                console.log(
-                  "Cancel reason from API:",
-                  order.cancelReason || order.cancel_reason
-                );
-              }
-
-              // Check all possible field names where cancelReason might be stored
-              const reason =
-                order.cancelReason ||
-                order.cancel_reason ||
-                order.reasonForCancellation ||
-                order.cancelDetails?.reason ||
-                order.cancelInfo; // Thêm các trường có thể chứa lý do hủy
-
-              return {
-                ...order,
-                // Store the reason in a consistent field name
-                cancelReason: reason || null,
-              };
-            });
 
             // Sort and set the processed orders
             const sortedOrders = processedOrders.sort(
@@ -203,7 +233,7 @@ const OrderProfile = () => {
   // Hàm xử lý xác nhận hủy đơn hàng
   // Cập nhật trong hàm confirmCancelOrder
   // Hàm xử lý xác nhận hủy đơn hàng
-  const confirmCancelOrder = () => {
+  const confirmCancelOrder = async () => {
     // Xác định lý do cuối cùng dựa trên lựa chọn
     const finalReason =
       cancelReason === "Khác"
@@ -217,14 +247,46 @@ const OrderProfile = () => {
 
     console.log("Sending cancel reason to API:", finalReason); // Log để kiểm tra
 
-    // Gửi đối tượng với status và cancelReason
-    handleUpdateStatus(cancelOrderID, {
-      status: "Cancelled",
-      cancelReason: finalReason,
-    });
+    try {
+      // Fetch the full order details to get product information
+      const fullOrderDetails = await getOrderById(cancelOrderID);
 
-    // Gửi thông báo hủy đơn hàng cho admin
-    sendCancelNotify(cancelOrderID, finalReason);
+      // Gửi đối tượng với status và cancelReason
+      await handleUpdateStatus(cancelOrderID, {
+        status: "Cancelled",
+        cancelReason: finalReason,
+      });
+
+      // Restore product quantities if order details exist
+      if (fullOrderDetails && fullOrderDetails.orderDetails) {
+        await Promise.all(
+          fullOrderDetails.orderDetails.map(async (item) => {
+            const product = await getProductById(item.productID);
+            const updatedQuantity = product.quantity + item.quantity;
+
+            await updateProductQuantity(item.productID, {
+              ...product,
+              quantity: updatedQuantity,
+              sold: product.sold - item.quantity,
+            });
+
+            console.log(
+              `Restored quantity for product ${item.productID}: +${item.quantity}`
+            );
+          })
+        );
+      }
+
+      // Gửi thông báo hủy đơn hàng cho admin.
+      await sendCancelNotify(cancelOrderID, finalReason);
+
+      setMessage(
+        "Đơn hàng đã được hủy !"
+      );
+    } catch (error) {
+      console.error("Error during order cancellation:", error);
+      setMessage("Lỗi khi hủy đơn hàng. Vui lòng thử lại sau.");
+    }
 
     setShowCancelModal(false);
   };
@@ -327,11 +389,7 @@ const OrderProfile = () => {
               {order.status === "Cancelled" && (
                 <p className="text-sm text-red-500">
                   Lý do hủy:{" "}
-                  {order.cancelReason
-                    ? order.cancelReason.startsWith("Khác:")
-                      ? order.cancelReason // Hiển thị nguyên chuỗi nếu đã có tiền tố
-                      : order.cancelReason
-                    : "Không có lý do"}
+                  {order.cancelReason ? order.cancelReason : "Không có lý do"}
                 </p>
               )}
 
