@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { changePassword } from "../../../services/AuthService"; // Import hàm changePassword
+import { changePassword } from "../../../services/AuthService";
 
 const ChangePassword = () => {
   const location = useLocation();
@@ -18,24 +18,44 @@ const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState(""); // Lưu lỗi từ BE
-  const [successMessage, setSuccessMessage] = useState(""); // Lưu thông báo thành công từ BE
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Regex pattern for strong password validation
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage(""); // Reset lỗi
-    setSuccessMessage(""); // Reset thông báo thành công
+    setErrorMessage("");
+    setSuccessMessage("");
 
-    // ✅ Kiểm tra độ dài mật khẩu mới
-    if (newPassword.length < 6) {
-      setErrorMessage("Mật khẩu mới phải có ít nhất 6 ký tự.");
+    // Check if old password is provided
+    if (!oldPassword.trim()) {
+      setErrorMessage("Vui lòng nhập mật khẩu cũ.");
       setIsLoading(false);
       return;
     }
 
-    // ✅ Kiểm tra mật khẩu xác nhận
+    // Check if new password meets requirements
+    if (!strongPasswordRegex.test(newPassword)) {
+      setErrorMessage(
+        "Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if new password is different from old password
+    if (newPassword === oldPassword) {
+      setErrorMessage("Mật khẩu mới không được trùng với mật khẩu cũ.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check password confirmation
     if (newPassword !== confirmNewPassword) {
       setErrorMessage("Mật khẩu mới và nhập lại không khớp.");
       setIsLoading(false);
@@ -43,22 +63,38 @@ const ChangePassword = () => {
     }
 
     try {
+      console.log("Sending password change request:", {
+        email,
+        oldPassword,
+        newPassword,
+      });
       const message = await changePassword(email, oldPassword, newPassword);
-      setSuccessMessage(message); // Hiển thị thông báo thành công
+      console.log("Password change response:", message);
+
+      setSuccessMessage(message || "Đổi mật khẩu thành công!");
       setOldPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
     } catch (error) {
-      if (error.email) {
-        setErrorMessage(error.email); // Hiển thị lỗi email từ backend
-      } else if (error.oldPassword) {
-        setErrorMessage(error.oldPassword); // Hiển thị lỗi mật khẩu cũ từ backend
-      } else if (error.newPassword) {
-        setErrorMessage(error.newPassword); // Hiển thị lỗi mật khẩu mới từ backend
-      } else if (error.server) {
-        setErrorMessage(error.server); // Hiển thị lỗi server từ backend
+      console.error("Password change error:", error);
+
+      // Improved error handling
+      if (typeof error === "object") {
+        if (error.email) {
+          setErrorMessage(error.email);
+        } else if (error.oldPassword) {
+          setErrorMessage(error.oldPassword);
+        } else if (error.newPassword) {
+          setErrorMessage(error.newPassword);
+        } else if (error.server) {
+          setErrorMessage(error.server);
+        } else if (error.message) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("Lỗi không xác định, vui lòng thử lại sau.");
+        }
       } else {
-        setErrorMessage("Lỗi kết nối, vui lòng thử lại."); // Hiển thị lỗi mặc định
+        setErrorMessage("Lỗi kết nối, vui lòng thử lại sau.");
       }
     } finally {
       setIsLoading(false);
@@ -69,7 +105,6 @@ const ChangePassword = () => {
     <div className="w-full max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-center mb-6">Đổi mật khẩu</h2>
 
-      {/* Form fields */}
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="block text-gray-700 mb-1 font-bold">Email:</label>
@@ -90,6 +125,7 @@ const ChangePassword = () => {
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400"
+            required
           />
         </div>
 
@@ -102,6 +138,7 @@ const ChangePassword = () => {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400"
+            required
           />
         </div>
 
@@ -114,6 +151,7 @@ const ChangePassword = () => {
             value={confirmNewPassword}
             onChange={(e) => setConfirmNewPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400"
+            required
           />
         </div>
 

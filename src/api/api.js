@@ -583,22 +583,22 @@ export const handleAuthApi = {
     }
   },
   changePassword: async (email, oldPassword, newPassword) => {
-    try {
-      const response = await api.post(
-        `/auth/change-password?email=${encodeURIComponent(
-          email
-        )}&oldPassword=${encodeURIComponent(
-          oldPassword
-        )}&newPassword=${encodeURIComponent(newPassword)}`,
-        {},
-        { headers }
-      );
-      return response.data; // Trả về dữ liệu từ API
-    } catch (error) {
-      console.error("Lỗi khi đổi mật khẩu:", error);
-      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
-    }
-  },
+  try {
+    const response = await api.post(
+      `/auth/change-password?email=${encodeURIComponent(
+        email
+      )}&oldPassword=${encodeURIComponent(
+        oldPassword
+      )}&newPassword=${encodeURIComponent(newPassword)}`,
+      {},
+      { headers: getAuthHeader() }
+    );
+    return response.data; // Trả về dữ liệu từ API
+  } catch (error) {
+    console.error("Lỗi khi đổi mật khẩu:", error);
+    throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+  }
+},
   getAddressesByUserId: async (userID) => {
     try {
       const response = await api.get(`/address`, {

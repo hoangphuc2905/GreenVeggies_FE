@@ -10,6 +10,10 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
   const [success, setSuccess] = useState(""); // Thông báo thành công từ BE
   const [formErrors, setFormErrors] = useState({}); // Lưu lỗi từ FE
 
+  // Regex pattern cho mật khẩu mạnh
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -19,12 +23,16 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
 
     // Kiểm tra các trường nhập
     const errors = {};
+
+    // Kiểm tra mật khẩu mới
     if (!newPassword) {
       errors.newPassword = "Vui lòng nhập mật khẩu mới.";
-    } else if (newPassword.length < 6) {
-      errors.newPassword = "Mật khẩu phải có ít nhất 6 ký tự.";
+    } else if (!strongPasswordRegex.test(newPassword)) {
+      errors.newPassword =
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt .";
     }
 
+    // Kiểm tra xác nhận mật khẩu
     if (!confirmPassword) {
       errors.confirmPassword = "Vui lòng xác nhận mật khẩu mới.";
     } else if (newPassword !== confirmPassword) {
@@ -52,8 +60,14 @@ const ResetPasswordForm = ({ goBack, closeResetPasswordForm, emailqmk }) => {
         setError(err.email); // Hiển thị lỗi email từ backend
       } else if (err.newPassword) {
         setError(err.newPassword); // Hiển thị lỗi mật khẩu từ backend
+      } else if (err.oldPassword) {
+        // Xử lý trường hợp mật khẩu mới giống mật khẩu cũ
+        setError("Mật khẩu mới không được giống mật khẩu cũ của bạn.");
       } else if (err.server) {
         setError(err.server); // Hiển thị lỗi server từ backend
+      } else if (err.message && err.message.includes("same as old")) {
+        // Xử lý trường hợp phản hồi lỗi có message chứa thông tin về mật khẩu trùng
+        setError("Mật khẩu mới không được giống mật khẩu cũ của bạn.");
       } else {
         setError("Lỗi kết nối, vui lòng thử lại."); // Hiển thị lỗi mặc định
       }

@@ -18,6 +18,10 @@ const SignupForm = ({ switchToLogin, email }) => {
   const [success, setSuccess] = useState("");
   const [formErrors, setFormErrors] = useState({}); // Lưu lỗi từ BE
 
+  // Regex pattern cho mật khẩu mạnh
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
+
   useEffect(() => {
     if (email) {
       setFormData((prevFormData) => ({ ...prevFormData, email }));
@@ -50,9 +54,12 @@ const SignupForm = ({ switchToLogin, email }) => {
       errors.dateOfBirth = "Tuổi phải từ 12 trở lên.";
     }
 
-    // Kiểm tra mật khẩu
-    if (!formData.password || formData.password.length < 6) {
-      errors.password = "Mật khẩu phải có ít nhất 6 ký tự.";
+    // Kiểm tra mật khẩu sử dụng regex
+    if (!formData.password) {
+      errors.password = "Vui lòng nhập mật khẩu.";
+    } else if (!strongPasswordRegex.test(formData.password)) {
+      errors.password =
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
     }
 
     return errors;
