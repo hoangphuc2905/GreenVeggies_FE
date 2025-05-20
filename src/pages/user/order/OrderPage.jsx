@@ -7,9 +7,14 @@ import {
   Radio,
   message,
   notification,
+  Select,
+  Spin,
 } from "antd";
 import { useState, useEffect } from "react";
-import { getUserInfo } from "../../../services/UserService";
+import {
+  getUserInfo,
+  getAddressesByUserId,
+} from "../../../services/UserService";
 import { deleteShoppingCartDetailById } from "../../../services/ShoppingCartService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";
@@ -51,23 +56,22 @@ const OrderPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [form] = Form.useForm();
   const location = useLocation();
+  const [addresses, setAddresses] = useState([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
   useEffect(() => {
     const userID = localStorage.getItem("userID");
     if (userID) {
+      // Fetch user info
       getUserInfo(userID)
         .then((userInfo) => {
           console.log("User Info:", userInfo);
-
-          const address = userInfo.address[0];
-          const fullAddress = `${address.street}, ${address.ward}, ${address.district}`;
 
           form.setFieldsValue({
             user: {
               firstName: userInfo.username,
               lastName: userInfo.username,
-              address: fullAddress,
-              city: address.city,
               phone: userInfo.phone,
               email: userInfo.email,
             },
@@ -92,6 +96,44 @@ const OrderPage = () => {
           console.error("Failed to fetch user info:", error);
           message.error("Không thể lấy thông tin người dùng");
         });
+
+      // Fetch user addresses
+      setLoadingAddresses(true);
+      getAddressesByUserId(userID)
+        .then((addressData) => {
+          console.log("User Addresses:", addressData);
+          setAddresses(addressData);
+
+          // Find default address
+          const defaultAddress = addressData.find(
+            (addr) => addr.default === true
+          );
+          if (defaultAddress) {
+            setSelectedAddress(defaultAddress._id);
+            form.setFieldsValue({
+              user: {
+                ...form.getFieldValue("user"),
+                addressId: defaultAddress._id,
+              },
+            });
+          } else if (addressData.length > 0) {
+            // If no default, select the first address
+            setSelectedAddress(addressData[0]._id);
+            form.setFieldsValue({
+              user: {
+                ...form.getFieldValue("user"),
+                addressId: addressData[0]._id,
+              },
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch user addresses:", error);
+          message.error("Không thể lấy danh sách địa chỉ");
+        })
+        .finally(() => {
+          setLoadingAddresses(false);
+        });
     } else {
       message.error("User ID không tồn tại. Vui lòng đăng nhập lại.");
     }
@@ -99,6 +141,26 @@ const OrderPage = () => {
 
   const onChange = (e) => {
     setValue(e.target.value);
+  };
+
+  const handleAddressChange = (addressId) => {
+    setSelectedAddress(addressId);
+  };
+
+  // Format the address for display
+  const formatAddress = (address) => {
+    return `${address.street}, ${address.ward}, ${address.district}, ${
+      address.city
+    }${address.default ? " (Mặc định)" : ""}`;
+  };
+
+  // Get the full address string for the selected address
+  const getSelectedAddressString = () => {
+    const selected = addresses.find((addr) => addr._id === selectedAddress);
+    if (selected) {
+      return `${selected.street}, ${selected.ward}, ${selected.district}, ${selected.city}`;
+    }
+    return "";
   };
 
   const handlePlaceOrder = async (
@@ -406,29 +468,36 @@ const OrderPage = () => {
               </Form.Item>
             </div>
             <Form.Item
-              name={["user", "address"]}
-              label="Địa chỉ"
+              name={["user", "addressId"]}
+              label="Địa chỉ giao hàng"
               rules={[
                 {
                   required: true,
-                  message: "Vui lòng nhập địa chỉ đầy đủ!",
+                  message: "Vui lòng chọn địa chỉ giao hàng!",
                 },
               ]}
               labelCol={{ span: 24 }}
               wrapperCol={{ span: 24 }}>
-              <Input placeholder="Nhập địa chỉ (Đường, Phường/Xã, Quận/Huyện)" />
-            </Form.Item>
-            <Form.Item
-              name={["user", "city"]}
-              label="Tỉnh/ Thành phố"
-              rules={[
-                {
-                  required: true,
-                },
-              ]}
-              labelCol={{ span: 24 }}
-              wrapperCol={{ span: 24 }}>
-              <Input />
+              <Spin spinning={loadingAddresses}>
+                {addresses.length > 0 ? (
+                  <Select
+                    value={selectedAddress}
+                    onChange={handleAddressChange}
+                    placeholder="Chọn địa chỉ giao hàng"
+                    className="w-full">
+                    {addresses.map((address) => (
+                      <Select.Option key={address._id} value={address._id}>
+                        {formatAddress(address)}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                ) : (
+                  <div className="text-red-500">
+                    Bạn chưa có địa chỉ nào. Vui lòng thêm địa chỉ trong trang
+                    cá nhân.
+                  </div>
+                )}
+              </Spin>
             </Form.Item>
             <Form.Item
               name={["user", "phone"]}
@@ -492,14 +561,14 @@ const OrderPage = () => {
             <p>Giỏ hàng của bạn đang trống.</p>
           )}
           <Divider style={{ borderColor: "#7cb305" }} />
-          <Form.Item
+          {/* <Form.Item
             name="discountCode"
             label="Mã giảm giá"
             labelCol={{ span: 24 }}
             wrapperCol={{ span: 24 }}
             className="mt-4">
             <Input placeholder="Nhập mã giảm giá" />
-          </Form.Item>
+          </Form.Item> */}
           <label className="block text-sm font-bold mb-2 uppercase">
             Phương thức thanh toán
           </label>
@@ -561,11 +630,20 @@ const OrderPage = () => {
                   0
                 );
                 const totalAmount = totalPrice;
-                const formValues = form.getFieldsValue();
-                const userAddress = `${formValues.user.address}, ${formValues.user.city}`;
+                const address = getSelectedAddressString();
 
                 if (!userID) {
                   alert("User ID không tồn tại. Vui lòng đăng nhập lại.");
+                  return;
+                }
+
+                if (!selectedAddress) {
+                  notification.error({
+                    message: "Địa chỉ giao hàng",
+                    description: "Vui lòng chọn địa chỉ giao hàng",
+                    placement: "topRight",
+                    duration: 3,
+                  });
                   return;
                 }
 
@@ -575,7 +653,7 @@ const OrderPage = () => {
                   totalQuantity,
                   totalAmount,
                   value === 1 ? "CASH" : "BANK",
-                  userAddress
+                  address
                 );
               }}>
               Đặt hàng

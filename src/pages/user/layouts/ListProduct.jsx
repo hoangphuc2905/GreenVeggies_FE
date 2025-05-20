@@ -151,12 +151,20 @@ const ListProduct = ({
   // Sắp xếp sản phẩm: còn hàng lên đầu theo thứ tự bảng chữ cái, hết hàng xuống cuối
   const sortProducts = (productsToSort) => {
     return [...productsToSort].sort((a, b) => {
-      // Nếu một sản phẩm hết hàng và sản phẩm khác còn hàng
-      if (a.status === "out_of_stock" && b.status !== "out_of_stock") {
+      // Sắp xếp ưu tiên: available > out_of_stock > unavailable
+      if (a.status === "available" && b.status !== "available") {
+        return -1; // a đứng trước b
+      }
+      if (a.status !== "available" && b.status === "available") {
         return 1; // a đứng sau b
       }
-      if (a.status !== "out_of_stock" && b.status === "out_of_stock") {
+
+      // Nếu cả hai không phải available, ưu tiên out_of_stock trước unavailable
+      if (a.status === "out_of_stock" && b.status === "unavailable") {
         return -1; // a đứng trước b
+      }
+      if (a.status === "unavailable" && b.status === "out_of_stock") {
+        return 1; // a đứng sau b
       }
 
       // Nếu cả hai cùng trạng thái, sắp xếp theo tên
@@ -346,19 +354,30 @@ const ListProduct = ({
                   backgroundColor: "#82AE46",
                   color: "white",
                   fontWeight: "bold",
-                  padding: "6px 12px",
+                  padding: "0 12px",
                   border: "2px solid #82AE46",
                   borderRadius: "4px",
+                  outline: "none",
+                  boxShadow: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "32px",
+                  minWidth: "32px",
                 }
               : {
                   backgroundColor: "white",
                   color: "#82AE46",
-                  padding: "6px 12px",
+                  padding: "0 12px",
                   border: "1px solid #82AE46",
                   borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "32px",
+                  minWidth: "32px",
                 }
-          }
-        >
+          }>
           {page}
         </span>
       );
@@ -371,8 +390,7 @@ const ListProduct = ({
       <Spin
         spinning={loading}
         tip="Đang tải sản phẩm..."
-        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]"
-      >
+        className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
         <List
           grid={{ gutter: 16, column: 4 }}
           className="px-2"
@@ -391,12 +409,11 @@ const ListProduct = ({
                 <Badge.Ribbon
                   text={`${product.discount}%`}
                   color="#82AE46"
-                  style={{ display: product.discount ? "block" : "none" }}
-                >
+                  style={{ display: product.discount ? "block" : "none" }}>
                   <Card
-                    hoverable={product.status !== "out_of_stock"}
+                    hoverable={product.status === "available"}
                     className={`h-[300px] relative transition-all duration-300 ${
-                      product.status === "out_of_stock"
+                      product.status !== "available"
                         ? "opacity-50 cursor-not-allowed"
                         : "hover:scale-105"
                     }`}
@@ -411,13 +428,12 @@ const ListProduct = ({
                           alt={product.name}
                           className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-50"
                         />
-                        {product.status !== "out_of_stock" && (
+                        {product.status === "available" && (
                           <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
                             <Link
                               to={`/product/${product._id}`}
                               state={{ productID: product.productID }}
-                              className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                            >
+                              className="flex flex-col items-center text-black hover:text-[#82AE46] transition-transform transform hover:scale-125">
                               <EyeOutlined className="text-2xl" />
                               <Typography.Text className="text-xs mt-2 text-center">
                                 Xem chi tiết
@@ -433,8 +449,7 @@ const ListProduct = ({
                                 product.quantity === 0
                                   ? "text-gray-300 cursor-not-allowed"
                                   : "text-black hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                              }`}
-                            >
+                              }`}>
                               <ShoppingCartOutlined className="text-2xl" />
                               <Typography.Text className="text-xs mt-2">
                                 Thêm vào giỏ hàng
@@ -443,19 +458,22 @@ const ListProduct = ({
                           </div>
                         )}
                       </div>
-                    }
-                  >
+                    }>
                     <Card.Meta
                       title={
                         <Typography.Text
                           ellipsis
                           className="font-bold text-center block"
-                          style={{ textAlign: "center", width: "100%" }}
-                        >
+                          style={{ textAlign: "center", width: "100%" }}>
                           {product.name}
                           {product.status === "out_of_stock" && (
                             <div className="text-red-500 text-sm mt-1">
                               Hết hàng
+                            </div>
+                          )}
+                          {product.status === "unavailable" && (
+                            <div className="text-red-500 text-sm mt-1">
+                              Ngừng kinh doanh
                             </div>
                           )}
                         </Typography.Text>
@@ -491,7 +509,7 @@ const ListProduct = ({
           total={searchQuery ? sortedBySearch.length : sortedByPrice.length}
           onChange={handlePageChange}
           itemRender={itemRender}
-          className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
+          className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-item-active]:!border-[#82AE46] [&_.ant-pagination-item-active]:!outline-none [&_.ant-pagination-item-active]:!shadow-none [&_.ant-pagination-item]:!outline-none [&_.ant-pagination-item]:!shadow-none [&_.ant-pagination-item]:focus:!outline-none [&_.ant-pagination-item]:focus:!shadow-none [&_.ant-pagination-item]:focus:!border-[#82AE46]"
         />
       </div>
 
