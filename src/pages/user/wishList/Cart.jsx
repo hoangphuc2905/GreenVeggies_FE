@@ -24,6 +24,7 @@ import {
 // Kiểm soát thông báo toàn cục
 const notificationShown = {
   outOfStock: false,
+  unavailable: false,
 };
 
 const Cart = () => {
@@ -38,6 +39,7 @@ const Cart = () => {
   useEffect(() => {
     return () => {
       notificationShown.outOfStock = false;
+      notificationShown.unavailable = false;
       isNotificationShownRef.current = false;
     };
   }, []);
@@ -55,20 +57,25 @@ const Cart = () => {
             fetchedWishlist &&
             Array.isArray(fetchedWishlist.shoppingCartDetails)
           ) {
-            // Tạo mảng để lưu tên các sản phẩm hết hàng
+            // Tạo mảng để lưu tên các sản phẩm hết hàng và ngừng kinh doanh
             const outOfStockProducts = [];
+            const unavailableProducts = [];
 
             const detailedWishlist = await Promise.all(
               fetchedWishlist.shoppingCartDetails.map(async (item) => {
                 const productDetails = await getProductById(item.productID);
-                // Kiểm tra xem sản phẩm có hết hàng hay không
+                // Kiểm tra trạng thái sản phẩm
                 const isOutOfStock =
                   productDetails.status === "out_of_stock" ||
                   productDetails.quantity <= 0;
+                const isUnavailable = productDetails.status === "unavailable";
 
-                // Thêm tên sản phẩm vào danh sách các sản phẩm hết hàng
+                // Thêm tên sản phẩm vào danh sách tương ứng
                 if (isOutOfStock) {
                   outOfStockProducts.push(productDetails.name);
+                }
+                if (isUnavailable) {
+                  unavailableProducts.push(productDetails.name);
                 }
 
                 return {
@@ -78,13 +85,13 @@ const Cart = () => {
                   totalAmount:
                     (item.quantity || 1) *
                     (CalcPrice(productDetails.price) || 0), // Calculate totalAmount
-                  isOutOfStock: isOutOfStock, // Thêm thuộc tính isOutOfStock
+                  isOutOfStock: isOutOfStock || isUnavailable, // Cả hai loại đều không thể chọn
+                  isUnavailable: isUnavailable, // Thêm thuộc tính để phân biệt
                 };
               })
             );
 
-            // Hiển thị một thông báo duy nhất cho tất cả sản phẩm hết hàng
-            // CHỈ khi chưa hiển thị thông báo và có sản phẩm hết hàng
+            // Hiển thị thông báo cho sản phẩm hết hàng
             if (
               outOfStockProducts.length > 0 &&
               !notificationShown.outOfStock &&
@@ -115,6 +122,42 @@ const Cart = () => {
                   // Sau 5 giây, cho phép hiển thị thông báo lại nếu cần
                   setTimeout(() => {
                     notificationShown.outOfStock = false;
+                  }, 1000);
+                },
+              });
+            }
+
+            // Hiển thị thông báo cho sản phẩm ngừng kinh doanh
+            if (
+              unavailableProducts.length > 0 &&
+              !notificationShown.unavailable &&
+              !isNotificationShownRef.current
+            ) {
+              let description;
+              if (unavailableProducts.length === 1) {
+                description = `Sản phẩm "${unavailableProducts[0]}" đã ngừng kinh doanh. Bạn nên xóa sản phẩm này khỏi giỏ hàng.`;
+              } else {
+                description = `Các sản phẩm sau đã ngừng kinh doanh:\n${unavailableProducts
+                  .map((name) => `- ${name}`)
+                  .join(
+                    "\n"
+                  )}\n\nBạn nên xóa những sản phẩm này khỏi giỏ hàng.`;
+              }
+
+              // Đánh dấu đã hiển thị thông báo
+              notificationShown.unavailable = true;
+              isNotificationShownRef.current = true;
+
+              notification.warning({
+                message: "Sản phẩm ngừng kinh doanh",
+                description: description,
+                placement: "topRight",
+                duration: 5,
+                style: { whiteSpace: "pre-line" },
+                onClose: () => {
+                  // Sau 5 giây, cho phép hiển thị thông báo lại nếu cần
+                  setTimeout(() => {
+                    notificationShown.unavailable = false;
                   }, 1000);
                 },
               });
@@ -256,6 +299,18 @@ const Cart = () => {
         notification.error({
           message: "Lỗi",
           description: "Không thể lấy thông tin sản phẩm",
+          placement: "topRight",
+          duration: 3,
+        });
+        return;
+      }
+
+      // Kiểm tra nếu sản phẩm ngừng kinh doanh
+      if (productDetails.status === "unavailable") {
+        notification.error({
+          message: "Sản phẩm ngừng kinh doanh",
+          description:
+            "Sản phẩm này đã ngừng kinh doanh, vui lòng xóa khỏi giỏ hàng",
           placement: "topRight",
           duration: 3,
         });
@@ -539,11 +594,15 @@ const Cart = () => {
                       <p className="max-w-[300px] break-words">
                         {item.name || "No name available"}
                       </p>
-                      {item.isOutOfStock && (
+                      {item.isUnavailable ? (
+                        <p className="text-red-500 text-sm">
+                          Sản phẩm đã ngừng kinh doanh
+                        </p>
+                      ) : item.isOutOfStock ? (
                         <p className="text-red-500 text-sm">
                           Sản phẩm đã hết hàng
                         </p>
-                      )}
+                      ) : null}
                     </div>
                   </div>
 
