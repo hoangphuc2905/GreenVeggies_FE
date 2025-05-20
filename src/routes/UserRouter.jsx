@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import Home from "../pages/user/Home";
 import Product from "../pages/user/product/Page";
 import Detail from "../pages/user/product/Detail";
-import Wishlist from "../pages/user/Wishlist/Cart/";
+import Wishlist from "../pages/user/Wishlist/Cart";
 import ProfilePage from "../pages/user/Profile/ProfilePage";
 import Profile from "../pages/user/Profile/Profile";
 import Address from "../pages/user/Profile/AddressForm";
