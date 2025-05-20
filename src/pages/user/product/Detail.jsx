@@ -543,16 +543,28 @@ const Detail = () => {
                   backgroundColor: "#82AE46",
                   color: "white",
                   fontWeight: "bold",
-                  padding: "6px 12px",
+                  padding: "0 12px",
                   border: "2px solid #82AE46",
                   borderRadius: "4px",
+                  outline: "none",
+                  boxShadow: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "32px",
+                  minWidth: "32px",
                 }
               : {
                   backgroundColor: "white",
                   color: "#82AE46",
-                  padding: "6px 12px",
+                  padding: "0 12px",
                   border: "1px solid #82AE46",
                   borderRadius: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "32px",
+                  minWidth: "32px",
                 }
           }>
           {page}
@@ -1000,7 +1012,7 @@ const Detail = () => {
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
                   itemRender={itemRender}
-                  className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white"
+                  className="[&_.ant-pagination-prev_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-next_.ant-pagination-item-link]:!text-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-prev:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!bg-[#82AE46] [&_.ant-pagination-next:hover_.ant-pagination-item-link]:!text-white [&_.ant-pagination-item-active]:!border-[#82AE46] [&_.ant-pagination-item-active]:!outline-none [&_.ant-pagination-item-active]:!shadow-none [&_.ant-pagination-item]:!outline-none [&_.ant-pagination-item]:!shadow-none [&_.ant-pagination-item]:focus:!outline-none [&_.ant-pagination-item]:focus:!shadow-none [&_.ant-pagination-item]:focus:!border-[#82AE46]"
                 />
               </div>
             </Spin>
