@@ -4,7 +4,7 @@ import Home from "../pages/user/Home";
 import Product from "../pages/user/product/Page";
 import Detail from "../pages/user/product/Detail";
 import Wishlist from "../pages/user/wishList/Cart";
-import ProfilePage from "../pages/user/Profile/ProfilePage";
+import ProfilePage from "../pages/user/profile/ProfilePage";
 import Profile from "../pages/user/profile/Profile";
 import Address from "../pages/user/profile/AddressForm";
 import Contact from "../pages/user/contact/Contact";
