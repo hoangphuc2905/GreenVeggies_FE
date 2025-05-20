@@ -72,3 +72,29 @@ export const updateUserStatus = async (userID, status) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+
+// Cập nhật địa chỉ
+export const updateAddress = async (addressID, userID, addressData) => {
+  try {
+    const response = await handleAuthApi.updateAddress(
+      addressID,
+      userID,
+      addressData
+    );
+    return response; // Trả về kết quả từ API
+  } catch (error) {
+    console.error("Lỗi khi gọi API updateAddress:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};
+
+// Xóa địa chỉ
+export const deleteAddress = async (addressID, userID) => {
+  try {
+    const response = await handleAuthApi.deleteAddress(addressID, userID);
+    return response; // Trả về kết quả từ API
+  } catch (error) {
+    console.error("Lỗi khi gọi API deleteAddress:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};

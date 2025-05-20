@@ -201,17 +201,6 @@ export const handleUserApi = {
       headers: getAuthHeader(),
     });
   },
-
-  //Cập nhật trạng thái người dùng
-  updateUserStatus: async (userID, status) => {
-    return await api.patch(
-      `/user/${userID}/account-status`,
-      { status },
-      {
-        headers: getAuthHeader(),
-      }
-    );
-  },
 };
 
 //THÔNG BÁO
@@ -594,22 +583,22 @@ export const handleAuthApi = {
     }
   },
   changePassword: async (email, oldPassword, newPassword) => {
-  try {
-    const response = await api.post(
-      `/auth/change-password?email=${encodeURIComponent(
-        email
-      )}&oldPassword=${encodeURIComponent(
-        oldPassword
-      )}&newPassword=${encodeURIComponent(newPassword)}`,
-      {},
-      { headers: getAuthHeader() }
-    );
-    return response.data; // Trả về dữ liệu từ API
-  } catch (error) {
-    console.error("Lỗi khi đổi mật khẩu:", error);
-    throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
-  }
-},
+    try {
+      const response = await api.post(
+        `/auth/change-password?email=${encodeURIComponent(
+          email
+        )}&oldPassword=${encodeURIComponent(
+          oldPassword
+        )}&newPassword=${encodeURIComponent(newPassword)}`,
+        {},
+        { headers: getAuthHeader() }
+      );
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi đổi mật khẩu:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
   getAddressesByUserId: async (userID) => {
     try {
       const response = await api.get(`/address`, {
@@ -640,6 +629,35 @@ export const handleAuthApi = {
       return response.data; // Trả về dữ liệu từ API
     } catch (error) {
       console.error("Lỗi khi đăng ký tài khoản:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+  // Cập nhật địa chỉ
+  updateAddress: async (addressID, userID, addressData) => {
+    try {
+      const response = await api.put(
+        `/address/${addressID}/${userID}`,
+        addressData,
+        {
+          headers: getAuthHeader(),
+        }
+      );
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi cập nhật địa chỉ:", error);
+      throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
+    }
+  },
+
+  // Xóa địa chỉ
+  deleteAddress: async (addressID, userID) => {
+    try {
+      const response = await api.delete(`/address/${addressID}/${userID}`, {
+        headers: getAuthHeader(),
+      });
+      return response.data; // Trả về dữ liệu từ API
+    } catch (error) {
+      console.error("Lỗi khi xóa địa chỉ:", error);
       throw error.response?.data || { message: "Lỗi kết nối đến máy chủ!" };
     }
   },

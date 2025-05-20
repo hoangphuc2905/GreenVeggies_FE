@@ -1,7 +1,10 @@
+import { Modal } from "antd";
 import { useEffect, useState } from "react";
 import {
   addNewAddress,
+  deleteAddress,
   getAddressesByUserId,
+  updateAddress,
 } from "../../../services/UserService";
 
 const AddressForm = () => {
@@ -23,6 +26,9 @@ const AddressForm = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const addressesPerPage = 3;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
 
   useEffect(() => {
     if (userID) {
@@ -67,20 +73,168 @@ const AddressForm = () => {
     );
   };
 
+  // Add a validation function to check all required fields
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!address.city.trim()) {
+      newErrors.city = "Vui lòng nhập tên thành phố";
+      isValid = false;
+    }
+
+    if (!address.district.trim()) {
+      newErrors.district = "Vui lòng nhập tên quận/huyện";
+      isValid = false;
+    }
+
+    if (!address.ward.trim()) {
+      newErrors.ward = "Vui lòng nhập tên phường/xã";
+      isValid = false;
+    }
+
+    if (!address.street.trim()) {
+      newErrors.street = "Vui lòng nhập địa chỉ cụ thể";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // Update handleSubmit to validate form first
   const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (isEditing) {
+      handleUpdateAddress(e);
+    } else {
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      // Validate form before submission
+      if (!validateForm()) {
+        setErrorMessage(" Vui lòng nhập đầy đủ thông tin địa chỉ");
+        return;
+      }
+
+      if (isDuplicateAddress(address)) {
+        setErrorMessage(" Địa chỉ này đã tồn tại trong danh sách của bạn!");
+        return;
+      }
+
+      try {
+        const data = {
+          userID: userID,
+          city: address.city,
+          district: address.district,
+          ward: address.ward,
+          street: address.street,
+          isDefault: address.isDefault || false,
+        };
+
+        const response = await addNewAddress(data);
+
+        if (response) {
+          setSuccessMessage("✅ Địa chỉ đã được thêm thành công!");
+
+          const newAddress = {
+            ...address,
+            isDefault: address.isDefault || false,
+          };
+
+          setAddresses((prevAddresses) => {
+            if (address.isDefault) {
+              return [newAddress, ...prevAddresses];
+            }
+            return [...prevAddresses, newAddress];
+          });
+
+          setAddress({
+            city: "",
+            district: "",
+            ward: "",
+            street: "",
+            isDefault: false,
+          });
+
+          setShowForm(false);
+        } else {
+          setErrorMessage("❌ Lỗi khi thêm địa chỉ: " + response.message);
+        }
+      } catch (error) {
+        if (error.response?.status === 400 || error.response?.status === 404) {
+          setErrors(error.response.data.errors || {});
+        } else {
+          setErrorMessage("❌ Lỗi khi gửi yêu cầu API, vui lòng thử lại.");
+          console.error("Lỗi API:", error);
+        }
+      }
+    }
+  };
+
+  // Bắt đầu chỉnh sửa địa chỉ
+  const handleEdit = (addr) => {
+    setAddress({
+      city: addr.city,
+      district: addr.district,
+      ward: addr.ward,
+      street: addr.street,
+      isDefault: addr.isDefault || false,
+    });
+    setEditingAddressId(addr.id || addr._id);
+    setShowForm(true);
+    setIsEditing(true);
+    setSuccessMessage("");
+    setErrorMessage("");
+  };
+
+  // Hủy chỉnh sửa địa chỉ
+  const handleCancelEdit = () => {
+    setAddress({
+      city: "",
+      district: "",
+      ward: "",
+      street: "",
+      isDefault: false,
+    });
+    setShowForm(false);
+    setIsEditing(false);
+    setEditingAddressId(null);
+  };
+
+  // Add this new function to check for duplicates during update
+  const isDuplicateForUpdate = (updatedAddress, currentAddressId) => {
+    return addresses.some(
+      (addr) =>
+        addr.city === updatedAddress.city &&
+        addr.district === updatedAddress.district &&
+        addr.ward === updatedAddress.ward &&
+        addr.street === updatedAddress.street &&
+        (addr.id || addr._id) !== currentAddressId // Exclude the current address being edited
+    );
+  };
+
+  // Update handleUpdateAddress to check for duplicates
+  const handleUpdateAddress = async (e) => {
     e.preventDefault();
     setSuccessMessage("");
     setErrorMessage("");
-    setErrors({});
 
-    if (isDuplicateAddress(address)) {
-      setErrorMessage("❌ Địa chỉ này đã tồn tại trong danh sách của bạn!");
+    // Validate form before updating
+    if (!validateForm()) {
+      setErrorMessage(" Vui lòng nhập đầy đủ thông tin địa chỉ");
+      return;
+    }
+
+    // Check for duplicates, excluding the current address being edited
+    if (isDuplicateForUpdate(address, editingAddressId)) {
+      setErrorMessage(" Địa chỉ này đã tồn tại trong danh sách của bạn!");
       return;
     }
 
     try {
       const data = {
-        userID: userID,
         city: address.city,
         district: address.district,
         ward: address.ward,
@@ -88,23 +242,15 @@ const AddressForm = () => {
         isDefault: address.isDefault || false,
       };
 
-      const response = await addNewAddress(data);
+      const response = await updateAddress(editingAddressId, userID, data);
 
       if (response) {
-        setSuccessMessage("✅ Địa chỉ đã được thêm thành công!");
+        setSuccessMessage("✅ Địa chỉ đã được cập nhật thành công!");
 
-        const newAddress = {
-          ...address,
-          isDefault: address.isDefault || false,
-        };
+        // Cập nhật lại danh sách địa chỉ trong state
+        await fetchUserAddress();
 
-        setAddresses((prevAddresses) => {
-          if (address.isDefault) {
-            return [newAddress, ...prevAddresses];
-          }
-          return [...prevAddresses, newAddress];
-        });
-
+        // Reset form
         setAddress({
           city: "",
           district: "",
@@ -114,8 +260,10 @@ const AddressForm = () => {
         });
 
         setShowForm(false);
+        setIsEditing(false);
+        setEditingAddressId(null);
       } else {
-        setErrorMessage("❌ Lỗi khi thêm địa chỉ: " + response.message);
+        setErrorMessage("❌ Lỗi khi cập nhật địa chỉ!");
       }
     } catch (error) {
       if (error.response?.status === 400 || error.response?.status === 404) {
@@ -125,6 +273,33 @@ const AddressForm = () => {
         console.error("Lỗi API:", error);
       }
     }
+  };
+
+  // Xóa địa chỉ
+  const handleDeleteAddress = (addressID) => {
+    Modal.confirm({
+      title: "Xác nhận xóa",
+      content: "Bạn có chắc chắn muốn xóa địa chỉ này không?",
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          const response = await deleteAddress(addressID, userID);
+
+          if (response) {
+            setSuccessMessage("✅ Đã xóa địa chỉ thành công!");
+            // Cập nhật lại danh sách địa chỉ
+            await fetchUserAddress();
+          } else {
+            setErrorMessage("❌ Không thể xóa địa chỉ!");
+          }
+        } catch (error) {
+          setErrorMessage("❌ Lỗi khi xóa địa chỉ, vui lòng thử lại.");
+          console.error("Lỗi khi xóa địa chỉ:", error);
+        }
+      },
+    });
   };
 
   const indexOfLastAddress = currentPage * addressesPerPage;
@@ -182,6 +357,21 @@ const AddressForm = () => {
                   ✅ Mặc định
                 </span>
               )}
+
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => handleEdit(addr)}
+                  className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition"
+                >
+                  Chỉnh sửa
+                </button>
+                <button
+                  onClick={() => handleDeleteAddress(addr.id || addr._id)}
+                  className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
+                >
+                  Xóa
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -279,7 +469,16 @@ const AddressForm = () => {
             type="submit"
             className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition"
           >
-            Lưu địa chỉ
+            {isEditing ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}
+          </button>
+
+          {/* Add cancel button for both adding and editing */}
+          <button
+            type="button"
+            onClick={handleCancelEdit}
+            className="mt-2 w-full py-2 rounded-md text-gray-700 font-semibold bg-gray-200 hover:bg-gray-300 transition"
+          >
+            {isEditing ? "Hủy" : "Đóng"}
           </button>
         </form>
       )}
