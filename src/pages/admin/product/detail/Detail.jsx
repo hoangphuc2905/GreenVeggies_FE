@@ -14,7 +14,7 @@ import Description from "./Description";
 import Rating from "./Rating";
 import { useHandlerClickUpdate } from "../../../../components/updateProduct/handlerClickUpdate";
 import { useLocation } from "react-router-dom";
-import History from "../../stockEntry/history";
+import History from "../../stockEntry/History";
 import InsertStockEntry from "../../stockEntry/InsertStockEntry";
 import { getProductById } from "../../../../services/ProductService";
 const Detail = () => {
