@@ -1,25 +1,15 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import AdminRouter from "./routes/AdminRouter";
-import UserRouter from "./routes/UserRouter";
+import { BrowserRouter as Router } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
+import RoleBasedRouter from "./routes/RoleBaseRouter";
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/admin/*" element={<AdminRouter />} />
-
-        <Route path="/*" element={<UserRouter />} />
-
-        {/* <Route path="/auth/*" element={<AuthRouter />} /> */}
-
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <RoleBasedRouter />
+      </Router>
+    </Provider>
   );
 };
 

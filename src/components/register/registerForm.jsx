@@ -1,23 +1,27 @@
-import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { register } from "../../services/AuthService"; // Import hàm register
 
 const SignupForm = ({ switchToLogin, email }) => {
   const [formData, setFormData] = useState({
-    email: email || "", // Gán giá trị email từ props
+    email: email || "",
     username: "",
     phone: "",
     dateOfBirth: "",
     password: "",
     image: null,
-    address: "",
     role: "user",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [formErrors, setFormErrors] = useState({}); // Lưu lỗi từ BE
 
-  // Cập nhật email khi nhận được từ props
+  // Regex pattern cho mật khẩu mạnh
+  const strongPasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
+
   useEffect(() => {
     if (email) {
       setFormData((prevFormData) => ({ ...prevFormData, email }));
@@ -26,10 +30,39 @@ const SignupForm = ({ switchToLogin, email }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormErrors({ ...formErrors, [e.target.name]: "" }); // Xóa lỗi khi người dùng sửa
   };
 
   const handleFileChange = (e) => {
     setFormData({ ...formData, image: e.target.files[0] });
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    // Kiểm tra số điện thoại
+    const phoneRegex = /^0\d{9}$/; // Số điện thoại phải bắt đầu bằng 0 và có đúng 10 chữ số
+    if (!formData.phone || !phoneRegex.test(formData.phone)) {
+      errors.phone = "Số điện thoại phải bắt đầu bằng 0 và có đúng 10 số.";
+    }
+
+    // Kiểm tra tuổi (ngày sinh)
+    const currentDate = new Date();
+    const birthDate = new Date(formData.dateOfBirth);
+    const age = currentDate.getFullYear() - birthDate.getFullYear();
+    if (!formData.dateOfBirth || age < 12) {
+      errors.dateOfBirth = "Tuổi phải từ 12 trở lên.";
+    }
+
+    // Kiểm tra mật khẩu sử dụng regex
+    if (!formData.password) {
+      errors.password = "Vui lòng nhập mật khẩu.";
+    } else if (!strongPasswordRegex.test(formData.password)) {
+      errors.password =
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e) => {
@@ -38,53 +71,49 @@ const SignupForm = ({ switchToLogin, email }) => {
     setError("");
     setSuccess("");
 
-    // Kiểm tra nếu các trường bắt buộc không có giá trị
-    if (
-      !formData.email ||
-      !formData.phone ||
-      !formData.username ||
-      !formData.password ||
-      !formData.dateOfBirth
-    ) {
-      setError(
-        "Vui lòng nhập đầy đủ các trường: email, phone, username, password, dateOfBirth."
-      );
+    // Kiểm tra lỗi form
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       setLoading(false);
       return;
     }
 
-    const requestBody = {
-      email: formData.email,
-      username: formData.username,
-      phone: formData.phone,
-      dateOfBirth: formData.dateOfBirth,
-      password: formData.password,
-      address: formData.address,
-      avatar: formData.image ? formData.image.name : null,
-    };
-
     try {
-      const response = await fetch("http://localhost:8019/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      // Xử lý avatar (nếu có)
+      const avatar = formData.image
+        ? formData.image.name
+        : "https://res.cloudinary.com/dze57n4oa/image/upload/v1741758315/e693481de2901eaee3e8746472c2a552_nle9hj.jpg";
 
-      const data = await response.json();
-      console.log("Response data:", data);
+      // Chuẩn bị dữ liệu gửi lên API
+      const userData = {
+        email: formData.email,
+        username: formData.username,
+        phone: formData.phone,
+        dateOfBirth: formData.dateOfBirth,
+        password: formData.password,
+        avatar: avatar,
+        role: formData.role || "user",
+      };
 
-      if (response.ok) {
-        setSuccess("Đăng ký thành công!");
+      console.log("Dữ liệu gửi lên API:", userData); // Debug log
+
+      // Gọi API đăng ký
+      const responseMessage = await register(userData);
+
+      if (responseMessage) {
+        setSuccess(responseMessage);
         setTimeout(() => {
-          switchToLogin();
+          switchToLogin(); // Chuyển về trang đăng nhập
         }, 2000);
-      } else {
-        setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
       }
-    } catch (error) {
-      setError("Lỗi kết nối, vui lòng thử lại.");
+    } catch (err) {
+      // Xử lý lỗi từ backend
+      if (err.email || err.phone || err.username || err.password) {
+        setFormErrors(err); // Hiển thị lỗi cụ thể từ backend
+      } else {
+        setError(err.server || "Lỗi kết nối, vui lòng thử lại."); // Lỗi chung
+      }
     } finally {
       setLoading(false);
     }
@@ -94,9 +123,10 @@ const SignupForm = ({ switchToLogin, email }) => {
     <div className="bg-white p-6 rounded-xl shadow-lg flex w-full max-w-4xl min-h-[500px] relative z-20">
       <button
         onClick={switchToLogin}
-        className="absolute top-4 left-4 flex items-center text-green-700 hover:text-green-900 transition">
+        className="absolute top-4 left-4 flex items-center text-green-700 hover:text-green-900 transition"
+      >
         <ArrowLeft size={24} className="mr-2" />
-        Back
+        Quay lại
       </button>
 
       <div className="w-1/2 hidden md:flex justify-center items-center">
@@ -112,7 +142,7 @@ const SignupForm = ({ switchToLogin, email }) => {
           GREENVEGGIES
         </h2>
         <h3 className="text-xl font-bold mb-4 text-black text-center">
-          Create Account
+          Tạo tài khoản
         </h3>
 
         {error && <div className="text-red-500 text-center mb-3">{error}</div>}
@@ -120,70 +150,102 @@ const SignupForm = ({ switchToLogin, email }) => {
           <div className="text-green-500 text-center mb-3">{success}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-            readOnly // Không cho chỉnh sửa email
-          />
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Username"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Phone"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
-          <input
-            type="date"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Password"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-            required
-          />
-          <input
-            type="file"
-            name="image"
-            onChange={handleFileChange}
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-          />
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="Address"
-            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
-          />
+        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+          <div>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              className={`w-full p-2 border ${
+                formErrors.email ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
+              readOnly
+            />
+            {formErrors.email && (
+              <div className="text-red-500 text-sm">{formErrors.email}</div>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Tên người dùng"
+              className={`w-full p-2 border ${
+                formErrors.username ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
+            />
+            {formErrors.username && (
+              <div className="text-red-500 text-sm">{formErrors.username}</div>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Số điện thoại"
+              className={`w-full p-2 border ${
+                formErrors.phone ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
+            />
+            {formErrors.phone && (
+              <div className="text-red-500 text-sm">{formErrors.phone}</div>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              className={`w-full p-2 border ${
+                formErrors.dateOfBirth ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
+            />
+            {formErrors.dateOfBirth && (
+              <div className="text-red-500 text-sm">
+                {formErrors.dateOfBirth}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Mật khẩu"
+              className={`w-full p-2 border ${
+                formErrors.password ? "border-red-500" : "border-gray-300"
+              } rounded-lg bg-gray-100`}
+            />
+            {formErrors.password && (
+              <div className="text-red-500 text-sm">{formErrors.password}</div>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="file"
+              name="image"
+              onChange={handleFileChange}
+              className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+            />
+          </div>
 
           <button
             type="submit"
             className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-700 transition"
-            disabled={loading}>
-            {loading ? "Đang đăng ký..." : "Sign up"}
+            disabled={loading}
+          >
+            {loading ? "Đang đăng ký..." : "Đăng ký"}
           </button>
         </form>
       </div>

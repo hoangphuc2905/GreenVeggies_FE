@@ -1,34 +1,29 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { getUserInfo, updateUserInfo } from "../services/UserService"; // Import các hàm API
 
 // Action lấy user từ API
-export const fetchUser = createAsyncThunk("user/fetchUser", async ({ userID, token }) => {
+export const fetchUser = createAsyncThunk("user/fetchUser", async ({ userID }, { rejectWithValue }) => {
   try {
-    const response = await axios.get(`http://localhost:8002/api/user/${userID}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return response.data;
+    const response = await getUserInfo(userID); // Gọi hàm API getUserInfo
+    return response; // Trả về dữ liệu người dùng
   } catch (error) {
-    console.error("Error fetching user:", error.response ? error.response.data : error.message);
-    throw error;
+    console.error("Error fetching user:", error.message);
+    return rejectWithValue(error.message); // Trả về lỗi
   }
 });
 
 // Action cập nhật user
-export const updateUser = createAsyncThunk("user/updateUser", async ({ userID, token, updatedData }) => {
-  const response = await axios.put(`http://localhost:8002/api/user/${userID}`, updatedData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return response.data;
+export const updateUser = createAsyncThunk("user/updateUser", async ({ userID, accessToken, updatedData }, { rejectWithValue }) => {
+  try {
+    const response = await updateUserInfo(userID, accessToken, updatedData); // Gọi hàm API updateUserInfo
+    return response; // Trả về dữ liệu người dùng đã cập nhật
+  } catch (error) {
+    console.error("Error updating user:", error.message);
+    return rejectWithValue(error.message); // Trả về lỗi
+  }
 });
 
-const userSlice = createSlice({
+const UserSlice = createSlice({
   name: "user",
   initialState: {
     user: null,
@@ -38,6 +33,7 @@ const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Xử lý fetchUser
       .addCase(fetchUser.pending, (state) => {
         state.status = "loading";
       })
@@ -47,12 +43,22 @@ const userSlice = createSlice({
       })
       .addCase(fetchUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.error.message;
+        state.error = action.payload;
+      })
+
+      // Xử lý updateUser
+      .addCase(updateUser.pending, (state) => {
+        state.status = "loading";
       })
       .addCase(updateUser.fulfilled, (state, action) => {
-        state.user = action.payload;
+        state.status = "succeeded";
+        state.user = action.payload; // Cập nhật thông tin người dùng
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       });
   },
 });
 
-export default userSlice.reducer;
+export default UserSlice.reducer;

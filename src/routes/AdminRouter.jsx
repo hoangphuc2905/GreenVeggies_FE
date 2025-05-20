@@ -1,19 +1,57 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { App, Layout, theme } from "antd";
-import AdminHeader from "../pages/Admin/layout/header";
-import DefaultPage from "../pages/Admin/defaultPage/defaultPage";
-import AdminSidebar from "../pages/Admin/layout/menu";
-import Products from "../pages/Admin/product/page";
-import Detail from "../pages/Admin/product/Infomation/detail";
-import ListUser from "../pages/Admin/user/page";
-import BreadcrumbNav from "../pages/Admin/layout/BreadcrumbNav";
-import InsertProduct from "../pages/Admin/product/InsertAndUpdate/insert";
-import UpdateForm from "../pages/Admin/product/InsertAndUpdate/update";
+import BreadcrumbNav from "../pages/admin/layout/BreadcrumbNav";
+import Revenue from "../pages/admin/revenue/Revenue";
+import Detail from "../pages/admin/product/detail/Detail";
+import ListUser from "../pages/admin/user/ListUser";
+import AdminHeader from "../pages/admin/layout/AdminHeader";
+
+import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
+import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct";
+import Order from "../pages/admin/order/Order";
+import ListOrder from "../pages/admin/order/listOrder/ListOrder";
+import Page from "../pages/admin/product/Page";
+import AdminSidebar from "../pages/admin/layout/AdminSidebar";
+import { useDispatch } from "react-redux";
+
+import { useEffect, useState } from "react";
+import { fetchUser } from "../redux/userSlice";
+import NotificationScreen from "../pages/admin/notification/NotificationScreen";
+import { getUserInfo } from "../services/UserService";
 
 const AdminRouter = () => {
+  const [userInfo, setUserInfo] = useState({});
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+    const userID = localStorage.getItem("userID");
+    const role = localStorage.getItem("role");
+    if (accessToken && refreshToken && userID) {
+      dispatch(fetchUser({ userID, accessToken, refreshToken }));
+      getUserInfo(userID).then((userInfo) => {
+        setUserInfo(userInfo);
+        if (role === "admin") {
+          setIsAdmin(true);
+        } else {
+          navigate("/not-authorized");
+        }
+      });
+    } else {
+      navigate("/login");
+    }
+  }, [dispatch, navigate]);
+
+  if (!isAdmin) {
+    return null; // or a loading spinner
+  }
 
   return (
     <App>
@@ -26,7 +64,7 @@ const AdminRouter = () => {
             colorBgContainer={colorBgContainer}
           />
           <Layout className="h-full flex">
-            <Layout className="h-full mt-[4vh] flex-1 p-4 ml-[270px] mr-[3vh]">
+            <Layout className="h-full mt-[4vh] flex-1 p-4 ml-[240px] mr-[3vh]">
               <BreadcrumbNav
                 className="fixed top-16 w-full"
                 style={{
@@ -34,12 +72,28 @@ const AdminRouter = () => {
                 }}
               />
               <Routes>
-                <Route path="/" element={<DefaultPage />} />
-                <Route path="/products" element={<Products />} />
+                <Route path="/dashboard/revenue" element={<Revenue />} />
+                <Route path="/products" element={<Page />} />
                 <Route path="/products/:id" element={<Detail />} />
                 <Route path="/user-list" element={<ListUser />} />
                 <Route path="/add-product" element={<InsertProduct />} />
-                <Route path="/products/update-product/:id" element={<UpdateForm />} />
+                <Route
+                  path="/products/update-product/:id"
+                  element={<UpdateProduct />}
+                />
+                <Route path="/dashboard/orders" element={<Order />} />
+                <Route
+                  path="/dashboard/orders/list"
+                  element={<ListOrder state={{}} />}
+                />
+                <Route
+                  path="/notifications"
+                  element={<NotificationScreen userID={userInfo.userID} />}
+                />
+                <Route
+                  path="*"
+                  element={<Navigate to="/not-authorized" replace />}
+                />
               </Routes>
             </Layout>
           </Layout>
