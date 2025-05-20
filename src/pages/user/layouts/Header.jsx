@@ -102,11 +102,11 @@ const Header = () => {
       localStorage.setItem("refreshToken", userData.refreshToken); // Lưu refreshToken vào localStorage
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
-
+      const role = userData.user.role;
       const shoppingCart = await getShoppingCartByUserId(userData.user.userID);
       console.log("Shopping cart:", shoppingCart); // Debugging statement
 
-      if (userInfo.role === "admin") {
+      if (role === "admin") {
         navigate("/admin");
       } else {
         navigate("/");
@@ -216,7 +216,7 @@ const Header = () => {
         <div className="flex items-center">
           <FontAwesomeIcon icon={faPaperPlane} className="text-white text-l" />
           <div className="text-white text-l font-bold ml-2">
-          smileshopptit@gmail.com
+            smileshopptit@gmail.com
           </div>
         </div>
         <div className="flex items-center space-x-4 cursor-pointer">
