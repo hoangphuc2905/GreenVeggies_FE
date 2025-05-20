@@ -27,6 +27,8 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchQuery.trim() !== "") {
+      // Scroll to top of the page
+      window.scrollTo({ top: 0, behavior: "smooth" });
       navigate(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery("");
     }

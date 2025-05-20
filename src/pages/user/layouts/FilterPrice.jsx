@@ -52,6 +52,9 @@ const FilterPrice = ({
       params.set("maxPrice", newMaxPrice);
       return params;
     });
+
+    // Scroll to top of the page
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handlePriceRangeChange = (range) => {
@@ -103,6 +106,9 @@ const FilterPrice = ({
         params.delete("search"); // Xóa từ khóa tìm kiếm khi chọn radio
         return params;
       });
+
+      // Scroll to top of the page
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
