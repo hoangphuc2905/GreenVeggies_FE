@@ -77,7 +77,7 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col mx-[10%]">
       {/* Header */}
-      <div className="container mx-auto">
+      <div className="container mx-auto mt-[122px]">
         <div className="container mx-auto relative">
           <img src={bgImage} alt="Mô tả hình ảnh" className="w-full h-auto" />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
