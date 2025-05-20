@@ -16,12 +16,7 @@ import OtpFormqmk from "../../../components/forgotPassword/otpForgot";
 import OtpFormdk from "../../../components/register/otpRegister";
 import ForgotPasswordForm from "../../../components/forgotPassword/forgotPassword";
 import SignupForm from "../../../components/register/registerForm";
-<<<<<<< HEAD:src/pages/user/layouts/header.jsx
-import logoImage from "../../../assets/Green.png";
-
-=======
 import Navbar from "./Navbar";
->>>>>>> 2a027605e320efaaad01c3f53c1eda2e80f35c81:src/pages/user/layouts/Header.jsx
 import {
   SettingOutlined,
   ShoppingOutlined,
