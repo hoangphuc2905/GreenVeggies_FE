@@ -14,7 +14,7 @@ import OrderDetail from "../pages/user/profile/OrderDetail";
 import OrderProFile from "../pages/user/profile/OrderProfile";
 
 import { useEffect, useState } from "react";
-import CategoryPage from "../pages/user/Category/CategoryPage";
+import CategoryPage from "../pages/user/category/CategoryPage";
 import Header from "../pages/user/layouts/Header";
 import UserFooter from "../pages/user/layouts/UserFooter";
 import { App, notification } from "antd";

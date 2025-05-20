@@ -6,7 +6,7 @@ import Detail from "../pages/admin/product/detail/Detail";
 import ListUser from "../pages/admin/user/ListUser";
 import AdminHeader from "../pages/admin/layout/AdminHeader";
 
-import UpdateProduct from "../pages/admin/product/InsertAndUpdate/UpdateProduct";
+import UpdateProduct from "../pages/admin/product/insertAndUpdate/UpdateProduct";
 import InsertProduct from "../pages/admin/product/insertAndUpdate/InsertProduct";
 import Order from "../pages/admin/order/Order";
 import ListOrder from "../pages/admin/order/listOrder/ListOrder";
