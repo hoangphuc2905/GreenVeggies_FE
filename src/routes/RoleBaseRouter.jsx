@@ -37,10 +37,7 @@ const RoleBasedRouter = () => {
           dispatch(fetchUser({ userID, accessToken, refreshToken }));
 
           // Chỉ chuyển hướng nếu chưa ở đúng route
-          if (
-            userRole === "admin" &&
-            !window.location.pathname.startsWith("/admin")
-          ) {
+          if (userRole === "admin") {
             navigate("/admin/dashboard/revenue", { replace: true }); // Sử dụng replace để tránh vòng lặp
           } else if (
             userRole !== "admin" &&
