@@ -11,7 +11,7 @@ import {
   SettingOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import Profile from "../../user/Profile/Profile";
+import Profile from "../../user/profile/Profile";
 import Notification from "../notification/Notification";
 import ChangePassword from "../../user/profile/ChangePassword";
 import { fetchNotifications } from "../../../services/NotifyService";
