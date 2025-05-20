@@ -22,14 +22,22 @@ const Page = () => {
     try {
       const data = await getProducts();
 
-      // Sắp xếp sản phẩm: còn hàng lên đầu theo thứ tự bảng chữ cái, hết hàng xuống cuối
+      // Sắp xếp sản phẩm: còn hàng lên đầu, hết hàng và ngừng kinh doanh xuống cuối
       const sortedProducts = [...data].sort((a, b) => {
-        // Nếu một sản phẩm hết hàng và sản phẩm khác còn hàng
-        if (a.status === "out_of_stock" && b.status !== "out_of_stock") {
+        // Sắp xếp ưu tiên: available > out_of_stock > unavailable
+        if (a.status === "available" && b.status !== "available") {
+          return -1; // a đứng trước b
+        }
+        if (a.status !== "available" && b.status === "available") {
           return 1; // a đứng sau b
         }
-        if (a.status !== "out_of_stock" && b.status === "out_of_stock") {
+
+        // Nếu cả hai không phải available, ưu tiên out_of_stock trước unavailable
+        if (a.status === "out_of_stock" && b.status === "unavailable") {
           return -1; // a đứng trước b
+        }
+        if (a.status === "unavailable" && b.status === "out_of_stock") {
+          return 1; // a đứng sau b
         }
 
         // Nếu cả hai cùng trạng thái, sắp xếp theo tên
