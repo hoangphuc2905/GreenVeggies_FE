@@ -58,6 +58,7 @@ const AdminHeader = () => {
         localStorage.removeItem("userID");
         localStorage.removeItem("email");
         localStorage.removeItem("role");
+        
         setUserInfo({});
         message.success("Bạn đã đăng xuất thành công!");
         navigate("/"); // Chuyển hướng về trang Home

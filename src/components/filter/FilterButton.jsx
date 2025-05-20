@@ -19,8 +19,6 @@ const FilterButton = ({
     setVisible(flag);
   };
 
-  console.log("Filters in FilterButton:", filters);
-  console.log("setFilters in FilterButton:", setFilters);
 
   const getMenu = () => {
     if (typeFilter === "column") {

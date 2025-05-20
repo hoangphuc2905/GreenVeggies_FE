@@ -105,7 +105,6 @@ const ListOrder = () => {
     setDateFilter(null);
     setSelectedRowKeys([]);
     setSelectedOrders([]);
-    // Reset danh sách về tất cả hóa đơn
     setLoading(true);
     const allOrders = await fetchOrders();
     setOrders(allOrders);
@@ -256,25 +255,6 @@ const ListOrder = () => {
   const handleReset = (clearFilters) => {
     clearFilters();
     setSearchText("");
-  };
-
-  const handleCancelFilters = () => {
-    setSearchText("");
-    setSearchedColumn("");
-    setFilteredInfo({});
-    setSortedInfo({});
-    setVisibleColumns({
-      orderID: true,
-      userID: true,
-      phone: true,
-      totalAmount: true,
-      address: true,
-      status: true,
-      updatedAt: true,
-      paymentMethod: true,
-      paymentContent: true,
-      actions: true,
-    });
   };
 
   const showOrderDetail = (order) => {
@@ -521,54 +501,59 @@ const ListOrder = () => {
           });
           return Promise.reject(); // Ngăn modal đóng
         }
-
-        try {
-          // Gửi thông báo hủy đơn hàng cho khách
-          await sendCancelNotification(
-            order.orderID,
-            order.userID,
-            finalReason
-          );
-
-          // Cập nhật lại số lượng sản phẩm
-          if (order.orderDetails) {
-            await Promise.all(
-              order.orderDetails.map(async (item) => {
-                const product = await getProductById(item.productID);
-                const updatedQuantity = product.quantity + item.quantity;
-
-                await updateProductQuantity(item.productID, {
-                  ...product,
-                  quantity: updatedQuantity,
-                  sold: product.sold - item.quantity,
-                });
-              })
+        if (order.status === "Pending") {
+          try {
+            // Gửi thông báo hủy đơn hàng cho khách
+            await sendCancelNotification(
+              order.orderID,
+              order.userID,
+              finalReason
             );
+            // Cập nhật trạng thái đơn hàng trên server
+            await updateStatus(order.orderID, "Cancelled", {
+              reason: finalReason,
+            });
+
+            // Cập nhật lại số lượng sản phẩm
+            if (order.orderDetails) {
+              await Promise.all(
+                order.orderDetails.map(async (item) => {
+                  const product = await getProductById(item.productID);
+                  const updatedQuantity = product.quantity + item.quantity;
+
+                  await updateProductQuantity(item.productID, {
+                    ...product,
+                    quantity: updatedQuantity,
+                    sold: product.sold - item.quantity,
+                  });
+                })
+              );
+            }
+
+            // Cập nhật trạng thái đơn hàng trên giao diện (không cần reload toàn bộ)
+            setOrders((prevOrders) =>
+              prevOrders.map((o) =>
+                o.orderID === order.orderID ? { ...o, status: "Cancelled" } : o
+              )
+            );
+
+            Modal.success({
+              content:
+                "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
+            });
+
+            // Không cần gọi refreshOrders ở đây nữa vì đã cập nhật trực tiếp state
+          } catch (error) {
+            Modal.error({
+              content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+            });
+            console.error("Error cancelling order:", error);
           }
-
-          // Cập nhật trạng thái đơn hàng trên server
-          await updateStatus(order.orderID, "Cancelled", {
-            reason: finalReason,
-          });
-
-          // Cập nhật trạng thái đơn hàng trên giao diện (không cần reload toàn bộ)
-          setOrders((prevOrders) =>
-            prevOrders.map((o) =>
-              o.orderID === order.orderID ? { ...o, status: "Cancelled" } : o
-            )
-          );
-
-          Modal.success({
-            content:
-              "Đơn hàng đã được hủy thành công và số lượng sản phẩm đã được cập nhật.",
-          });
-
-          // Không cần gọi refreshOrders ở đây nữa vì đã cập nhật trực tiếp state
-        } catch (error) {
+        } else {
           Modal.error({
-            content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+            content: "Không thể hủy đơn hàng đã được duyệt hoặc giao hàng.",
           });
-          console.error("Error cancelling order:", error);
+          return Promise.reject(); // Ngăn modal đóng
         }
       },
     });
@@ -594,17 +579,28 @@ const ListOrder = () => {
   };
 
   // Xử lý duyệt nhiều đơn hàng đã chọn (chỉ cho phép duyệt nếu sản phẩm còn bán)
-  // - Nếu có đơn có sản phẩm ngưng bán sẽ hỏi xác nhận bỏ qua các đơn đó
+  // - Nếu có đơn có sản phẩm ngưng bán hoặc không ở trạng thái chờ duyệt sẽ hỏi xác nhận bỏ qua các đơn đó
   const handleApproveSelectedOrders = async () => {
     try {
       const unavailableOrders = [];
+      const invalidStatusOrders = [];
       const approvedOrders = [];
 
-      // Kiểm tra sản phẩm ngưng bán trước khi hỏi xác nhận
+      // Kiểm tra trạng thái và sản phẩm ngưng bán trước khi hỏi xác nhận
       for (const orderID of selectedOrders) {
         const order = orders.find((o) => o.orderID === orderID);
         if (!order) continue;
 
+        // Kiểm tra trạng thái đơn hàng
+        if (!order.status || order.status !== "Pending") {
+          invalidStatusOrders.push({
+            orderID,
+            status: order.status,
+          });
+          continue;
+        }
+
+        // Kiểm tra sản phẩm ngưng bán
         const { isAvailable, productName } = await checkProductAvailability(
           order.orderDetails
         );
@@ -614,20 +610,47 @@ const ListOrder = () => {
         }
       }
 
-      // Nếu có đơn hàng có sản phẩm ngưng bán, hỏi xác nhận
-      if (unavailableOrders.length > 0) {
+      // Nếu có đơn hàng không ở trạng thái chờ duyệt hoặc có sản phẩm ngưng bán, hỏi xác nhận
+      if (invalidStatusOrders.length > 0 || unavailableOrders.length > 0) {
         Modal.confirm({
-          title: "Một số sản phẩm đã ngưng bán",
+          title: "Một số đơn hàng không thể duyệt",
           content: (
             <div>
-              <p>Các đơn hàng sau có sản phẩm ngưng bán:</p>
-              <ul>
-                {unavailableOrders.map((order) => (
-                  <li key={order.orderID}>
-                    Đơn hàng {order.orderID}: Sản phẩm `{order.productName}`
-                  </li>
-                ))}
-              </ul>
+              {invalidStatusOrders.length > 0 && (
+                <>
+                  <p>
+                    Các đơn hàng sau không ở trạng thái <b>Đang chờ duyệt</b>:
+                  </p>
+                  <ul>
+                    {invalidStatusOrders.map((order) => (
+                      <li key={order.orderID}>
+                        Đơn hàng {order.orderID}: Trạng thái hiện tại{" "}
+                        <b>
+                          {order.status === "Shipped"
+                            ? "Đang giao hàng"
+                            : order.status === "Delivered"
+                            ? "Đã giao thành công"
+                            : order.status === "Cancelled"
+                            ? "Đã hủy"
+                            : order.status}
+                        </b>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {unavailableOrders.length > 0 && (
+                <>
+                  <p>Các đơn hàng sau có sản phẩm ngưng bán:</p>
+                  <ul>
+                    {unavailableOrders.map((order) => (
+                      <li key={order.orderID}>
+                        Đơn hàng {order.orderID}: Sản phẩm `{order.productName}`
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
               <p>
                 Bạn có muốn bỏ qua các đơn này và tiếp tục duyệt các đơn còn lại
                 không?
@@ -639,7 +662,9 @@ const ListOrder = () => {
           onOk: async () => {
             // Lọc ra các đơn hợp lệ để duyệt
             const validOrderIDs = selectedOrders.filter(
-              (orderID) => !unavailableOrders.some((u) => u.orderID === orderID)
+              (orderID) =>
+                !invalidStatusOrders.some((u) => u.orderID === orderID) &&
+                !unavailableOrders.some((u) => u.orderID === orderID)
             );
             if (validOrderIDs.length === 0) {
               Modal.info({
@@ -673,7 +698,7 @@ const ListOrder = () => {
           },
         });
       } else {
-        // Nếu không có đơn nào ngưng bán, hỏi xác nhận duyệt tất cả
+        // Nếu không có đơn nào ngưng bán hoặc sai trạng thái, hỏi xác nhận duyệt tất cả
         Modal.confirm({
           title: `Bạn có chắc chắn muốn duyệt ${selectedOrders.length} đơn hàng đã chọn?`,
           okText: "Duyệt",
@@ -722,6 +747,7 @@ const ListOrder = () => {
       dataIndex: "key",
       key: "key",
       width: 50,
+      // Không filter/sort nên không cần filteredValue/sortOrder
       render: (text, record, index) => {
         return (pagination.current - 1) * pagination.pageSize + index + 1;
       },
@@ -734,6 +760,8 @@ const ListOrder = () => {
       width: 220,
       fixed: "left",
       ...getColumnSearchProps("orderID", true),
+      filteredValue: filteredInfo.orderID || null,
+      sortOrder: sortedInfo.columnKey === "orderID" ? sortedInfo.order : null,
       render: (orderID) => (
         <Tooltip placement="topLeft" title={orderID}>
           {orderID}
@@ -748,6 +776,8 @@ const ListOrder = () => {
       width: 160,
       ...getColumnSearchProps("userID", true),
       fixed: "left",
+      filteredValue: filteredInfo.userID || null,
+      sortOrder: sortedInfo.columnKey === "userID" ? sortedInfo.order : null,
       render: (userID) => (
         <Tooltip placement="topLeft" title={userID}>
           {userID}
@@ -761,6 +791,8 @@ const ListOrder = () => {
       width: 130,
       ellipsis: true,
       ...getColumnSearchProps("phone"),
+      filteredValue: filteredInfo.phone || null,
+      sortOrder: sortedInfo.columnKey === "phone" ? sortedInfo.order : null,
       render: (phone) => (
         <Tooltip placement="topLeft" title={phone}>
           {phone}
@@ -773,6 +805,15 @@ const ListOrder = () => {
       key: "totalAmount",
       ellipsis: true,
       ...getColumnSearchProps("totalAmount", true),
+      filteredValue: filteredInfo.totalAmount || null,
+      sortOrder:
+        sortedInfo.columnKey === "totalAmount" ? sortedInfo.order : null,
+      sorter: (a, b) => {
+        // Đảm bảo so sánh số, không phải chuỗi
+        const aVal = Number(a.totalAmount) || 0;
+        const bVal = Number(b.totalAmount) || 0;
+        return aVal - bVal;
+      },
       render: (totalAmount) => {
         const format = formattedPrice(totalAmount);
         return <span>{format}</span>;
@@ -784,6 +825,8 @@ const ListOrder = () => {
       key: "address",
       ellipsis: true,
       ...getColumnSearchProps("address"),
+      filteredValue: filteredInfo.address || null,
+      sortOrder: sortedInfo.columnKey === "address" ? sortedInfo.order : null,
       render: (address) => (
         <Tooltip placement="topLeft" title={address}>
           {address}
@@ -801,6 +844,8 @@ const ListOrder = () => {
         { value: "Delivered", label: "Đã giao thành công" },
         { value: "Cancelled", label: "Đã hủy" },
       ]),
+      filteredValue: filteredInfo.status || null,
+      sortOrder: sortedInfo.columnKey === "status" ? sortedInfo.order : null,
       render: (status) => {
         let color =
           status === "Pending"
@@ -827,6 +872,8 @@ const ListOrder = () => {
       key: "updatedAt",
       ellipsis: true,
       ...getColumnSearchProps("updatedAt", true),
+      filteredValue: filteredInfo.updatedAt || null,
+      sortOrder: sortedInfo.columnKey === "updatedAt" ? sortedInfo.order : null,
       render: (updatedAt) => formattedDate(updatedAt),
     },
     {
@@ -839,6 +886,9 @@ const ListOrder = () => {
         { value: "CASH", label: "Thanh toán tiền mặt" },
         { value: "BANK", label: "Chuyển khoản" },
       ]),
+      filteredValue: filteredInfo.paymentMethod || null,
+      sortOrder:
+        sortedInfo.columnKey === "paymentMethod" ? sortedInfo.order : null,
       render: (paymentMethod) => {
         let paymentText =
           paymentMethod === "COD" || paymentMethod === "CASH"
@@ -862,6 +912,9 @@ const ListOrder = () => {
       width: 180,
       ellipsis: true,
       ...getColumnSearchProps("paymentContent"),
+      filteredValue: filteredInfo.paymentContent || null,
+      sortOrder:
+        sortedInfo.columnKey === "paymentContent" ? sortedInfo.order : null,
       render: (orderID) => {
         const content = paymentContents[orderID];
         return content ? (
@@ -921,7 +974,6 @@ const ListOrder = () => {
               Duyệt {selectedRowKeys.length} đơn đã chọn
             </Button>
           )}
-          <Button onClick={handleCancelFilters}>Hủy lọc</Button>
           <FilterButton
             columnsVisibility={visibleColumns}
             handleColumnVisibilityChange={handleColumnVisibilityChange}
@@ -952,12 +1004,12 @@ const ListOrder = () => {
             },
           }}
           onChange={(pagination, filters, sorter) => {
+            setFilteredInfo(filters);
+            setSortedInfo(sorter);
             setPagination({
               current: pagination.current,
               pageSize: pagination.pageSize,
             }); // Cập nhật trạng thái phân trang
-            setFilteredInfo(filters || {}); // Đảm bảo xử lý bộ lọc đúng cách
-            setSortedInfo(sorter || {}); // Đảm bảo xử lý sắp xếp đúng cách
           }}
           onRow={(record) => ({
             onClick: () => showOrderDetail(record), // Hiển thị chi tiết đơn hàng khi click vào dòng

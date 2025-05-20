@@ -356,39 +356,45 @@ const OrderDetail = ({
           });
           return Promise.reject(); // Ngăn modal đóng
         }
-
-        try {
-          // Cập nhật lại số lượng sản phẩm
-          if (order.orderDetails) {
-            await Promise.all(
-              order.orderDetails.map(async (item) => {
-                const product = await getProductById(item.productID);
-                const updatedQuantity = product.quantity + item.quantity;
-
-                await updateProductQuantity(item.productID, {
-                  ...product,
-                  quantity: updatedQuantity,
-                  sold: product.sold - item.quantity,
-                });
-              })
-            );
-          }
-
+        if (order.status === "Pending") {
           await updateStatus(order.orderID, "Cancelled", { reason });
-          Modal.success({
-            content: "Đơn hàng đã được hủy thành công.",
-          });
+          try {
+            // Cập nhật lại số lượng sản phẩm
+            if (order.orderDetails) {
+              await Promise.all(
+                order.orderDetails.map(async (item) => {
+                  const product = await getProductById(item.productID);
+                  const updatedQuantity = product.quantity + item.quantity;
 
-          await sendCancelNotify(order.orderID, reason); // Gửi thông báo sau khi hủy đơn hàng
-          setTimeout(() => {
-            refreshOrders();
-            onClose();
-          }, 1000);
-        } catch (error) {
+                  await updateProductQuantity(item.productID, {
+                    ...product,
+                    quantity: updatedQuantity,
+                    sold: product.sold - item.quantity,
+                  });
+                })
+              );
+            }
+
+            Modal.success({
+              content: "Đơn hàng đã được hủy thành công.",
+            });
+
+            await sendCancelNotify(order.orderID, reason); // Gửi thông báo sau khi hủy đơn hàng
+            setTimeout(() => {
+              refreshOrders();
+              onClose();
+            }, 1000);
+          } catch (error) {
+            Modal.error({
+              content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+            });
+            console.error("Error cancelling order:", error);
+          }
+        } else {
           Modal.error({
-            content: "Đã xảy ra lỗi khi hủy đơn hàng.",
+            content: "Không thể hủy đơn hàng đã được duyệt hoặc giao hàng.",
           });
-          console.error("Error cancelling order:", error);
+          return Promise.reject(); // Ngăn modal đóng
         }
       },
     });
