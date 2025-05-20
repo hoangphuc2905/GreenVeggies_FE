@@ -23,7 +23,6 @@ const Navbar = () => {
   const isNewsActive = location.pathname.startsWith("/news");
   const isCartActive = location.pathname.startsWith("/wishlist");
   const isContactActive = location.pathname.startsWith("/contact");
-  const isBlogActive = location.pathname.startsWith("/posts");
   const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
   const handleSearch = (e) => {
@@ -119,8 +118,7 @@ const Navbar = () => {
       <div className="container flex justify-between items-center center mx-auto">
         <Link
           to="/"
-          className="flex items-center gap-2 text-2xl py-4 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer"
-        >
+          className="flex items-center gap-2 text-2xl py-4 font-bold bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] bg-clip-text text-transparent cursor-pointer">
           <img
             src={logoImage}
             alt="Mô tả hình ảnh"
@@ -137,8 +135,7 @@ const Navbar = () => {
                 isHomeActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/" className="font-bold" onClick={scrollToTop}>
                 TRANG CHỦ
               </Link>
@@ -150,8 +147,7 @@ const Navbar = () => {
                 isProductActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/product" className="font-bold" onClick={scrollToTop}>
                 CỬA HÀNG
               </Link>
@@ -161,21 +157,9 @@ const Navbar = () => {
                 isNewsActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/news" className="font-bold" onClick={scrollToTop}>
                 TIN TỨC
-              </Link>
-            </li>
-            <li
-              className={`mx-4 py-2 text-sm mt-1 transition-all duration-200 ${
-                isBlogActive
-                  ? "text-[#82AE46] underline font-bold"
-                  : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
-              <Link to="/posts" className="font-bold" onClick={scrollToTop}>
-                BÀI VIẾT
               </Link>
             </li>
             <li
@@ -183,8 +167,7 @@ const Navbar = () => {
                 isContactActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link to="/contact" className="font-bold" onClick={scrollToTop}>
                 LIÊN HỆ
               </Link>
@@ -194,13 +177,11 @@ const Navbar = () => {
                 isCartActive
                   ? "text-[#82AE46] underline font-bold"
                   : "hover:text-[#82AE46] hover:underline active:scale-95"
-              }`}
-            >
+              }`}>
               <Link
                 to={isLoggedIn() ? "/wishlist" : "#"}
                 className="font-bold"
-                onClick={handleCartClick}
-              >
+                onClick={handleCartClick}>
                 <Space size="middle">
                   <Badge count={isLoggedIn() ? cartItemCount : 0} showZero>
                     <FontAwesomeIcon
