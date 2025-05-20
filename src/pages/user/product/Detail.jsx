@@ -554,8 +554,7 @@ const Detail = () => {
                   border: "1px solid #82AE46",
                   borderRadius: "4px",
                 }
-          }
-        >
+          }>
           {page}
         </span>
       );
@@ -604,15 +603,14 @@ const Detail = () => {
                     if (Array.isArray(product.imageUrl)) {
                       setSelectedImage(product.imageUrl[current]);
                     }
-                  }}
-                >
+                  }}>
                   {Array.isArray(product.imageUrl) &&
                     product.imageUrl.map((img, index) => (
                       <div key={index}>
                         <Image
                           src={img}
                           alt={`Ảnh ${index + 1}`}
-                          className="w-full h-96 object-cover rounded-md"
+                          className="w-full h-96 object-contain rounded-md"
                           preview={{
                             mask: (
                               <div className="flex items-center justify-center group hover:text-[#82AE46] transition-colors duration-300">
@@ -621,6 +619,7 @@ const Detail = () => {
                               </div>
                             ),
                           }}
+                          style={{ width: "384px", height: "384px" }}
                         />
                       </div>
                     ))}
@@ -628,16 +627,14 @@ const Detail = () => {
                 <div className="absolute top-1/2 left-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                   <button
                     onClick={() => carouselRef.current.prev()}
-                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                  >
+                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125">
                     <LeftOutlined />
                   </button>
                 </div>
                 <div className="absolute top-1/2 right-0 transform -translate-y-1/2 p-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out">
                   <button
                     onClick={() => carouselRef.current.next()}
-                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125"
-                  >
+                    className="text-gray-500 text-3xl hover:text-[#82AE46] transition-transform transform hover:scale-125">
                     <RightOutlined />
                   </button>
                 </div>
@@ -692,8 +689,8 @@ const Detail = () => {
                             <img
                               src={img}
                               alt={`Zoomed Image ${index + 1}`}
-                              className="w-full h-auto object-over"
-                              style={{ maxWidth: "100%", maxHeight: "100%" }}
+                              className="w-full h-full object-contain"
+                              style={{ width: "600px", height: "600px" }}
                             />
                           </div>
                         ))}
@@ -718,8 +715,7 @@ const Detail = () => {
               <div className="mt-4">
                 <Typography.Paragraph
                   ref={descriptionRef}
-                  ellipsis={{ rows: 3 }}
-                >
+                  ellipsis={{ rows: 3 }}>
                   {product.description}
                 </Typography.Paragraph>
                 {showSeeMore && (
@@ -750,8 +746,7 @@ const Detail = () => {
                         }
                       }, 100);
                     }}
-                    className="text-[#82AE46]"
-                  >
+                    className="text-[#82AE46]">
                     Xem thêm
                   </Button>
                 )}
@@ -759,8 +754,7 @@ const Detail = () => {
 
               <Typography.Text
                 className="text-xl block mt-2"
-                style={{ color: "#FEA837" }}
-              >
+                style={{ color: "#FEA837" }}>
                 {formattedPrice(CalcPrice(product.price))}
               </Typography.Text>
 
@@ -789,7 +783,6 @@ const Detail = () => {
                 <Space.Compact>
                   <Button
                     onClick={decrementQuantity}
-
                     disabled={
                       product.quantity === 0 ||
                       quantity <= 1 ||
@@ -815,8 +808,7 @@ const Detail = () => {
                       quantity >= availableQuantity ||
                       availableQuantity === 0
                     }
-                    className="!hover:bg-[#82AE46] !hover:text-white !hover:border-[#82AE46] transition-colors"
-                  >
+                    className="!hover:bg-[#82AE46] !hover:text-white !hover:border-[#82AE46] transition-colors">
                     +
                   </Button>
                 </Space.Compact>
@@ -840,8 +832,7 @@ const Detail = () => {
                 boxShadow: "inset 0 0 6px rgba(0, 0, 0, 0.1)",
                 scrollbarWidth: "thin",
                 scrollbarColor: "#82AE46 #f0f0f0",
-              }}
-            >
+              }}>
               <Favourite />
             </div>
           </div>
@@ -858,8 +849,7 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("description");
               toggleDescription();
-            }}
-          >
+            }}>
             MÔ TẢ
           </Button>
           <Button
@@ -872,8 +862,7 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("informations");
               toggleInformations();
-            }}
-          >
+            }}>
             THÔNG TIN LIÊN QUAN
           </Button>
 
@@ -887,16 +876,14 @@ const Detail = () => {
             onClick={() => {
               setSelectedTab("reviews");
               toggleReviews();
-            }}
-          >
+            }}>
             ĐÁNH GIÁ
           </Button>
         </div>
         {showDescription && (
           <div
             ref={fullDescriptionRef}
-            className="mt-4 p-4 rounded-lg bg-[#f0fdf4]"
-          >
+            className="mt-4 p-4 rounded-lg bg-[#f0fdf4]">
             <Typography.Title level={2}>Mô tả sản phẩm</Typography.Title>
             <Typography.Paragraph className="whitespace-pre-line">
               {product.description}
@@ -937,8 +924,7 @@ const Detail = () => {
             <Spin
               spinning={reviewsLoading}
               tip="Đang tải đánh giá..."
-              className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]"
-            >
+              className="[&_.ant-spin-dot]:!text-[#82AE46] [&_.ant-spin-text]:!text-[#82AE46]">
               {product.reviews
                 // Sort by date, newest first
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -977,8 +963,7 @@ const Detail = () => {
                               {review.imageUrl.map((img, imgIndex) => (
                                 <div
                                   key={imgIndex}
-                                  className="w-16 h-16 rounded overflow-hidden border border-gray-200"
-                                >
+                                  className="w-16 h-16 rounded overflow-hidden border border-gray-200">
                                   <Image
                                     src={img}
                                     alt={`Review image ${imgIndex + 1}`}
