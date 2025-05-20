@@ -11,7 +11,7 @@ import {
   SettingOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import Profile from "../../user/Profile/Profile";
+import Profile from "../../user/profile/Profile";
 import Notification from "../notification/Notification";
 import ChangePassword from "../../user/profile/ChangePassword";
 import { fetchNotifications } from "../../../services/NotifyService";
@@ -56,6 +56,8 @@ const AdminHeader = () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         localStorage.removeItem("userID");
+        localStorage.removeItem("email");
+        localStorage.removeItem("role");
         setUserInfo({});
         message.success("Bạn đã đăng xuất thành công!");
         navigate("/"); // Chuyển hướng về trang Home
