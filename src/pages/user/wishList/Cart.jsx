@@ -585,7 +585,7 @@ const Cart = () => {
               <div key={item.productID}>
                 <div
                   className={`grid grid-cols-7 items-center p-4 font-semibold ${
-                    item.isOutOfStock
+                    item.isOutOfStock || item.isUnavailable
                       ? "opacity-50 cursor-not-allowed bg-gray-100"
                       : "cursor-pointer"
                   }`}>
@@ -603,7 +603,9 @@ const Cart = () => {
                   <div
                     className="col-span-2 flex items-center gap-4"
                     onClick={() =>
-                      !item.isOutOfStock && handleProductClick(item)
+                      !item.isOutOfStock &&
+                      !item.isUnavailable &&
+                      handleProductClick(item)
                     }>
                     <img
                       src={
