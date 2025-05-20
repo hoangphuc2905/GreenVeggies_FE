@@ -393,7 +393,6 @@ const Page = () => {
     setFilteredInfo({});
     setSortedInfo({});
     setCurrentPage(1);
-    setPageSize(10);
     setSelectedRowKeys([]);
     setSelectedOptions(["Tất cả"]);
     setFilteredProducts(products);
@@ -496,6 +495,8 @@ const Page = () => {
       width: 120,
       ...getColumnSearchProps("productID", true),
       sorter: (a, b) => a.productID.localeCompare(b.productID),
+      filteredValue: filteredInfo.productID || null,
+      sortOrder: sortedInfo.columnKey === "productID" ? sortedInfo.order : null,
       render: (productID) => (
         <Tooltip placement="topLeft" title={productID}>
           {productID}
@@ -510,6 +511,8 @@ const Page = () => {
       width: 180,
       ...getColumnSearchProps("name", true),
       sorter: (a, b) => a.name.localeCompare(b.name),
+      filteredValue: filteredInfo.name || null,
+      sortOrder: sortedInfo.columnKey === "name" ? sortedInfo.order : null,
       render: (name) => (
         <Tooltip placement="topLeft" title={name}>
           {name}
@@ -558,6 +561,8 @@ const Page = () => {
       onFilter: (value, record) => record.category?._id === value,
       sorter: (a, b) =>
         (a.category?.name || "").localeCompare(b.category?.name || ""),
+      filteredValue: filteredInfo.category || null,
+      sortOrder: sortedInfo.columnKey === "category" ? sortedInfo.order : null,
       render: (category) => category?.name || "--|--",
     },
     columnsVisibility.price && {
@@ -568,6 +573,8 @@ const Page = () => {
       width: 120,
       ...getColumnSearchProps("price", true),
       sorter: (a, b) => a.price - b.price,
+      filteredValue: filteredInfo.price || null,
+      sortOrder: sortedInfo.columnKey === "price" ? sortedInfo.order : null,
       render: (text, record) =>
         `${formattedPrice(CalcPrice(record.price))} / ${getUnitVN(
           record.unit
@@ -580,6 +587,8 @@ const Page = () => {
       align: "center",
       width: 100,
       ...getColumnSearchProps("origin", true),
+      filteredValue: filteredInfo.origin || null,
+      sortOrder: sortedInfo.columnKey === "origin" ? sortedInfo.order : null,
       render: (origin) => origin || "--|--",
     },
     columnsVisibility.quantity && {
@@ -590,6 +599,8 @@ const Page = () => {
       width: 100,
       ...getColumnSearchProps("quantity", true),
       sorter: (a, b) => a.quantity - b.quantity,
+      filteredValue: filteredInfo.quantity || null,
+      sortOrder: sortedInfo.columnKey === "quantity" ? sortedInfo.order : null,
       render: (text, record) =>
         `${text.toLocaleString()} ${getUnitVN(record.unit)}`,
     },
@@ -601,6 +612,8 @@ const Page = () => {
       width: 100,
       ...getColumnSearchProps("sold", true),
       sorter: (a, b) => a.sold - b.sold,
+      filteredValue: filteredInfo.sold || null,
+      sortOrder: sortedInfo.columnKey === "sold" ? sortedInfo.order : null,
       render: (text, record) =>
         `${text.toLocaleString()} ${getUnitVN(record.unit)}`,
     },
@@ -610,10 +623,11 @@ const Page = () => {
       key: "reviews",
       align: "center",
       width: 90,
-      // Cho phép tìm kiếm theo điểm đánh giá trung bình
       ...getColumnSearchProps("reviews", true),
       sorter: (a, b) =>
         calculateAverageRating(a.reviews) - calculateAverageRating(b.reviews),
+      filteredValue: filteredInfo.reviews || null,
+      sortOrder: sortedInfo.columnKey === "reviews" ? sortedInfo.order : null,
       render: (reviews) => <div>{calculateAverageRating(reviews)}</div>,
     },
     columnsVisibility.status && {
@@ -627,6 +641,8 @@ const Page = () => {
         value: status.value,
       })),
       onFilter: (value, record) => record.status === value,
+      filteredValue: filteredInfo.status || null,
+      sortOrder: sortedInfo.columnKey === "status" ? sortedInfo.order : null,
       render: (status) => (
         <Tag color={statusMapping[status]?.color}>
           {statusMapping[status]?.text}
