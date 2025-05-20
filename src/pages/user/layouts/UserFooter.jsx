@@ -80,7 +80,8 @@ const UserFooter = () => {
             <Link
               to="/contact"
               className="text-gray-700 mt-4 block hover:text-green-600"
-              onClick={scrollToTop}>
+              onClick={scrollToTop}
+            >
               Liên hệ với chúng tôi
             </Link>
           </div>
@@ -117,7 +118,7 @@ const UserFooter = () => {
             </p>
             <p className="text-gray-700 mt-4 flex items-center">
               <FontAwesomeIcon icon={faEnvelope} className="text-l mr-2" />
-              khoinhokboddy@gmail.com
+              smileshopptit@gmail.com
             </p>
           </div>
         </div>

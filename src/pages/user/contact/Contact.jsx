@@ -1,5 +1,3 @@
-
-
 const Lienhe = () => {
   return (
     <div className="px-[10%]">
@@ -54,7 +52,7 @@ const Lienhe = () => {
                 📞 <strong>Hotline hỗ trợ:</strong> (+84) 987-654-321
               </p>
               <p>
-                📧 <strong>Email liên hệ:</strong> khoinhokboddy@gmail.com
+                📧 <strong>Email liên hệ:</strong> smileshopptit@gmail.com
               </p>
             </div>
             <p className="mt-4 text-gray-700">
@@ -79,12 +77,12 @@ const Lienhe = () => {
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31349.66356226036!2d106.64666935971026!3d10.833647667504824!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3174deb3ef536f31%3A0x8b7bb8b7c956157b!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBDw7RuZyBuZ2hp4buHcCBUUC5IQ00!5e0!3m2!1svi!2s!4v1712550958598!5m2!1svi!2s"
             allowFullScreen
             loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"></iframe>
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
         </div>
       </div>
 
       {/* Footer */}
-     
     </div>
   );
 };
