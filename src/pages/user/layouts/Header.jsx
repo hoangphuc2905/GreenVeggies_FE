@@ -103,6 +103,7 @@ const Header = () => {
       localStorage.setItem("email", userData.user.email); // Lưu email vào localStorage
       localStorage.setItem("userID", userData.user.userID); // Lưu id vào localStorage
       const role = userData.user.role;
+      console.log("User role:", role); // Kiểm tra vai trò người dùng
       const shoppingCart = await getShoppingCartByUserId(userData.user.userID);
       console.log("Shopping cart:", shoppingCart); // Debugging statement
 
