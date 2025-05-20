@@ -108,7 +108,7 @@ const Header = () => {
       console.log("Shopping cart:", shoppingCart); // Debugging statement
 
       if (role === "admin") {
-        navigate("/admin");
+        navigate("/admin/dashboard/revenue");
       } else {
         navigate("/");
       }
