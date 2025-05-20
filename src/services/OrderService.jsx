@@ -27,10 +27,14 @@ export const getOrdersByUserId = async (userID) => {
       return response.data; // Trả về danh sách đơn hàng
     }
     console.error("API không trả về dữ liệu hợp lệ:", response);
-    return null;
+    return [];
   } catch (error) {
+    if (error.response && error.response.status === 404) {
+      // Nếu lỗi 404 (không tìm thấy), trả về rỗng
+      return [];
+    }
     if (error.response && error.response.data) {
-      throw error.response.data.errors;
+      return [];
     }
     console.error("Lỗi khi gọi API getOrdersByUserId:", error);
     throw new Error("Lỗi kết nối đến máy chủ!");
@@ -111,4 +115,3 @@ export const addOrder = async (orderData) => {
     throw new Error("Không thể tạo đơn hàng. Vui lòng thử lại sau.");
   }
 };
-
