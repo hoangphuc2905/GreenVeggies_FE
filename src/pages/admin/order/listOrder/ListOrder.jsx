@@ -45,7 +45,6 @@ const useStyle = createStyles(({ css, token }) => {
     `,
   };
 });
-
 const ListOrder = () => {
   const location = useLocation();
   const { status, day, month, year } = location.state || {}; // Retrieve state parameters
