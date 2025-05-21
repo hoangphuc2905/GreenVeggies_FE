@@ -6,6 +6,7 @@ import {
   message,
   Modal,
   Space,
+  Spin,
   Table,
   Tag,
 } from "antd";
@@ -80,8 +81,16 @@ const ListUser = () => {
     setOriginalUsers([...sortedData]);
   };
   useEffect(() => {
-    fetchUsers();
-  }, [loading]); // Khi loading đổi (reset, reload), luôn fetch lại dữ liệu
+    setLoading(true);
+    fetchUsers()
+      .then(() => {
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+        message.error("Có lỗi xảy ra khi tải danh sách người dùng!");
+      });
+  }, []);
 
   /**
    * Hàm xử lý cập nhật trạng thái tài khoản người dùng.
@@ -216,8 +225,10 @@ const ListUser = () => {
     setSortedInfo({});
     setPagination({ current: 1, pageSize: 5 });
     setSelectedRowKeys([]);
-    setLoading((prev) => !prev); // Trigger reload
-    setUsers([]);
+    setLoading(true);
+    await fetchUsers();
+    // setUsers(allUsers);
+    setLoading(false);
   };
 
   // Định nghĩa các cột cho bảng người dùng
@@ -290,6 +301,8 @@ const ListUser = () => {
       },
       render: (_, __, index) =>
         index + 1 + (pagination.current - 1) * pagination.pageSize,
+      filteredValue: filteredInfo.index || null,
+      sortOrder: sortedInfo.columnKey === "index" ? sortedInfo.order : null,
     },
     {
       title: "Tên",
@@ -297,6 +310,8 @@ const ListUser = () => {
       key: "username",
       align: "center",
       ...getColumnSearchProps("username", true),
+      filteredValue: filteredInfo.username || null,
+      sortOrder: sortedInfo.columnKey === "username" ? sortedInfo.order : null,
     },
     {
       title: "Hình đại diện",
@@ -322,7 +337,10 @@ const ListUser = () => {
         { text: "Admin", value: "admin" },
         { text: "Người dùng", value: "user" },
       ],
-      onFilter: (value, record) => record.role === value || (value === "user" && record.role === "user"),
+      filteredValue: filteredInfo.role || null,
+      sortOrder: sortedInfo.columnKey === "role" ? sortedInfo.order : null,
+      onFilter: (value, record) =>
+        record.role === value || (value === "user" && record.role === "user"),
       sorter: (a, b) => a.role.localeCompare(b.role, "vi"),
       render: (role) => {
         const roleVN = role === "admin" ? "Admin" : "Người dùng";
@@ -344,18 +362,20 @@ const ListUser = () => {
       key: "email",
       align: "center",
       ...getColumnSearchProps("email", true),
+      filteredValue: filteredInfo.email || null,
+      sortOrder: sortedInfo.columnKey === "email" ? sortedInfo.order : null,
     },
     {
       title: "Đơn hàng",
       dataIndex: "userID",
       key: "orders",
       align: "center",
-      // Cho phép tìm kiếm theo số lượng đơn hàng đã đặt
       ...getColumnSearchProps("orders", true),
+      filteredValue: filteredInfo.orders || null,
+      sortOrder: sortedInfo.columnKey === "orders" ? sortedInfo.order : null,
       sorter: (a, b) =>
         (orderCounts[a.userID] || 0) - (orderCounts[b.userID] || 0),
       render: (userID) => orderCounts[userID] || "--|--",
-      // Ghi chú: Có thể nhập số vào ô tìm kiếm để lọc user theo số lượng đơn hàng đã đặt.
     },
     {
       title: "Trạng thái",
@@ -367,6 +387,9 @@ const ListUser = () => {
         { text: "Ngưng hoạt động", value: "Inactive" },
         { text: "Đã khóa", value: "Suspended" },
       ],
+      filteredValue: filteredInfo.accountStatus || null,
+      sortOrder:
+        sortedInfo.columnKey === "accountStatus" ? sortedInfo.order : null,
       onFilter: (value, record) => record.accountStatus === value,
       sorter: (a, b) =>
         (a.accountStatus || "").localeCompare(b.accountStatus || "", "vi"),
@@ -469,28 +492,30 @@ const ListUser = () => {
             </Button>
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
-          <Table
-            size="small"
-            dataSource={users || []}
-            rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
-            rowKey="_id"
-            pagination={pagination}
-            onChange={(pagination, filters, sorter) => {
-              setPagination({
-                current: pagination.current,
-                pageSize: pagination.pageSize,
-              });
-              setFilteredInfo(filters || {});
-              setSortedInfo(sorter || {});
-            }}
-            filteredInfo={filteredInfo}
-            sortedInfo={sortedInfo}
-            className="text-sm font-thin hover:cursor-pointer "
-            onRow={(record) => ({
-              onClick: () => showUserDetails(record),
-            })}
-            columns={columns}
-          />
+          <Spin spinning={loading} tip="Đang tải dữ liệu...">
+            <Table
+              size="small"
+              dataSource={users || []}
+              rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+              rowKey="_id"
+              pagination={pagination}
+              onChange={(pagination, filters, sorter) => {
+                setPagination({
+                  current: pagination.current,
+                  pageSize: pagination.pageSize,
+                });
+                setFilteredInfo(filters || {});
+                setSortedInfo(sorter || {});
+              }}
+              filteredInfo={filteredInfo}
+              sortedInfo={sortedInfo}
+              className="text-sm font-thin hover:cursor-pointer "
+              onRow={(record) => ({
+                onClick: () => showUserDetails(record),
+              })}
+              columns={columns}
+            />
+          </Spin>
           <UserDetailModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}

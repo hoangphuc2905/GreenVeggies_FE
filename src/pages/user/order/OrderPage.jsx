@@ -9,6 +9,7 @@ import {
   notification,
   Select,
   Spin,
+  Modal,
 } from "antd";
 import { useState, useEffect } from "react";
 import {
@@ -20,6 +21,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";
 import { addOrder } from "../../../services/OrderService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import AddressForm from "../profile/AddressForm";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 const style = {
   display: "flex",
   flexDirection: "column",
@@ -59,6 +63,7 @@ const OrderPage = () => {
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
 
   useEffect(() => {
     const userID = localStorage.getItem("userID");
@@ -98,42 +103,7 @@ const OrderPage = () => {
         });
 
       // Fetch user addresses
-      setLoadingAddresses(true);
-      getAddressesByUserId(userID)
-        .then((addressData) => {
-          console.log("User Addresses:", addressData);
-          setAddresses(addressData);
-
-          // Find default address
-          const defaultAddress = addressData.find(
-            (addr) => addr.default === true
-          );
-          if (defaultAddress) {
-            setSelectedAddress(defaultAddress._id);
-            form.setFieldsValue({
-              user: {
-                ...form.getFieldValue("user"),
-                addressId: defaultAddress._id,
-              },
-            });
-          } else if (addressData.length > 0) {
-            // If no default, select the first address
-            setSelectedAddress(addressData[0]._id);
-            form.setFieldsValue({
-              user: {
-                ...form.getFieldValue("user"),
-                addressId: addressData[0]._id,
-              },
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch user addresses:", error);
-          message.error("Không thể lấy danh sách địa chỉ");
-        })
-        .finally(() => {
-          setLoadingAddresses(false);
-        });
+      fetchUserAddress();
     } else {
       message.error("User ID không tồn tại. Vui lòng đăng nhập lại.");
     }
@@ -432,6 +402,58 @@ const OrderPage = () => {
   const shippingFee = calculateShippingFee(totalProductPrice);
   const totalPrice = totalProductPrice + shippingFee;
 
+  const fetchUserAddress = async () => {
+    try {
+      const userID = localStorage.getItem("userID");
+      if (!userID) return;
+
+      setLoadingAddresses(true);
+      const userAddress = await getAddressesByUserId(userID);
+      if (userAddress && Array.isArray(userAddress) && userAddress.length > 0) {
+        setAddresses(userAddress);
+
+        // Find default address
+        const defaultAddress = userAddress.find(
+          (addr) => addr.default === true
+        );
+        if (defaultAddress) {
+          setSelectedAddress(defaultAddress._id);
+          form.setFieldsValue({
+            user: {
+              ...form.getFieldValue("user"),
+              addressId: defaultAddress._id,
+            },
+          });
+        } else if (userAddress.length > 0) {
+          // If no default, select the first address
+          setSelectedAddress(userAddress[0]._id);
+          form.setFieldsValue({
+            user: {
+              ...form.getFieldValue("user"),
+              addressId: userAddress[0]._id,
+            },
+          });
+        }
+      } else if (userAddress && typeof userAddress === "object") {
+        setAddresses([userAddress]);
+        setSelectedAddress(userAddress._id);
+        form.setFieldsValue({
+          user: {
+            ...form.getFieldValue("user"),
+            addressId: userAddress._id,
+          },
+        });
+      } else {
+        setAddresses([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user addresses:", error);
+      message.error("Không thể lấy danh sách địa chỉ");
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col items-center px-[10%] mt-28">
       <Divider style={{ borderColor: "#7cb305" }} />
@@ -469,7 +491,29 @@ const OrderPage = () => {
             </div>
             <Form.Item
               name={["user", "addressId"]}
-              label="Địa chỉ giao hàng"
+              label={
+                <div className="flex items-center justify-between w-full">
+                  <span>Địa chỉ giao hàng</span>
+                  <Button
+                    type="primary"
+                    shape="circle"
+                    size="small"
+                    onClick={() => setIsAddressModalVisible(true)}
+                    className="ml-2 flex items-center justify-center"
+                    style={{
+                      backgroundColor: "#82AE46",
+                      borderColor: "#82AE46",
+                      width: "24px",
+                      height: "24px",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                    }}>
+                    <FontAwesomeIcon
+                      icon={faPlus}
+                      style={{ fontSize: "12px" }}
+                    />
+                  </Button>
+                </div>
+              }
               rules={[
                 {
                   required: true,
@@ -493,8 +537,8 @@ const OrderPage = () => {
                   </Select>
                 ) : (
                   <div className="text-red-500">
-                    Bạn chưa có địa chỉ nào. Vui lòng thêm địa chỉ trong trang
-                    cá nhân.
+                    Bạn chưa có địa chỉ nào. Vui lòng thêm địa chỉ bằng nút + ở
+                    trên.
                   </div>
                 )}
               </Spin>
@@ -537,6 +581,22 @@ const OrderPage = () => {
               <Input.TextArea />
             </Form.Item>
           </Form>
+
+          {/* Address Modal */}
+          <Modal
+            title="Thêm địa chỉ mới"
+            open={isAddressModalVisible}
+            onCancel={() => setIsAddressModalVisible(false)}
+            footer={null}
+            width={700}>
+            <AddressForm
+              isModal={true}
+              onAddressAdded={() => {
+                fetchUserAddress();
+                setIsAddressModalVisible(false);
+              }}
+            />
+          </Modal>
         </div>
         {/* Cột bên phải: Thông tin đơn hàng */}
         <div className="w-1/2 pl-4 border-[#82AE46] border-4 sticky top-28 self-start p-4">
