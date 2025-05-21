@@ -964,12 +964,10 @@ const ListOrder = () => {
     // Tạo header cho file Excel
     const headers = exportableColumns.map((col) => col.title);
 
-    // Tạo dữ liệu cho file Excel
+    // Lấy toàn bộ dữ liệu đang hiển thị trong bảng (đã lọc/tìm kiếm/sắp xếp)
     const data = (orders || []).map((order) =>
       exportableColumns.map((col) => {
-        // Render giá trị nếu có hàm render, ngược lại lấy trực tiếp
         if (col.key === "paymentContent") {
-          // Đặc biệt cho cột paymentContent
           const content = paymentContents[order.orderID];
           return content || "Không áp dụng";
         }
@@ -977,7 +975,6 @@ const ListOrder = () => {
           return formattedDate(order.updatedAt);
         }
         if (col.render) {
-          // Trả về text gốc nếu render chỉ là Tooltip hoặc Tag
           if (col.dataIndex) {
             return order[col.dataIndex];
           }
@@ -990,8 +987,6 @@ const ListOrder = () => {
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "DANH SÁCH HÓA ĐƠN");
-
-    // Đặt tên file theo ngày hiện tại
     const today = dayjs().format("DD-MM-YYYY");
     XLSX.writeFile(wb, `DanhSachHoaDon_ngay${today}.xlsx`);
   };
