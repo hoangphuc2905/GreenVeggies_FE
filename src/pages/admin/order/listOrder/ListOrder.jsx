@@ -964,8 +964,27 @@ const ListOrder = () => {
     // Tạo header cho file Excel
     const headers = exportableColumns.map((col) => col.title);
 
-    // Lấy toàn bộ dữ liệu đang hiển thị trong bảng (đã lọc/tìm kiếm/sắp xếp)
-    const data = (orders || []).map((order) =>
+    // Lấy dữ liệu thực sự đang hiển thị trên bảng (sau khi lọc, tìm kiếm, sắp xếp, PHÂN TRANG)
+    // => Lấy từ DOM bảng Ant Design (chỉ lấy các dòng đang render)
+    const tableRows = document.querySelectorAll(".ant-table-tbody > tr");
+    const displayedOrders = [];
+    tableRows.forEach((row) => {
+      const rowKey = row.getAttribute("data-row-key");
+      if (rowKey) {
+        const found = (orders || []).find((o) => o.orderID === rowKey);
+        if (found) displayedOrders.push(found);
+      }
+    });
+
+    // Nếu không lấy được từ DOM (SSR hoặc lỗi), fallback về phân trang hiện tại
+    let dataToExport = displayedOrders;
+    if (dataToExport.length === 0) {
+      const startIdx = (pagination.current - 1) * pagination.pageSize;
+      const endIdx = startIdx + pagination.pageSize;
+      dataToExport = (orders || []).slice(startIdx, endIdx);
+    }
+
+    const data = dataToExport.map((order) =>
       exportableColumns.map((col) => {
         if (col.key === "paymentContent") {
           const content = paymentContents[order.orderID];
