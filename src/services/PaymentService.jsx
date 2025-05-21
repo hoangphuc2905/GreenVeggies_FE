@@ -125,7 +125,7 @@ export const getPaymentByOrderId = async (orderID) => {
   try {
     const response = await handlePaymentApi.getPaymentByOrderId(orderID);
     if (!response || !response.payment) {
-      throw new Error("No payment data found for order");
+      return null; // Hoặc xử lý theo cách bạn muốn
     }
     return response.payment;
   } catch (error) {

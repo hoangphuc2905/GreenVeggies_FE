@@ -25,6 +25,7 @@ import {
 import {
   getCategories,
   updateProduct,
+  deleteImage,
 } from "../../../../services/ProductService.jsx";
 
 const { TextArea } = Input;
@@ -59,9 +60,9 @@ const UpdateProduct = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [isStockEntryOpen, setIsStockEntryOpen] = useState(false);
-
+  const [removedImages, setRemovedImages] = useState([]);
   const location = useLocation();
-  const getProduct = location.state?.product; // Lấy product từ location.state
+  const getProduct = location.state?.product;
 
   const fetchCategories = async () => {
     try {
@@ -116,10 +117,9 @@ const UpdateProduct = () => {
         });
       }
     }
-  }, [getProduct, categories]); // Chạy lại khi product hoặc categories thay đổi
+  }, [getProduct, categories]);
 
   const clearFieldError = (fieldName) => {
-    // Hàm xóa lỗi của trường khi người dùng bắt đầu nhập
     form.setFields([
       {
         name: fieldName,
@@ -128,20 +128,32 @@ const UpdateProduct = () => {
     ]);
   };
 
+  const deleteImagesOnCloud = async (images) => {
+    if (!images || images.length === 0) return;
+    for (const imageUrl of images) {
+      const publicId = imageUrl
+        .substring(imageUrl.lastIndexOf("/") + 1)
+        .split(".")[0];
+      try {
+        await deleteImage(publicId);
+      } catch (err) {
+        console.error("Error deleting image from Cloudinary:", err);
+      }
+    }
+  };
+
   const handlerUpdateProduct = async (values) => {
     try {
       setLoading(true);
-
-      // Gọi API cập nhật sản phẩm
+      // Delete images marked for deletion before saving
+      await deleteImagesOnCloud(removedImages);
       const response = await updateProduct(product.productID, values);
-
       if (response) {
         message.success("Cập nhật sản phẩm thành công!");
         setTimeout(() => navigate("/admin/products"), 1000);
       }
     } catch (errors) {
       console.error("Lỗi khi cập nhật sản phẩm:", errors);
-
       if (errors) {
         const fieldErrors = Object.keys(errors).map((field) => ({
           name: field,
@@ -229,18 +241,16 @@ const UpdateProduct = () => {
                   name="name"
                   // rules={[{ required: true }]}
                 >
-                  <Input
-                    onChange={() => clearFieldError("name")} // Xóa lỗi khi nhập
-                  />
+                  <Input onChange={() => clearFieldError("name")} />
                 </Form.Item>
                 <Form.Item label="Loại danh mục" name="category">
                   <div className="flex items-center gap-2">
                     <Select
-                      value={form.getFieldValue("category")} // Lấy giá trị từ form
+                      value={form.getFieldValue("category")}
                       placeholder="Chọn danh mục"
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
-                        clearFieldError("category"); // Xóa lỗi khi chọn
+                        clearFieldError("category");
                       }}
                     >
                       {categories.map((cat) => (
@@ -258,20 +268,17 @@ const UpdateProduct = () => {
                     </button>
                   </div>
                 </Form.Item>
-
                 <Form.Item
                   label="Nguồn gốc"
                   name="origin"
                   // rules={[{ required: true }]}
                 >
-                  <Input
-                    onChange={() => clearFieldError("origin")} // Xóa lỗi khi nhập
-                  />
+                  <Input onChange={() => clearFieldError("origin")} />
                 </Form.Item>
                 <Form.Item label="Mô tả" name="description">
                   <TextArea
                     rows={6}
-                    onChange={() => clearFieldError("description")} // Xóa lỗi khi nhập
+                    onChange={() => clearFieldError("description")}
                   />
                 </Form.Item>
               </Col>
@@ -281,9 +288,7 @@ const UpdateProduct = () => {
                   name="unit"
                   // rules={[{ required: true }]}
                 >
-                  <Select
-                    onChange={() => clearFieldError("unit")} // Xóa lỗi khi chọn
-                  >
+                  <Select onChange={() => clearFieldError("unit")}>
                     <Select.Option value="piece">Cái</Select.Option>
                     <Select.Option value="kg">Kg</Select.Option>
                     <Select.Option value="gram">Gram</Select.Option>
@@ -294,13 +299,7 @@ const UpdateProduct = () => {
                 <Form.Item
                   label="Đơn giá"
                   name="price"
-                  rules={[
-                    {
-                      type: "number",
-                      min: 0,
-                      // message: "Giá nhập không hợp lệ!",
-                    },
-                  ]}
+                  rules={[{ type: "number", min: 0 }]}
                 >
                   <InputNumber
                     type="number"
@@ -309,18 +308,17 @@ const UpdateProduct = () => {
                       form.setFieldsValue({
                         entryPrice: formattedPrice(CalcPrice(value)),
                       });
-                      clearFieldError("price"); // Xóa lỗi khi nhập
+                      clearFieldError("price");
                     }}
                   />
                 </Form.Item>
-
                 <Form.Item label="Giá bán" name="entryPrice">
                   <InputNumber className="w-full" disabled={true} />
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">
                   <Select
                     className="w-full"
-                    onChange={() => clearFieldError("status")} // Xóa lỗi khi chọn
+                    onChange={() => clearFieldError("status")}
                   >
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Option key={option.value} value={option.value}>
@@ -344,28 +342,28 @@ const UpdateProduct = () => {
                     fileList={form.getFieldValue("imageUrl")}
                     onFileListChange={(newFileList) => {
                       form.setFieldsValue({ imageUrl: newFileList });
-                      clearFieldError("imageUrl"); // Xóa lỗi khi thay đổi hình ảnh
+                      clearFieldError("imageUrl");
                     }}
+                    onImagesMarkedForDelete={(newRemovedImages) =>
+                      setRemovedImages(newRemovedImages)
+                    }
                   />
                 </Form.Item>
               </Col>
             </Row>
           </Form>
-
-          {/* Modal thêm danh mục */}
           <FormInsertCategory
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onCategoryAdded={handleCategoryAdded}
           />
-
           <InsertStockEntry
             isOpen={isStockEntryOpen}
             onClose={() => setIsStockEntryOpen(false)}
             productID={product?.productID}
             productName={product?.name}
             entryPrice={product?.price}
-          ></InsertStockEntry>
+          />
         </Flex>
       </div>
     </Layout>

@@ -20,7 +20,11 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../../components/calcSoldPrice/CalcPrice";
-import { addProduct, getCategories } from "../../../../services/ProductService";
+import {
+  addProduct,
+  getCategories,
+  deleteImage,
+} from "../../../../services/ProductService";
 
 const { TextArea } = Input;
 
@@ -50,10 +54,10 @@ const InsertProduct = () => {
   const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [removedImages, setRemovedImages] = useState([]);
+  const navigate = useNavigate();
 
-  // Lấy danh sách danh mục khi load trang
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -75,29 +79,39 @@ const InsertProduct = () => {
     setIsModalOpen(true);
   };
 
+  const deleteImagesOnCloud = async (images) => {
+    if (!images || images.length === 0) return;
+    for (const imageUrl of images) {
+      const publicId = imageUrl
+        .substring(imageUrl.lastIndexOf("/") + 1)
+        .split(".")[0];
+      try {
+        await deleteImage(publicId);
+      } catch (err) {
+        console.error("Error deleting image from Cloudinary:", err);
+      }
+    }
+  };
+
   const handlerInsertProduct = async (values) => {
     try {
       setLoading(true);
-
-      // Gọi hàm addProduct từ ProductService
+      // Delete images marked for deletion before saving
+      await deleteImagesOnCloud(removedImages);
       const response = await addProduct(values);
       if (response) {
         message.success("Thêm sản phẩm thành công! 🎉");
-
         setTimeout(() => {
           navigate("/admin/products");
         }, 1000);
       }
     } catch (errors) {
       console.error("Lỗi khi thêm sản phẩm:", errors);
-
-      // Hiển thị lỗi từ BE
       if (errors) {
         const fieldErrors = Object.keys(errors).map((field) => ({
           name: field,
           errors: [errors[field]],
         }));
-        console.error("Có lỗi xảy ra khi thêm sản phẩm:", errors);
         form.setFields(fieldErrors);
       } else {
         message.error("Lỗi hệ thống ở service, vui lòng thử lại sau! ⚠️");
@@ -108,7 +122,6 @@ const InsertProduct = () => {
   };
 
   const clearFieldError = (fieldName) => {
-    // Hàm xóa lỗi của trường khi người dùng bắt đầu nhập
     form.setFields([
       {
         name: fieldName,
@@ -116,6 +129,31 @@ const InsertProduct = () => {
       },
     ]);
   };
+
+  const handleCancel = async () => {
+    const allImages = [
+      ...(form.getFieldValue("imageUrl") || [])
+        .map((f) => f.url || f.response?.secure_url)
+        .filter(Boolean),
+      ...removedImages,
+    ];
+    await deleteImagesOnCloud(allImages);
+    navigate("/admin/products");
+  };
+
+  useEffect(() => {
+    return () => {
+      if (!form.isFieldsTouched()) {
+        const allImages = [
+          ...(form.getFieldValue("imageUrl") || [])
+            .map((f) => f.url || f.response?.secure_url)
+            .filter(Boolean),
+          ...removedImages,
+        ];
+        deleteImagesOnCloud(allImages);
+      }
+    };
+  }, [form, removedImages]);
 
   return (
     <Layout className="h-full">
@@ -163,7 +201,14 @@ const InsertProduct = () => {
                   >
                     {loading ? "Đang lưu..." : "Lưu"}
                   </Button>
-
+                  <Button
+                    size="small"
+                    type="default"
+                    className="py-4 px-10 size-3"
+                    onClick={handleCancel}
+                  >
+                    Hủy
+                  </Button>
                   <Button
                     size="small"
                     type="default"
@@ -179,27 +224,21 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Tên sản phẩm"
                   name="name"
-                  // rules={[
-                  //   { required: true, message: "Vui lòng nhập tên sản phẩm." },
-                  // ]}
+                  // rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm." }]}
                 >
-                  <Input
-                    onChange={() => clearFieldError("name")} // Xóa lỗi khi nhập
-                  />
+                  <Input onChange={() => clearFieldError("name")} />
                 </Form.Item>
                 <Form.Item
                   label="Loại danh mục"
                   name="category"
-                  // rules={[
-                  //   { required: true, message: "Vui lòng chọn danh mục." },
-                  // ]}
+                  // rules={[{ required: true, message: "Vui lòng chọn danh mục." }]}
                 >
                   <div className="flex items-center gap-2">
                     <Select
                       className="flex-1"
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
-                        clearFieldError("category"); // Xóa lỗi khi chọn
+                        clearFieldError("category");
                       }}
                     >
                       {categories.map((cat) => (
@@ -217,33 +256,21 @@ const InsertProduct = () => {
                     </button>
                   </div>
                 </Form.Item>
-
                 <Form.Item
                   label="Nguồn gốc"
                   name="origin"
-                  // rules={
-                  //   [
-                  //     { required: true, message: "Vui lòng nhập nguồn gốc." },
-                  //   ]
-                  // }
+                  // rules={[{ required: true, message: "Vui lòng nhập nguồn gốc." }]}
                 >
-                  <Input
-                    onChange={() => clearFieldError("origin")} // Xóa lỗi khi nhập
-                  />
+                  <Input onChange={() => clearFieldError("origin")} />
                 </Form.Item>
                 <Form.Item
                   label="Mô tả"
                   name="description"
-                  // rules={[
-                  //   {
-                  //     required: true,
-                  //     message: "Vui lòng nhập mô tả sản phẩm.",
-                  //   },
-                  // ]}
+                  // rules={[{ required: true, message: "Vui lòng nhập mô tả sản phẩm." }]}
                 >
                   <TextArea
                     rows={6}
-                    onChange={() => clearFieldError("description")} // Xóa lỗi khi nhập
+                    onChange={() => clearFieldError("description")}
                   />
                 </Form.Item>
                 <Form.Item
@@ -251,19 +278,16 @@ const InsertProduct = () => {
                   valuePropName="fileList"
                   getValueFromEvent={(e) => e.fileList}
                   name="imageUrl"
-                  // rules={[
-                  //   {
-                  //     required: true,
-                  //     message: "Vui lòng tải lên hình ảnh sản phẩm.",
-                  //   },
-                  // ]}
                 >
                   <UploadPicture
                     fileList={form.getFieldValue("imageUrl")}
                     onFileListChange={(newFileList) => {
                       form.setFieldsValue({ imageUrl: newFileList });
-                      clearFieldError("imageUrl"); // Xóa lỗi khi thay đổi hình ảnh
+                      clearFieldError("imageUrl");
                     }}
+                    onImagesMarkedForDelete={(newRemovedImages) =>
+                      setRemovedImages(newRemovedImages)
+                    }
                   />
                 </Form.Item>
               </Col>
@@ -271,25 +295,18 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Giá nhập"
                   name="price"
-                  rules={[
-                    {
-                      // required: true,
-                      type: "number",
-                      min: 0,
-                      // message: "Vui lòng nhập giá sản phẩm.",
-                    },
-                  ]}
+                  rules={[{ type: "number", min: 0 }]}
                 >
                   <InputNumber
                     type="number"
                     className="w-full"
                     onChange={(value) => {
-                      const calculatedPrice = CalcPrice(value || 0); // Tính giá bán
+                      const calculatedPrice = CalcPrice(value || 0);
                       form.setFieldsValue({
-                        entryPrice: calculatedPrice, // Lưu giá trị chưa định dạng
-                        formattedEntryPrice: formattedPrice(calculatedPrice), // Hiển thị giá trị đã định dạng
+                        entryPrice: calculatedPrice,
+                        formattedEntryPrice: formattedPrice(calculatedPrice),
                       });
-                      clearFieldError("price"); // Xóa lỗi khi nhập
+                      clearFieldError("price");
                     }}
                   />
                 </Form.Item>
@@ -303,18 +320,11 @@ const InsertProduct = () => {
                 <Form.Item
                   label="Số lượng nhập"
                   name="import"
-                  rules={[
-                    {
-                      // required: true,
-                      type: "number",
-                      min: 0,
-                      // message: "Vui lòng nhập số lượng sản phẩm.",
-                    },
-                  ]}
+                  rules={[{ type: "number", min: 0 }]}
                 >
                   <InputNumber
                     className="w-full"
-                    onChange={() => clearFieldError("import")} // Xóa lỗi khi nhập
+                    onChange={() => clearFieldError("import")}
                   />
                 </Form.Item>
                 <Form.Item
@@ -322,9 +332,7 @@ const InsertProduct = () => {
                   name="unit"
                   // rules={[{ required: true, message: "Vui lòng chọn đơn vị." }]}
                 >
-                  <Select
-                    onChange={() => clearFieldError("unit")} // Xóa lỗi khi chọn
-                  >
+                  <Select onChange={() => clearFieldError("unit")}>
                     <Select.Option value="piece">Cái</Select.Option>
                     <Select.Option value="kg">Kg</Select.Option>
                     <Select.Option value="gram">Gram</Select.Option>
@@ -349,7 +357,6 @@ const InsertProduct = () => {
               </Col>
             </Row>
           </Form>
-          {/* Modal thêm danh mục */}
           <FormInsertCategory
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
