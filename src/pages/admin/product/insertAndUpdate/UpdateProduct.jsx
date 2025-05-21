@@ -289,7 +289,7 @@ const UpdateProduct = () => {
                   // rules={[{ required: true }]}
                 >
                   <Select onChange={() => clearFieldError("unit")}>
-                    <Select.Option value="piece">Cái</Select.Option>
+                    <Select.Option value="piece">Phần</Select.Option>
                     <Select.Option value="kg">Kg</Select.Option>
                     <Select.Option value="gram">Gram</Select.Option>
                     <Select.Option value="liter">Lít</Select.Option>
