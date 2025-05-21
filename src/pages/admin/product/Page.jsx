@@ -207,7 +207,7 @@ const Page = () => {
       case "ml":
         return "Ml";
       case "piece":
-        return "Cái";
+        return "Phần";
       default:
         return unit || "";
     }

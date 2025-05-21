@@ -25,6 +25,7 @@ import {
   getCategories,
   deleteImage,
 } from "../../../../services/ProductService";
+import { getProducts } from "../../../../services/ProductService";
 
 const { TextArea } = Input;
 
@@ -56,10 +57,12 @@ const InsertProduct = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [removedImages, setRemovedImages] = useState([]);
+  const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCategories();
+    fetchProducts();
   }, []);
 
   const fetchCategories = async () => {
@@ -68,6 +71,19 @@ const InsertProduct = () => {
       setCategories(response);
     } else {
       setCategories([]);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const response = await getProducts();
+      if (Array.isArray(response)) {
+        setProducts(response);
+      } else {
+        setProducts([]);
+      }
+    } catch (err) {
+      setProducts([]);
     }
   };
 
@@ -96,6 +112,18 @@ const InsertProduct = () => {
   const handlerInsertProduct = async (values) => {
     try {
       setLoading(true);
+
+      // Check trùng tên sản phẩm (không phân biệt hoa thường, loại bỏ khoảng trắng đầu/cuối)
+      const newName = (values.name || "").trim().toLowerCase();
+      const isDuplicate = products.some(
+        (p) => (p.name || "").trim().toLowerCase() === newName
+      );
+      if (isDuplicate) {
+        message.error("Tên sản phẩm đã tồn tại. Vui lòng nhập tên khác!");
+        setLoading(false);
+        return;
+      }
+
       // Delete images marked for deletion before saving
       await deleteImagesOnCloud(removedImages);
       const response = await addProduct(values);
@@ -333,7 +361,7 @@ const InsertProduct = () => {
                   // rules={[{ required: true, message: "Vui lòng chọn đơn vị." }]}
                 >
                   <Select onChange={() => clearFieldError("unit")}>
-                    <Select.Option value="piece">Cái</Select.Option>
+                    <Select.Option value="piece">Phần</Select.Option>
                     <Select.Option value="kg">Kg</Select.Option>
                     <Select.Option value="gram">Gram</Select.Option>
                     <Select.Option value="liter">Lít</Select.Option>
