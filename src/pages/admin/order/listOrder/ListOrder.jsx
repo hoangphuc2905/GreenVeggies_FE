@@ -990,10 +990,11 @@ const ListOrder = () => {
     // Tạo worksheet và workbook
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Orders");
+    XLSX.utils.book_append_sheet(wb, ws, "DANH SÁCH HÓA ĐƠN");
 
-    // Xuất file
-    XLSX.writeFile(wb, "DanhSachDonHang.xlsx");
+    // Đặt tên file theo ngày hiện tại
+    const today = dayjs().format("DD-MM-YYYY");
+    XLSX.writeFile(wb, `DanhSachHoaDon_ngay${today}.xlsx`);
   };
 
   // Render giao diện danh sách đơn hàng, filter, bảng, modal chi tiết
@@ -1003,7 +1004,7 @@ const ListOrder = () => {
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
       <div className="text-lg font-semibold mb-4 flex justify-between">
-        <span>Danh sách đơn hàng</span>
+        <span style={{ color: "#22c55e" }}>Danh sách hóa đơn</span>
         <Space>
           {/* Nút xuất Excel */}
           <Button
