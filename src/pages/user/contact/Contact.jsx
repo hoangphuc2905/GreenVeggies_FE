@@ -11,7 +11,7 @@ const Lienhe = () => {
             Liên hệ với chúng tôi
           </h1>
           <p className="mt-2 text-lg text-white">
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn!
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn! 
           </p>
         </div>
       </div>
