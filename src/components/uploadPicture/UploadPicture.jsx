@@ -2,7 +2,6 @@ import { message, Modal, Upload } from "antd";
 import { cloundinaryPreset, cloundinaryURL } from "../../api/api.js";
 import { PlusOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { deleteImage } from "../../services/ProductService.jsx";
 
 export const handlerBeforeUpload = (file) => {
   const isImage = file.type.startsWith("image/");
@@ -48,11 +47,14 @@ const UploadPicture = ({
   type = "product",
   fileList = [],
   onFileListChange,
+  onImagesMarkedForDelete,
 }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [previewTitle, setPreviewTitle] = useState("");
   const [files, setFiles] = useState(fileList);
+  const [removedImages, setRemovedImages] = useState([]);
+
   useEffect(() => {
     if (JSON.stringify(files) !== JSON.stringify(fileList)) {
       setFiles(fileList);
@@ -73,6 +75,7 @@ const UploadPicture = ({
       message.success("Ảnh mới đã được thêm!");
     }
   };
+
   const handleRemove = async (file) => {
     const imageUrl = file.url || file.response?.secure_url;
     if (!imageUrl) {
@@ -80,29 +83,17 @@ const UploadPicture = ({
       return;
     }
 
-    const publicId = imageUrl
-      .substring(imageUrl.lastIndexOf("/") + 1)
-      .split(".")[0];
+    // Add the image to the removedImages list
+    setRemovedImages((prev) => {
+      const newRemovedImages = [...prev, imageUrl];
+      onImagesMarkedForDelete(newRemovedImages);
+      return newRemovedImages;
+    });
 
-    try {
-      const data = await deleteImage(publicId);
-      console.log("Xóa ảnh thành công:", data.data);
-      if (data.data?.success === true) {
-        // Updated condition to check 'success'
-        message.success(data.data?.message || "Xóa ảnh thành công!");
-        const newFileList = files.filter((item) => item.uid !== file.uid);
-        setFiles(newFileList);
-        onFileListChange(newFileList);
-      } else {
-        message.error(data.data?.message || "Xóa ảnh thất bại!");
-      }
-    } catch (error) {
-      message.error(
-        "Lỗi khi xóa ảnh!" +
-          (error.message ? ` Chi tiết: ${error.message}` : "")
-      );
-      console.error("Lỗi khi xóa ảnh:", error);
-    }
+    // Update the file list without deleting from Cloudinary
+    const newFileList = files.filter((item) => item.uid !== file.uid);
+    setFiles(newFileList);
+    onFileListChange(newFileList);
   };
 
   return (
@@ -123,7 +114,7 @@ const UploadPicture = ({
           )
         }
         onRemove={handleRemove}
-        fileList={files} // Giữ danh sách ảnh
+        fileList={files}
       >
         <button style={{ border: 0, background: "none" }} type="button">
           <PlusOutlined />

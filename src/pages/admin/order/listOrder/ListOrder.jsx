@@ -28,6 +28,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { getListOrdersStatusByDate } from "../../../../services/StatisticService";
 import dayjs from "dayjs";
+import * as XLSX from "xlsx";
 
 const useStyle = createStyles(({ css, token }) => {
   const { antCls } = token;
@@ -932,25 +933,68 @@ const ListOrder = () => {
       ellipsis: true,
       fixed: "right",
       width: 100,
-      render: (text, record) => (
-        <Button
-          type="default"
-          size="small"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleCancelOrder(record, cancelReason);
-            setCancelReason("");
-          }}
-        >
-          Hủy đơn
-        </Button>
-      ),
+      render: (text, record) =>
+        record.status !== "Cancelled" && (
+          <Button
+            type="default"
+            size="small"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleCancelOrder(record, cancelReason);
+              setCancelReason("");
+            }}
+          >
+            Hủy đơn
+          </Button>
+        ),
     },
   ];
 
   const filteredColumns = columns.filter(
     (column) => visibleColumns[column.key]
   );
+
+  // Hàm xuất Excel cho bảng hiện tại (không xuất cột STT và Tác vụ)
+  const handleExportExcel = () => {
+    // Lấy các cột đang hiển thị, loại bỏ 'key' (STT) và 'actions' (Tác vụ)
+    const exportableColumns = columns.filter(
+      (col) =>
+        visibleColumns[col.key] && col.key !== "key" && col.key !== "actions"
+    );
+
+    // Tạo header cho file Excel
+    const headers = exportableColumns.map((col) => col.title);
+
+    // Tạo dữ liệu cho file Excel
+    const data = (orders || []).map((order) =>
+      exportableColumns.map((col) => {
+        // Render giá trị nếu có hàm render, ngược lại lấy trực tiếp
+        if (col.key === "paymentContent") {
+          // Đặc biệt cho cột paymentContent
+          const content = paymentContents[order.orderID];
+          return content || "Không áp dụng";
+        }
+        if (col.key === "updatedAt") {
+          return formattedDate(order.updatedAt);
+        }
+        if (col.render) {
+          // Trả về text gốc nếu render chỉ là Tooltip hoặc Tag
+          if (col.dataIndex) {
+            return order[col.dataIndex];
+          }
+        }
+        return order[col.dataIndex] ?? order[col.key];
+      })
+    );
+
+    // Tạo worksheet và workbook
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Orders");
+
+    // Xuất file
+    XLSX.writeFile(wb, "DanhSachDonHang.xlsx");
+  };
 
   // Render giao diện danh sách đơn hàng, filter, bảng, modal chi tiết
   // - Có nút duyệt nhiều đơn, nút hủy lọc, filter ẩn/hiện cột
@@ -961,6 +1005,14 @@ const ListOrder = () => {
       <div className="text-lg font-semibold mb-4 flex justify-between">
         <span>Danh sách đơn hàng</span>
         <Space>
+          {/* Nút xuất Excel */}
+          <Button
+            onClick={handleExportExcel}
+            type="primary"
+            className="bg-blue-500 text-white"
+          >
+            Xuất Excel
+          </Button>
           {/* Nút Reset toàn bộ lọc */}
           <Button onClick={handleResetAll} type="default">
             Reset
