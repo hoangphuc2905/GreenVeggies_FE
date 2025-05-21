@@ -970,22 +970,23 @@ const ListOrder = () => {
       else filterLabel = status;
     }
 
-    // Thêm dòng tiêu đề tiêu chí lọc
+    // Tiêu đề và ngày tạo file
     const filterTitle =
       filterLabel === "Tất cả"
         ? "DANH SÁCH HÓA ĐƠN"
         : `DANH SÁCH ĐƠN HÀNG ${filterLabel.toUpperCase()}`;
+    const today = dayjs().format("DD-MM-YYYY HH:mm:ss");
+    const excelCreatedRow = [`Ngày tạo file: ${today}`];
 
-    // Thêm cột "Ngày tạo"
+    // Chuẩn bị cột xuất Excel
     const exportableColumns = columns.filter(
       (col) =>
         visibleColumns[col.key] && col.key !== "key" && col.key !== "actions"
     );
     const headers = exportableColumns.map((col) => col.title);
-    headers.push("Ngày tạo");
+    headers.push("Ngày tạo đơn");
 
     // Lấy dữ liệu thực sự đang hiển thị trên bảng (sau khi lọc, tìm kiếm, sắp xếp, PHÂN TRANG)
-    // => Lấy từ DOM bảng Ant Design (chỉ lấy các dòng đang render)
     const tableRows = document.querySelectorAll(".ant-table-tbody > tr");
     const displayedOrders = [];
     tableRows.forEach((row) => {
@@ -995,8 +996,6 @@ const ListOrder = () => {
         if (found) displayedOrders.push(found);
       }
     });
-
-    // Nếu không lấy được từ DOM (SSR hoặc lỗi), fallback về phân trang hiện tại
     let dataToExport = displayedOrders;
     if (dataToExport.length === 0) {
       const startIdx = (pagination.current - 1) * pagination.pageSize;
@@ -1004,7 +1003,7 @@ const ListOrder = () => {
       dataToExport = (orders || []).slice(startIdx, endIdx);
     }
 
-    // Thêm dữ liệu cho từng dòng, bổ sung "Ngày tạo"
+    // Chuẩn hóa dữ liệu xuất
     const data = dataToExport.map((order) => [
       ...exportableColumns.map((col) => {
         if (col.key === "paymentContent") {
@@ -1021,35 +1020,83 @@ const ListOrder = () => {
         }
         return order[col.dataIndex] ?? order[col.key];
       }),
-      order.createdAt ? formattedDate(order.createdAt) : "", // Thêm ngày tạo
+      order.createdAt ? formattedDate(order.createdAt) : "",
     ]);
 
-    // Tạo worksheet với dòng tiêu chí lọc và header màu xanh lá
+    // Tạo worksheet với định dạng đẹp
     const ws_data = [
+      excelCreatedRow, // Ngày tạo file
       [filterTitle], // Tiêu đề lọc
       headers, // Header
       ...data,
     ];
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-    // Đổi màu header thành xanh lá (dòng thứ 2)
-    const headerRow = 2;
-    const headerColCount = headers.length;
-    for (let i = 0; i < headerColCount; i++) {
-      const cell = XLSX.utils.encode_cell({ r: headerRow - 1, c: i });
+    // Định dạng: merge cells cho tiêu đề và ngày tạo file
+    const totalCols = headers.length;
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, // merge ngày tạo file
+      { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, // merge tiêu đề
+    ];
+
+    // Định dạng style cho ngày tạo file (dòng 1)
+    const cellDate = XLSX.utils.encode_cell({ r: 0, c: 0 });
+    ws[cellDate].s = {
+      font: { bold: true, color: { rgb: "666666" }, sz: 12 },
+      alignment: { horizontal: "right", vertical: "center" },
+    };
+
+    // Định dạng style cho tiêu đề (dòng 2)
+    const cellTitle = XLSX.utils.encode_cell({ r: 1, c: 0 });
+    ws[cellTitle].s = {
+      font: { bold: true, color: { rgb: "22C55E" }, sz: 16 },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    // Định dạng style cho header (dòng 3)
+    for (let i = 0; i < totalCols; i++) {
+      const cell = XLSX.utils.encode_cell({ r: 2, c: i });
       if (!ws[cell]) continue;
       ws[cell].s = {
-        fill: { fgColor: { rgb: "22C55E" } }, // xanh lá
-        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "22C55E" } },
+        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
         alignment: { horizontal: "center", vertical: "center" },
+        border: {
+          top: { style: "thin", color: { rgb: "CCCCCC" } },
+          left: { style: "thin", color: { rgb: "CCCCCC" } },
+          right: { style: "thin", color: { rgb: "CCCCCC" } },
+          bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+        },
       };
     }
+
+    // Định dạng style cho dữ liệu (dòng 4 trở đi)
+    for (let r = 3; r < ws_data.length; r++) {
+      for (let c = 0; c < totalCols; c++) {
+        const cell = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cell]) continue;
+        ws[cell].s = {
+          alignment: { horizontal: "left", vertical: "center" },
+          border: {
+            top: { style: "thin", color: { rgb: "DDDDDD" } },
+            left: { style: "thin", color: { rgb: "DDDDDD" } },
+            right: { style: "thin", color: { rgb: "DDDDDD" } },
+            bottom: { style: "thin", color: { rgb: "DDDDDD" } },
+          },
+        };
+      }
+    }
+
+    // Đặt độ rộng cột tự động
+    ws["!cols"] = headers.map(() => ({ wch: 22 }));
 
     // Tạo workbook và lưu file
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "DANH SÁCH HÓA ĐƠN");
-    const today = dayjs().format("DD-MM-YYYY");
-    XLSX.writeFile(wb, `DanhSachHoaDon_ngay${today}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `DanhSachHoaDon_ngay${dayjs().format("DD-MM-YYYY")}.xlsx`
+    );
   };
 
   // Render giao diện danh sách đơn hàng, filter, bảng, modal chi tiết
