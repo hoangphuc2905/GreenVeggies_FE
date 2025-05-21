@@ -955,14 +955,34 @@ const ListOrder = () => {
 
   // Hàm xuất Excel cho bảng hiện tại (không xuất cột STT và Tác vụ)
   const handleExportExcel = () => {
-    // Lấy các cột đang hiển thị, loại bỏ 'key' (STT) và 'actions' (Tác vụ)
+    // Xác định tiêu chí lọc
+    let filterLabel = "Tất cả";
+    if (
+      filteredInfo &&
+      filteredInfo.status &&
+      filteredInfo.status.length === 1
+    ) {
+      const status = filteredInfo.status[0];
+      if (status === "Shipped") filterLabel = "Đang vận chuyển";
+      else if (status === "Pending") filterLabel = "Đang chờ duyệt";
+      else if (status === "Delivered") filterLabel = "Đã giao thành công";
+      else if (status === "Cancelled") filterLabel = "Đã hủy";
+      else filterLabel = status;
+    }
+
+    // Thêm dòng tiêu đề tiêu chí lọc
+    const filterTitle =
+      filterLabel === "Tất cả"
+        ? "DANH SÁCH HÓA ĐƠN"
+        : `DANH SÁCH ĐƠN HÀNG ${filterLabel.toUpperCase()}`;
+
+    // Thêm cột "Ngày tạo"
     const exportableColumns = columns.filter(
       (col) =>
         visibleColumns[col.key] && col.key !== "key" && col.key !== "actions"
     );
-
-    // Tạo header cho file Excel
     const headers = exportableColumns.map((col) => col.title);
+    headers.push("Ngày tạo");
 
     // Lấy dữ liệu thực sự đang hiển thị trên bảng (sau khi lọc, tìm kiếm, sắp xếp, PHÂN TRANG)
     // => Lấy từ DOM bảng Ant Design (chỉ lấy các dòng đang render)
@@ -984,8 +1004,9 @@ const ListOrder = () => {
       dataToExport = (orders || []).slice(startIdx, endIdx);
     }
 
-    const data = dataToExport.map((order) =>
-      exportableColumns.map((col) => {
+    // Thêm dữ liệu cho từng dòng, bổ sung "Ngày tạo"
+    const data = dataToExport.map((order) => [
+      ...exportableColumns.map((col) => {
         if (col.key === "paymentContent") {
           const content = paymentContents[order.orderID];
           return content || "Không áp dụng";
@@ -999,11 +1020,32 @@ const ListOrder = () => {
           }
         }
         return order[col.dataIndex] ?? order[col.key];
-      })
-    );
+      }),
+      order.createdAt ? formattedDate(order.createdAt) : "", // Thêm ngày tạo
+    ]);
 
-    // Tạo worksheet và workbook
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    // Tạo worksheet với dòng tiêu chí lọc và header màu xanh lá
+    const ws_data = [
+      [filterTitle], // Tiêu đề lọc
+      headers, // Header
+      ...data,
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+    // Đổi màu header thành xanh lá (dòng thứ 2)
+    const headerRow = 2;
+    const headerColCount = headers.length;
+    for (let i = 0; i < headerColCount; i++) {
+      const cell = XLSX.utils.encode_cell({ r: headerRow - 1, c: i });
+      if (!ws[cell]) continue;
+      ws[cell].s = {
+        fill: { fgColor: { rgb: "22C55E" } }, // xanh lá
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        alignment: { horizontal: "center", vertical: "center" },
+      };
+    }
+
+    // Tạo workbook và lưu file
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "DANH SÁCH HÓA ĐƠN");
     const today = dayjs().format("DD-MM-YYYY");
@@ -1017,7 +1059,7 @@ const ListOrder = () => {
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
       <div className="text-lg font-semibold mb-4 flex justify-between">
-        <span style={{ color: "#22c55e" }}>Danh sách hóa đơn</span>
+        <span>Danh sách hóa đơn</span>
         <Space>
           {/* Nút xuất Excel */}
           <Button
