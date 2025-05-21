@@ -1,5 +1,6 @@
 import { Modal } from "antd";
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import {
   addNewAddress,
   deleteAddress,
@@ -7,9 +8,9 @@ import {
   updateAddress,
 } from "../../../services/UserService";
 
-const AddressForm = () => {
+const AddressForm = ({ isModal = false, onAddressAdded = null }) => {
   const [showForm, setShowForm] = useState(false);
-  const [userID, setUserID] = useState(localStorage.getItem("userID") || "");
+  const userID = localStorage.getItem("userID") || "";
   const [addresses, setAddresses] = useState([]);
 
   const [address, setAddress] = useState({
@@ -31,10 +32,15 @@ const AddressForm = () => {
   const [editingAddressId, setEditingAddressId] = useState(null);
 
   useEffect(() => {
-    if (userID) {
+    if (userID && !isModal) {
       fetchUserAddress();
     }
-  }, [userID]);
+
+    // If we're in modal mode, always show the form
+    if (isModal) {
+      setShowForm(true);
+    }
+  }, [userID, isModal]);
 
   const fetchUserAddress = async () => {
     try {
@@ -118,7 +124,7 @@ const AddressForm = () => {
         return;
       }
 
-      if (isDuplicateAddress(address)) {
+      if (!isModal && isDuplicateAddress(address)) {
         setErrorMessage(" Địa chỉ này đã tồn tại trong danh sách của bạn!");
         return;
       }
@@ -150,6 +156,7 @@ const AddressForm = () => {
             return [...prevAddresses, newAddress];
           });
 
+          // Reset form
           setAddress({
             city: "",
             district: "",
@@ -158,9 +165,16 @@ const AddressForm = () => {
             isDefault: false,
           });
 
-          setShowForm(false);
+          // If we're in modal mode and have a callback, call it
+          if (isModal && onAddressAdded) {
+            onAddressAdded(response);
+          } else {
+            setShowForm(false);
+          }
         } else {
-          setErrorMessage("❌ Lỗi khi thêm địa chỉ: " + response.message);
+          setErrorMessage(
+            "❌ Lỗi khi thêm địa chỉ: " + (response?.message || "")
+          );
         }
       } catch (error) {
         if (error.response?.status === 400 || error.response?.status === 404) {
@@ -198,7 +212,14 @@ const AddressForm = () => {
       street: "",
       isDefault: false,
     });
-    setShowForm(false);
+
+    // If we're in modal mode and have a callback, call it to close the modal
+    if (isModal && onAddressAdded) {
+      onAddressAdded();
+    } else {
+      setShowForm(false);
+    }
+
     setIsEditing(false);
     setEditingAddressId(null);
   };
@@ -248,7 +269,9 @@ const AddressForm = () => {
         setSuccessMessage("✅ Địa chỉ đã được cập nhật thành công!");
 
         // Cập nhật lại danh sách địa chỉ trong state
-        await fetchUserAddress();
+        if (!isModal) {
+          await fetchUserAddress();
+        }
 
         // Reset form
         setAddress({
@@ -259,7 +282,13 @@ const AddressForm = () => {
           isDefault: false,
         });
 
-        setShowForm(false);
+        // If we're in modal mode and have a callback, call it
+        if (isModal && onAddressAdded) {
+          onAddressAdded(response);
+        } else {
+          setShowForm(false);
+        }
+
         setIsEditing(false);
         setEditingAddressId(null);
       } else {
@@ -311,6 +340,117 @@ const AddressForm = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  // If in modal mode, only show the form part
+  if (isModal) {
+    return (
+      <div className="bg-white p-4">
+        {successMessage && (
+          <div className="text-green-600 font-semibold text-center mb-4">
+            {successMessage}
+          </div>
+        )}
+        {errorMessage && (
+          <div className="text-red-600 font-semibold text-center mb-4">
+            {errorMessage}
+          </div>
+        )}
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-gray-700">Thành phố:</label>
+            <input
+              type="text"
+              name="city"
+              value={address.city}
+              onChange={handleChange}
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.city ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.city && (
+              <p className="text-red-500 text-sm">{errors.city}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700">Quận/Huyện:</label>
+            <input
+              type="text"
+              name="district"
+              value={address.district}
+              onChange={handleChange}
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.district ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.district && (
+              <p className="text-red-500 text-sm">{errors.district}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700">Phường/Xã:</label>
+            <input
+              type="text"
+              name="ward"
+              value={address.ward}
+              onChange={handleChange}
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.ward ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.ward && (
+              <p className="text-red-500 text-sm">{errors.ward}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700">Địa chỉ cụ thể:</label>
+            <input
+              type="text"
+              name="street"
+              value={address.street}
+              onChange={handleChange}
+              className={`w-full border px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 ${
+                errors.street ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            {errors.street && (
+              <p className="text-red-500 text-sm">{errors.street}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              name="isDefault"
+              checked={address.isDefault}
+              onChange={handleChange}
+              className="rounded focus:ring-2 focus:ring-green-500"
+            />
+            <label className="text-gray-700">Đặt làm địa chỉ mặc định</label>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition">
+              {isEditing ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="w-full py-2 rounded-md text-gray-700 font-semibold bg-gray-200 hover:bg-gray-300 transition">
+              Hủy
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // Non-modal view (original component)
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
       <h2 className="text-2xl font-bold text-gray-700 mb-4 text-center">
@@ -337,8 +477,7 @@ const AddressForm = () => {
                 addr.isDefault
                   ? "border-green-500 bg-green-50"
                   : "border-gray-300 bg-gray-100"
-              }`}
-            >
+              }`}>
               <p>
                 <strong>Thành phố:</strong> {addr.city}
               </p>
@@ -361,14 +500,12 @@ const AddressForm = () => {
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => handleEdit(addr)}
-                  className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition"
-                >
+                  className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition">
                   Chỉnh sửa
                 </button>
                 <button
                   onClick={() => handleDeleteAddress(addr.id || addr._id)}
-                  className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
-                >
+                  className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition">
                   Xóa
                 </button>
               </div>
@@ -384,8 +521,7 @@ const AddressForm = () => {
             setSuccessMessage("");
             setErrorMessage("");
           }}
-          className="mt-2 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition"
-        >
+          className="mt-2 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition">
           Thêm địa chỉ mới
         </button>
       ) : (
@@ -467,8 +603,7 @@ const AddressForm = () => {
 
           <button
             type="submit"
-            className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition"
-          >
+            className="mt-4 w-full py-2 rounded-md text-white font-semibold bg-green-500 hover:bg-green-600 transition">
             {isEditing ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}
           </button>
 
@@ -476,8 +611,7 @@ const AddressForm = () => {
           <button
             type="button"
             onClick={handleCancelEdit}
-            className="mt-2 w-full py-2 rounded-md text-gray-700 font-semibold bg-gray-200 hover:bg-gray-300 transition"
-          >
+            className="mt-2 w-full py-2 rounded-md text-gray-700 font-semibold bg-gray-200 hover:bg-gray-300 transition">
             {isEditing ? "Hủy" : "Đóng"}
           </button>
         </form>
@@ -487,20 +621,23 @@ const AddressForm = () => {
         <button
           onClick={() => paginate(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
-        >
+          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400">
           Trang trước
         </button>
         <button
           onClick={() => paginate(currentPage + 1)}
           disabled={currentPage * addressesPerPage >= addresses.length}
-          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400"
-        >
+          className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400">
           Trang tiếp
         </button>
       </div>
     </div>
   );
+};
+
+AddressForm.propTypes = {
+  isModal: PropTypes.bool,
+  onAddressAdded: PropTypes.func,
 };
 
 export default AddressForm;
