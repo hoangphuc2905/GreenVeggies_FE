@@ -1,5 +1,6 @@
 import { Modal } from "antd";
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import {
   addNewAddress,
   deleteAddress,
@@ -9,7 +10,7 @@ import {
 
 const AddressForm = ({ isModal = false, onAddressAdded = null }) => {
   const [showForm, setShowForm] = useState(false);
-  const [userID, setUserID] = useState(localStorage.getItem("userID") || "");
+  const userID = localStorage.getItem("userID") || "";
   const [addresses, setAddresses] = useState([]);
 
   const [address, setAddress] = useState({
@@ -632,6 +633,11 @@ const AddressForm = ({ isModal = false, onAddressAdded = null }) => {
       </div>
     </div>
   );
+};
+
+AddressForm.propTypes = {
+  isModal: PropTypes.bool,
+  onAddressAdded: PropTypes.func,
 };
 
 export default AddressForm;
