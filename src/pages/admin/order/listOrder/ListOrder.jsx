@@ -933,7 +933,7 @@ const ListOrder = () => {
       fixed: "right",
       width: 100,
       render: (text, record) =>
-        record.status !== "Cancelled" && (
+        record.status === "Pending" && (
           <Button
             type="default"
             size="small"
