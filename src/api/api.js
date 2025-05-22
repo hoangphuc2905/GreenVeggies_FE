@@ -169,6 +169,12 @@ export const handleProductApi = {
       headers: getAuthHeader(),
     });
   },
+  //Lấy danh sách phiếu nhập kho
+  getStockEntries: async () => {
+    return await api.get("/stock-entries", {
+      headers: getAuthHeader(),
+    });
+  },
   //Xóa hình ảnh trên cloud
   deleteImage: async (publicId) => {
     return await api.post(

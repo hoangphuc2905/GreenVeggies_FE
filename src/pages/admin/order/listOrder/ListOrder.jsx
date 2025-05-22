@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SearchOutlined } from "@ant-design/icons";
+import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Button,
   Input,
@@ -18,7 +18,10 @@ import OrderDetail from "./orderDetail/OrderDetail";
 import FilterButton from "../../../../components/filter/FilterButton";
 import { getPaymentByOrderId } from "../../../../services/PaymentService";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
-import { createNotify } from "../../../../services/NotifyService";
+import {
+  createNotify,
+  fetchCancelledOrderNotifications,
+} from "../../../../services/NotifyService";
 import { getUserInfo } from "../../../../services/UserService";
 import { getOrders, updateStatus } from "../../../../services/OrderService";
 import {
@@ -181,6 +184,36 @@ const ListOrder = () => {
     };
   }, []);
 
+  // Thông báo khi đơn hàng đã giao thành công
+  const sendDeliveredNotification = async (order) => {
+    try {
+      const adminID = localStorage.getItem("userID");
+      // Thông báo cho user
+      await createNotify({
+        senderType: "admin",
+        senderUserID: adminID,
+        receiverID: order.userID,
+        title: "Đơn hàng đã giao thành công",
+        message: `Đơn hàng ${order.orderID} của bạn đã được giao thành công.`,
+        type: "order",
+        orderID: order.orderID,
+      });
+      // Thông báo cho admin
+      await createNotify({
+        senderType: "system",
+        senderUserID: order.userID,
+        receiverID: adminID,
+        title: "Đơn hàng đã giao thành công",
+        message: `Đơn hàng ${order.orderID} đã được giao thành công cho khách hàng.`,
+        type: "order",
+        orderID: order.orderID,
+      });
+    } catch (error) {
+      // Không cần throw, chỉ log
+      console.error("Lỗi khi gửi thông báo đã giao hàng:", error);
+    }
+  };
+
   // Hàm tự động cập nhật trạng thái đơn hàng sang "Đã giao thành công" nếu quá 3 ngày kể từ updatedAt
   const autoUpdateDeliveredStatus = async (orders) => {
     const now = dayjs();
@@ -193,6 +226,8 @@ const ListOrder = () => {
         ) {
           try {
             await updateStatus(order.orderID, "Delivered");
+            // Gửi thông báo cho cả admin và user
+            await sendDeliveredNotification(order);
             return { ...order, status: "Delivered" };
           } catch (err) {
             return order;
@@ -492,23 +527,28 @@ const ListOrder = () => {
       cancelText: "Đóng",
       onOk: async () => {
         const finalReason = [selectedReason, enteredReason]
-          .filter(Boolean) // Loại bỏ giá trị null hoặc undefined
-          .join("; "); // Kết hợp cả hai lý do bằng dấu chấm phẩy
-
+          .filter(Boolean)
+          .join("; ");
         if (!finalReason) {
           Modal.error({
             content: "Vui lòng chọn hoặc nhập lý do hủy đơn hàng.",
           });
-          return Promise.reject(); // Ngăn modal đóng
+          return Promise.reject();
         }
         if (order.status === "Pending") {
           try {
-            // Gửi thông báo hủy đơn hàng cho khách
-            await sendCancelNotification(
-              order.orderID,
-              order.userID,
-              finalReason
+            // Kiểm tra đã có thông báo hủy chưa
+            const existedNotifies = await fetchCancelledOrderNotifications(
+              order.orderID
             );
+            if (!existedNotifies || existedNotifies.length === 0) {
+              // Gửi thông báo hủy đơn hàng cho khách nếu chưa có
+              await sendCancelNotification(
+                order.orderID,
+                order.userID,
+                finalReason
+              );
+            }
             // Cập nhật trạng thái đơn hàng trên server
             await updateStatus(order.orderID, "Cancelled", {
               reason: finalReason,
@@ -553,7 +593,7 @@ const ListOrder = () => {
           Modal.error({
             content: "Không thể hủy đơn hàng đã được duyệt hoặc giao hàng.",
           });
-          return Promise.reject(); // Ngăn modal đóng
+          return Promise.reject();
         }
       },
     });
@@ -1117,8 +1157,13 @@ const ListOrder = () => {
             Xuất Excel
           </Button>
           {/* Nút Reset toàn bộ lọc */}
-          <Button onClick={handleResetAll} type="default">
-            Reset
+
+          <Button
+            onClick={handleResetAll}
+            type="default"
+            icon={<ReloadOutlined />}
+          >
+            Tải lại
           </Button>
           {selectedRowKeys.length > 0 && (
             <Button

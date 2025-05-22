@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { getProductById } from "../../../services/ProductService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import translateUnit from "../../../components/translateUnit";
 import {
   deleteShoppingCartDetailById,
   getShoppingCartByUserId,
@@ -634,6 +635,9 @@ const Cart = () => {
 
                   <div className="col-span-1 text-center">
                     {(CalcPrice(item.price) || 0).toLocaleString()} VND
+                    <span className="text-gray-500 ml-1">
+                      /1 {translateUnit(item.unit)}
+                    </span>
                   </div>
                   <div className="col-span-1 text-center">
                     <InputNumber

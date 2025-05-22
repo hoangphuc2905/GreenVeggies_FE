@@ -49,6 +49,17 @@ const breadcrumbItems = {
   "/admin/notifications": [
     { href: "/admin/notifications", title: "Danh sách thông báo" },
   ],
+  "/admin/stock-entries": [
+    {
+      href: "/admin/products",
+      title: (
+        <>
+          <span>Quản lý sản phẩm</span>
+        </>
+      ),
+    },
+    { href: "/admin/stock-entries", title: "Danh sách phiếu nhập" },
+  ],
 };
 
 const BreadcrumbNav = () => {

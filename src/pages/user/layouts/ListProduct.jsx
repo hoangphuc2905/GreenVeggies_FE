@@ -18,6 +18,7 @@ import {
   formattedPrice,
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
+import translateUnit from "../../../components/translateUnit";
 import { getProducts } from "../../../services/ProductService";
 import LoginForm from "../../../components/login/login";
 import { getShoppingCartByUserId } from "../../../services/ShoppingCartService";
@@ -487,6 +488,9 @@ const ListProduct = ({
                           )}
                           <Typography.Text strong>
                             {formattedPrice(CalcPrice(product.price))}
+                            <span className="text-gray-500 ml-1">
+                              /1 {translateUnit(product.unit)}
+                            </span>
                           </Typography.Text>
                           <div className="flex justify-between mt-2 text-xs text-gray-500">
                             <span>Đánh giá: {averageRating.toFixed(1)}</span>
@@ -502,7 +506,7 @@ const ListProduct = ({
           }}
         />
       </Spin>
-      <div className="w-full flex justify-center mt-6">
+      <div className="w-full flex justify-center mt-5 mb-5">
         <Pagination
           current={currentPage}
           pageSize={pageSize}

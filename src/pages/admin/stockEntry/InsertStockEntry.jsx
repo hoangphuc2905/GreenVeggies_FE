@@ -141,17 +141,51 @@ const InsertStockEntry = ({
           <Form.Item
             label="Giá nhập"
             name="entryPrice"
-            rules={[{  type: "number" }]}
+            rules={[
+              { type: "number", message: "Giá phải là số", min: 0 },
+              { required: true, message: "Vui lòng nhập giá nhập" },
+            ]}
           >
-            <InputNumber className="w-full"></InputNumber>
+            <InputNumber
+              type="number"
+              className="w-full"
+              stringMode={false}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "e" ||
+                  e.key === "E" ||
+                  e.key === "+" ||
+                  e.key === "-"
+                ) {
+                  e.preventDefault();
+                }
+              }}
+            />
           </Form.Item>
 
           <Form.Item
             label="Số lượng nhập"
             name="entryQuantity"
-            rules={[{  type: "number" }]}
+            rules={[
+              { type: "number", message: "Số lượng phải là số", min: 0 },
+              { required: true, message: "Vui lòng nhập số lượng nhập" },
+            ]}
           >
-            <InputNumber className="w-full"></InputNumber>
+            <InputNumber
+              type="number"
+              className="w-full"
+              stringMode={false}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "e" ||
+                  e.key === "E" ||
+                  e.key === "+" ||
+                  e.key === "-"
+                ) {
+                  e.preventDefault();
+                }
+              }}
+            />
           </Form.Item>
 
           <div className="mt-4 flex justify-between w-full gap-4">

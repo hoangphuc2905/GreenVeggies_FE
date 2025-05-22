@@ -4,6 +4,7 @@ import {
   CalcPrice,
   formattedPrice,
 } from "../../../../components/calcSoldPrice/CalcPrice";
+import { UNIT_OPTIONS } from "../../../../constants/unitOptions";
 
 const Description = ({ product }) => {
   if (!product) return <p>Không có dữ liệu sản phẩm.</p>;
@@ -18,6 +19,12 @@ const Description = ({ product }) => {
     const result = product.quantity;
     if (result < 0) return 0;
     return result;
+  };
+
+  // Hàm lấy tên đơn vị tiếng Việt từ value
+  const getUnitLabel = (unitValue) => {
+    const found = UNIT_OPTIONS.find((u) => u.value === unitValue);
+    return found ? found.label : unitValue;
   };
 
   const dataSource = [
@@ -118,7 +125,7 @@ const Description = ({ product }) => {
           {/* Tồn kho (Số lượng nhập - Đã bán) */}
           <Col span={4}>
             <Card className="text-[#808080] shadow-md" title="Tồn kho">
-              {stockQuantity()} {product.unit}
+              {stockQuantity()} {getUnitLabel(product.unit)}
             </Card>
           </Col>
 
@@ -134,14 +141,14 @@ const Description = ({ product }) => {
           {/* Số lượng nhập */}
           <Col span={4}>
             <Card className="text-[#808080] shadow-md" title="Số lượng nhập">
-              {product.import} {product.unit}
+              {product.import} {getUnitLabel(product.unit)}
             </Card>
           </Col>
 
           {/* Đã bán */}
           <Col span={4}>
             <Card className="text-[#808080] shadow-md" title="Đã bán">
-              {product.sold} {product.unit}
+              {product.sold} {getUnitLabel(product.unit)}
             </Card>
           </Col>
         </Row>

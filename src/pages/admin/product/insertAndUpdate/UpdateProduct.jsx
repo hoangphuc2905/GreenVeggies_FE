@@ -27,6 +27,7 @@ import {
   updateProduct,
   deleteImage,
 } from "../../../../services/ProductService.jsx";
+import { UNIT_OPTIONS } from "../../../../constants/unitOptions";
 
 const { TextArea } = Input;
 
@@ -84,6 +85,11 @@ const UpdateProduct = () => {
 
   const handleCategoryAdded = async () => {
     await fetchCategories();
+    // Nếu chưa chọn category thì tự động chọn category mới nhất
+    const latestCategory = categories[categories.length - 1];
+    if (!form.getFieldValue("category") && latestCategory) {
+      form.setFieldsValue({ category: latestCategory._id });
+    }
   };
 
   const openInsertCategory = () => {
@@ -246,8 +252,13 @@ const UpdateProduct = () => {
                 <Form.Item label="Loại danh mục" name="category">
                   <div className="flex items-center gap-2">
                     <Select
-                      value={form.getFieldValue("category")}
-                      placeholder="Chọn danh mục"
+                      className="flex-1"
+                      placeholder={(() => {
+                        const selectedCat = categories.find(
+                          (cat) => cat._id === form.getFieldValue("category")
+                        );
+                        return selectedCat ? selectedCat.name : "Chọn danh mục";
+                      })()}
                       onChange={(value) => {
                         form.setFieldsValue({ category: value });
                         clearFieldError("category");
@@ -289,11 +300,11 @@ const UpdateProduct = () => {
                   // rules={[{ required: true }]}
                 >
                   <Select onChange={() => clearFieldError("unit")}>
-                    <Select.Option value="piece">Phần</Select.Option>
-                    <Select.Option value="kg">Kg</Select.Option>
-                    <Select.Option value="gram">Gram</Select.Option>
-                    <Select.Option value="liter">Lít</Select.Option>
-                    <Select.Option value="ml">Ml</Select.Option>
+                    {UNIT_OPTIONS.map((option) => (
+                      <Select.Option key={option.value} value={option.value}>
+                        {option.label}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
                 <Form.Item
@@ -309,6 +320,16 @@ const UpdateProduct = () => {
                         entryPrice: formattedPrice(CalcPrice(value)),
                       });
                       clearFieldError("price");
+                    }}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "e" ||
+                        e.key === "E" ||
+                        e.key === "+" ||
+                        e.key === "-"
+                      ) {
+                        e.preventDefault();
+                      }
                     }}
                   />
                 </Form.Item>
