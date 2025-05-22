@@ -1036,6 +1036,7 @@ const ListOrder = () => {
         if (found) displayedOrders.push(found);
       }
     });
+    
     let dataToExport = displayedOrders;
     if (dataToExport.length === 0) {
       const startIdx = (pagination.current - 1) * pagination.pageSize;
