@@ -3,7 +3,7 @@ import { getAllReviews } from "../../services/ReviewService";
 
 import Countdown from "react-countdown";
 // Đặt thời gian đếm ngược
-const countdownDate = new Date("2025-04-13T00:00:00").getTime();
+const countdownDate = new Date("2025-06-13T00:00:00").getTime();
 
 import bgImage from "../../../src/assets/pictures/bg.png";
 import bg1Image from "../../../src/assets/pictures/bg1.png";
@@ -35,8 +35,18 @@ const images = [
     description: "100% FRESH & ORGANIC FOODS",
     subText: "CHÚNG TÔI PHÂN PHỐI RAU CỦ VÀ TRÁI CÂY",
   },
-  { id: 2, src: bg1Image },
-  { id: 3, src: bg2Image },
+  {
+    id: 2,
+    src: bg1Image,
+    // description: "THỰC PHẨM SẠCH & AN TOÀN",
+    // subText: "RAU CỦ QUẢ TƯƠI NGON MỖI NGÀY",
+  },
+  {
+    id: 3,
+    src: bg2Image,
+    // description: "SẢN PHẨM CHẤT LƯỢNG",
+    // subText: "NGUỒN GỐC RÕ RÀNG, GIÀU DINH DƯỠNG",
+  },
 ];
 
 const Home = () => {
@@ -131,18 +141,18 @@ const Home = () => {
       <div className="container mx-auto mt-[100px]">
         <Carousel arrows autoplay infinite={false}>
           {images.map((item) => (
-            <div key={item.id} className="">
+            <div key={item.id} className="relative">
               <img
                 src={item.src}
                 alt="Mô tả hình ảnh"
                 className="w-full h-[70vh] object-fill"
               />
               {item.description && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <h2 className="text-white text-6xl md:text-8xl font-bold font-amatic">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <h2 className="text-white text-6xl md:text-8xl font-bold font-amatic text-shadow-lg">
                     {item.description}
                   </h2>
-                  <h3 className="text-white text-lg md:text-xl font-bold mt-4">
+                  <h3 className="text-white text-lg md:text-xl font-bold mt-4 text-shadow-md">
                     {item.subText}
                   </h3>
                 </div>
