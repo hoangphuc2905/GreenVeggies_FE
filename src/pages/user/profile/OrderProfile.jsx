@@ -150,8 +150,10 @@ const OrderProfile = () => {
     try {
       // Chuẩn bị dữ liệu để gửi đến API
       let updateData;
+      let statusToUpdate;
 
       if (typeof newStatus === "string") {
+        statusToUpdate = newStatus;
         if (newStatus === "Cancelled" && cancelReason) {
           updateData = { status: newStatus, cancelReason };
         } else {
@@ -159,16 +161,16 @@ const OrderProfile = () => {
         }
       } else {
         updateData = newStatus; // Nếu newStatus đã là object
+        statusToUpdate = newStatus.status;
       }
 
-      const result = await updateStatus(orderID, "Cancelled", true);
+      const result = await updateStatus(orderID, statusToUpdate, true);
 
       if (result) {
         setMessage(
-          newStatus === "Cancelled" ||
-            (typeof newStatus === "object" && newStatus.status === "Cancelled")
+          statusToUpdate === "Cancelled"
             ? "Đơn hàng đã được hủy thành công!"
-            : "Cập nhật trạng thái thành công!"
+            : "Cập nhật trạng thái thành công rồi !"
         );
 
         setOrders((prev) =>
@@ -176,10 +178,7 @@ const OrderProfile = () => {
             order.orderID === orderID
               ? {
                   ...order,
-                  status:
-                    typeof newStatus === "string"
-                      ? newStatus
-                      : newStatus.status,
+                  status: statusToUpdate,
                   cancelReason:
                     cancelReason ||
                     (typeof newStatus === "object"
@@ -280,9 +279,7 @@ const OrderProfile = () => {
       // Gửi thông báo hủy đơn hàng cho admin.
       await sendCancelNotify(cancelOrderID, finalReason);
 
-      setMessage(
-        "Đơn hàng đã được hủy !"
-      );
+      setMessage("Đơn hàng đã được hủy !");
     } catch (error) {
       console.error("Error during order cancellation:", error);
       setMessage("Lỗi khi hủy đơn hàng. Vui lòng thử lại sau.");
@@ -296,6 +293,29 @@ const OrderProfile = () => {
       const details = await getProductById(productId);
       setProductDetails((prev) => ({ ...prev, [productId]: details }));
     }
+  };
+
+  // Add this function to handle order receipt confirmation
+  const handleConfirmReceived = async (orderID) => {
+    Modal.confirm({
+      title: "Xác nhận đã nhận hàng",
+      content:
+        "Bạn chắc chắn đã nhận được đơn hàng này? Hành động này không thể hoàn tác sau khi xác nhận.",
+      okText: "Xác nhận đã nhận",
+      cancelText: "Hủy bỏ",
+      onOk: async () => {
+        try {
+          await handleUpdateStatus(orderID, "Delivered");
+          setMessage("Xác nhận đã nhận hàng thành công!");
+        } catch (error) {
+          console.error("Error confirming order receipt:", error);
+          setMessage("Lỗi khi xác nhận đã nhận hàng. Vui lòng thử lại sau.");
+        }
+
+        // Automatically hide the message after 3 seconds
+        setTimeout(() => setMessage(null), 3000);
+      },
+    });
   };
 
   const handleReviewClick = async (order) => {
