@@ -8,6 +8,7 @@ import taoDen from "../../../assets/pictures/tao-den.webp";
 import thuanImage from "../../../assets/pictures/thuan2.png";
 import xoaiImage from "../../../assets/pictures/xoai.jpg";
 
+
 export const newsData = [
   {
     id: 1,

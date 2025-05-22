@@ -45,7 +45,6 @@ const useStyle = createStyles(({ css, token }) => {
     `,
   };
 });
-
 const ListOrder = () => {
   const location = useLocation();
   const { status, day, month, year } = location.state || {}; // Retrieve state parameters
@@ -934,7 +933,7 @@ const ListOrder = () => {
       fixed: "right",
       width: 100,
       render: (text, record) =>
-        record.status !== "Cancelled" && (
+        record.status === "Pending" && (
           <Button
             type="default"
             size="small"
@@ -956,21 +955,58 @@ const ListOrder = () => {
 
   // Hàm xuất Excel cho bảng hiện tại (không xuất cột STT và Tác vụ)
   const handleExportExcel = () => {
-    // Lấy các cột đang hiển thị, loại bỏ 'key' (STT) và 'actions' (Tác vụ)
+    // Xác định tiêu chí lọc
+    let filterLabel = "Tất cả";
+    if (
+      filteredInfo &&
+      filteredInfo.status &&
+      filteredInfo.status.length === 1
+    ) {
+      const status = filteredInfo.status[0];
+      if (status === "Shipped") filterLabel = "Đang vận chuyển";
+      else if (status === "Pending") filterLabel = "Đang chờ duyệt";
+      else if (status === "Delivered") filterLabel = "Đã giao thành công";
+      else if (status === "Cancelled") filterLabel = "Đã hủy";
+      else filterLabel = status;
+    }
+
+    // Tiêu đề và ngày tạo file
+    const filterTitle =
+      filterLabel === "Tất cả"
+        ? "DANH SÁCH HÓA ĐƠN"
+        : `DANH SÁCH ĐƠN HÀNG ${filterLabel.toUpperCase()}`;
+    const today = dayjs().format("DD-MM-YYYY HH:mm:ss");
+    const excelCreatedRow = [`Ngày tạo file: ${today}`];
+
+    // Chuẩn bị cột xuất Excel
     const exportableColumns = columns.filter(
       (col) =>
         visibleColumns[col.key] && col.key !== "key" && col.key !== "actions"
     );
-
-    // Tạo header cho file Excel
     const headers = exportableColumns.map((col) => col.title);
+    headers.push("Ngày tạo đơn");
 
-    // Tạo dữ liệu cho file Excel
-    const data = (orders || []).map((order) =>
-      exportableColumns.map((col) => {
-        // Render giá trị nếu có hàm render, ngược lại lấy trực tiếp
+    // Lấy dữ liệu thực sự đang hiển thị trên bảng (sau khi lọc, tìm kiếm, sắp xếp, PHÂN TRANG)
+    const tableRows = document.querySelectorAll(".ant-table-tbody > tr");
+    const displayedOrders = [];
+    tableRows.forEach((row) => {
+      const rowKey = row.getAttribute("data-row-key");
+      if (rowKey) {
+        const found = (orders || []).find((o) => o.orderID === rowKey);
+        if (found) displayedOrders.push(found);
+      }
+    });
+    let dataToExport = displayedOrders;
+    if (dataToExport.length === 0) {
+      const startIdx = (pagination.current - 1) * pagination.pageSize;
+      const endIdx = startIdx + pagination.pageSize;
+      dataToExport = (orders || []).slice(startIdx, endIdx);
+    }
+
+    // Chuẩn hóa dữ liệu xuất
+    const data = dataToExport.map((order) => [
+      ...exportableColumns.map((col) => {
         if (col.key === "paymentContent") {
-          // Đặc biệt cho cột paymentContent
           const content = paymentContents[order.orderID];
           return content || "Không áp dụng";
         }
@@ -978,22 +1014,89 @@ const ListOrder = () => {
           return formattedDate(order.updatedAt);
         }
         if (col.render) {
-          // Trả về text gốc nếu render chỉ là Tooltip hoặc Tag
           if (col.dataIndex) {
             return order[col.dataIndex];
           }
         }
         return order[col.dataIndex] ?? order[col.key];
-      })
-    );
+      }),
+      order.createdAt ? formattedDate(order.createdAt) : "",
+    ]);
 
-    // Tạo worksheet và workbook
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    // Tạo worksheet với định dạng đẹp
+    const ws_data = [
+      excelCreatedRow, // Ngày tạo file
+      [filterTitle], // Tiêu đề lọc
+      headers, // Header
+      ...data,
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+    // Định dạng: merge cells cho tiêu đề và ngày tạo file
+    const totalCols = headers.length;
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, // merge ngày tạo file
+      { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, // merge tiêu đề
+    ];
+
+    // Định dạng style cho ngày tạo file (dòng 1)
+    const cellDate = XLSX.utils.encode_cell({ r: 0, c: 0 });
+    ws[cellDate].s = {
+      font: { bold: true, color: { rgb: "666666" }, sz: 12 },
+      alignment: { horizontal: "right", vertical: "center" },
+    };
+
+    // Định dạng style cho tiêu đề (dòng 2)
+    const cellTitle = XLSX.utils.encode_cell({ r: 1, c: 0 });
+    ws[cellTitle].s = {
+      font: { bold: true, color: { rgb: "22C55E" }, sz: 16 },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    // Định dạng style cho header (dòng 3)
+    for (let i = 0; i < totalCols; i++) {
+      const cell = XLSX.utils.encode_cell({ r: 2, c: i });
+      if (!ws[cell]) continue;
+      ws[cell].s = {
+        fill: { fgColor: { rgb: "22C55E" } },
+        font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+          top: { style: "thin", color: { rgb: "CCCCCC" } },
+          left: { style: "thin", color: { rgb: "CCCCCC" } },
+          right: { style: "thin", color: { rgb: "CCCCCC" } },
+          bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+        },
+      };
+    }
+
+    // Định dạng style cho dữ liệu (dòng 4 trở đi)
+    for (let r = 3; r < ws_data.length; r++) {
+      for (let c = 0; c < totalCols; c++) {
+        const cell = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cell]) continue;
+        ws[cell].s = {
+          alignment: { horizontal: "left", vertical: "center" },
+          border: {
+            top: { style: "thin", color: { rgb: "DDDDDD" } },
+            left: { style: "thin", color: { rgb: "DDDDDD" } },
+            right: { style: "thin", color: { rgb: "DDDDDD" } },
+            bottom: { style: "thin", color: { rgb: "DDDDDD" } },
+          },
+        };
+      }
+    }
+
+    // Đặt độ rộng cột tự động
+    ws["!cols"] = headers.map(() => ({ wch: 22 }));
+
+    // Tạo workbook và lưu file
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Orders");
-
-    // Xuất file
-    XLSX.writeFile(wb, "DanhSachDonHang.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "DANH SÁCH HÓA ĐƠN");
+    XLSX.writeFile(
+      wb,
+      `DanhSachHoaDon_ngay${dayjs().format("DD-MM-YYYY")}.xlsx`
+    );
   };
 
   // Render giao diện danh sách đơn hàng, filter, bảng, modal chi tiết
@@ -1003,7 +1106,7 @@ const ListOrder = () => {
   return (
     <div className="bg-white p-4 rounded-lg shadow-md">
       <div className="text-lg font-semibold mb-4 flex justify-between">
-        <span>Danh sách đơn hàng</span>
+        <span>Danh sách hóa đơn</span>
         <Space>
           {/* Nút xuất Excel */}
           <Button
