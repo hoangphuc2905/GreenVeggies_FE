@@ -28,7 +28,6 @@ import { ZoomInOutlined } from "@ant-design/icons";
 import { getProducts, getProductById } from "../../services/ProductService";
 import translateUnit from "../../components/translateUnit";
 
-
 const images = [
   {
     id: 1,
@@ -53,8 +52,16 @@ const Home = () => {
       try {
         const data = await getProducts();
 
+        // Filter products with sold count > 5
+        const popularProducts = data.filter((product) => product.sold > 5);
+
+        // If there are enough popular products, use only those
+        // Otherwise, use all products to avoid having too few options
+        const productsToChooseFrom =
+          popularProducts.length >= 6 ? popularProducts : data;
+
         // Get random products for featured section
-        const randomProductIds = getRandomProducts(data, 6).map(
+        const randomProductIds = getRandomProducts(productsToChooseFrom, 6).map(
           (product) => product.productID
         );
 
@@ -96,8 +103,6 @@ const Home = () => {
             return review;
           })
         );
-
-        console.log("Reviews with product details:", reviewsWithProductDetails);
         setReviews(reviewsWithProductDetails);
       } catch (error) {
         console.error("Error fetching reviews:", error);
@@ -330,23 +335,48 @@ const Home = () => {
                     <p className="text-gray-700 font-bold text-center">
                       {product.name}
                     </p>
-                    <p className="text-gray-700 text-center">
-                      {" "}
-                      {product.oldPrice && (
-                        <span className="line-through">
-                          {" "}
-                          {product.oldPrice}đ{" "}
-                        </span>
-                      )}{" "}
-                      <span className="text-gray-700">
+                    <div className="flex flex-col items-center">
+                      <p className="text-gray-700 text-center">
                         {" "}
-                        {formattedPrice(product.price)}{" "}
-                        <span className="text-gray-500 ml-1">
+                        {product.oldPrice && (
+                          <span className="line-through">
+                            {" "}
+                            {product.oldPrice}đ{" "}
+                          </span>
+                        )}{" "}
+                        <span className="text-gray-700">
                           {" "}
-                          /1 {translateUnit(product.unit)}{" "}
+                          {formattedPrice(product.price)}{" "}
+                          <span className="text-gray-500 ml-1">
+                            {" "}
+                            /1 {translateUnit(product.unit)}{" "}
+                          </span>{" "}
                         </span>{" "}
-                      </span>{" "}
-                    </p>
+                      </p>
+                      <div className="flex flex-col items-center mt-1">
+                        {product.reviews && product.reviews.length > 0 && (
+                          <div className="flex items-center mb-1">
+                            <Rate
+                              disabled
+                              allowHalf
+                              defaultValue={
+                                product.reviews.reduce(
+                                  (sum, review) => sum + Number(review.rating),
+                                  0
+                                ) / product.reviews.length
+                              }
+                              style={{ fontSize: "14px" }}
+                            />
+                            <span className="text-xs text-gray-500 ml-1">
+                              ({product.reviews.length})
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-xs text-gray-500 font-bold">
+                          Đã bán: {product.sold}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
