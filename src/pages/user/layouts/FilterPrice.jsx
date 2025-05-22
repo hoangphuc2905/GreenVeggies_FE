@@ -79,19 +79,19 @@ const FilterPrice = ({
         newMax = Number.MAX_VALUE;
 
       switch (range) {
-        case "under500k":
-          newMax = 500000;
+        case "under30k":
+          newMax = 30000;
           break;
-        case "500kTo1m":
-          newMin = 500000;
-          newMax = 1000000;
+        case "30kTo50k":
+          newMin = 30000;
+          newMax = 50000;
           break;
-        case "1mTo2m":
-          newMin = 1000000;
-          newMax = 2000000;
+        case "50kTo100k":
+          newMin = 50000;
+          newMax = 100000;
           break;
-        case "above2m":
-          newMin = 2000000;
+        case "above100k":
+          newMin = 100000;
           break;
         default:
           break;
@@ -102,7 +102,7 @@ const FilterPrice = ({
       setSearchParams((prev) => {
         const params = new URLSearchParams(prev);
         params.set("minPrice", newMin);
-        params.set("maxPrice", newMax);
+        params.set("maxPrice", newMax === Number.MAX_VALUE ? "max" : newMax);
         params.delete("search"); // Xóa từ khóa tìm kiếm khi chọn radio
         return params;
       });
@@ -124,20 +124,20 @@ const FilterPrice = ({
 
   const menuItems = [
     {
-      key: "under500k",
-      label: "Dưới 500K",
+      key: "under30k",
+      label: "Dưới 30.000 VND",
     },
     {
-      key: "500kTo1m",
-      label: "500K - 1M",
+      key: "30kTo50k",
+      label: "30.000 - 50.000 VND",
     },
     {
-      key: "1mTo2m",
-      label: "1M - 2M",
+      key: "50kTo100k",
+      label: "50.000 - 100.000 VND",
     },
     {
-      key: "above2m",
-      label: "Trên 2M",
+      key: "above100k",
+      label: "Trên 100.000 VND",
     },
   ];
 

@@ -571,7 +571,7 @@ const OrderPage = () => {
               wrapperCol={{ span: 24 }}>
               <Input />
             </Form.Item>
-            <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
+            {/* <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
               Thông tin bổ sung
             </label>
             <Form.Item
@@ -580,7 +580,7 @@ const OrderPage = () => {
               labelCol={{ span: 24 }}
               wrapperCol={{ span: 24 }}>
               <Input.TextArea />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
 
           {/* Address Modal */}

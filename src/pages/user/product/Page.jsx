@@ -8,15 +8,29 @@ import FilterPrice from "../layouts/FilterPrice";
 import { getProducts } from "../../../services/ProductService";
 
 const Page = () => {
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(Number.MAX_VALUE);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
+  const urlMinPrice = searchParams.get("minPrice");
+  const urlMaxPrice = searchParams.get("maxPrice");
+
+  // Initialize price filters from URL parameters if available
+  const [minPrice, setMinPrice] = useState(
+    urlMinPrice ? Number(urlMinPrice) : 0
+  );
+  const [maxPrice, setMaxPrice] = useState(
+    urlMaxPrice === "max"
+      ? Number.MAX_VALUE
+      : urlMaxPrice
+      ? Number(urlMaxPrice)
+      : Number.MAX_VALUE
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [tempMinPrice, setTempMinPrice] = useState("");
   const [tempMaxPrice, setTempMaxPrice] = useState("");
   const [selectedPriceRange, setSelectedPriceRange] = useState(null);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
-  const [, setProducts] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
   const fetchProducts = async () => {
     try {
@@ -45,14 +59,61 @@ const Page = () => {
       });
 
       setProducts(sortedProducts);
+
+      // Apply initial filtering
+      applyFilters(sortedProducts, minPrice, maxPrice, searchQuery);
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu!", error);
     }
   };
 
+  // Function to apply all filters
+  const applyFilters = (productsToFilter, min, max, query) => {
+    let filtered = [...productsToFilter];
+
+    // Apply price filter
+    filtered = filtered.filter((product) => {
+      const price = Number(product.price);
+      return price >= min && price <= max;
+    });
+
+    // Apply search query if exists
+    if (query) {
+      filtered = filtered.filter((product) =>
+        product.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  // Re-apply filters when parameters change
+  useEffect(() => {
+    if (products.length > 0) {
+      applyFilters(products, minPrice, maxPrice, searchQuery);
+    }
+  }, [minPrice, maxPrice, searchQuery, products]);
+
   useEffect(() => {
     fetchProducts();
-  }, []);
+
+    // Determine price range selection from URL params
+    if (urlMinPrice && urlMaxPrice) {
+      const min = Number(urlMinPrice);
+      const max =
+        urlMaxPrice === "max" ? Number.MAX_VALUE : Number(urlMaxPrice);
+
+      if (max === 30000) {
+        setSelectedPriceRange("under30k");
+      } else if (min === 30000 && max === 50000) {
+        setSelectedPriceRange("30kTo50k");
+      } else if (min === 50000 && max === 100000) {
+        setSelectedPriceRange("50kTo100k");
+      } else if (min === 100000) {
+        setSelectedPriceRange("above100k");
+      }
+    }
+  }, [urlMinPrice, urlMaxPrice]);
 
   useEffect(() => {
     const handleCartUpdated = () => {
@@ -109,6 +170,7 @@ const Page = () => {
               <Favourite />
             </div>
             <ListProduct
+              products={filteredProducts}
               minPrice={minPrice}
               maxPrice={maxPrice}
               searchQuery={searchQuery}
