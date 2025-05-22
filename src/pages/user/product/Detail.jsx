@@ -16,6 +16,8 @@ import {
   Tag,
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
+
+
 import Favourite from "../layouts/Favourite";
 import { getUserInfo } from "../../../services/UserService"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
 import { getProductById } from "../../../services/ProductService";
@@ -29,6 +31,7 @@ import {
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import LoginForm from "../../../components/login/login";
+import translateUnit from "../../../components/translateUnit";
 
 // Custom style for notifications
 const customNotificationStyle = `
@@ -767,7 +770,12 @@ const Detail = () => {
               <Typography.Text
                 className="text-xl block mt-2"
                 style={{ color: "#FEA837" }}>
-                {formattedPrice(CalcPrice(product.price))}
+                {" "}
+                {formattedPrice(CalcPrice(product.price))}{" "}
+                <span className="text-base text-gray-600 ml-2">
+                  {" "}
+                  / 1{translateUnit(product.unit)}{" "}
+                </span>{" "}
               </Typography.Text>
 
               <div className="mt-4">
@@ -845,7 +853,10 @@ const Detail = () => {
                 scrollbarWidth: "thin",
                 scrollbarColor: "#82AE46 #f0f0f0",
               }}>
-              <Favourite />
+              <Favourite
+                categoryID={product?.category?._id}
+                currentProductID={product?.productID}
+              />{" "}
             </div>
           </div>
         </div>
@@ -914,7 +925,11 @@ const Detail = () => {
                 Nguồn gốc: <Typography.Text>{product.origin}</Typography.Text>
               </Typography.Text>
               <Typography.Text strong>
-                Đơn vị tính: <Typography.Text>{product.unit}</Typography.Text>
+                {" "}
+                Đơn vị tính:{" "}
+                <Typography.Text>
+                  {translateUnit(product.unit)}
+                </Typography.Text>{" "}
               </Typography.Text>
               <Typography.Text strong>
                 Trạng thái:{" "}

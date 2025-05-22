@@ -21,6 +21,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createNotify } from "../../../services/NotifyService";
 import { addOrder } from "../../../services/OrderService";
 import { CalcPrice } from "../../../components/calcSoldPrice/CalcPrice";
+import translateUnit from "../../../components/translateUnit";
 import AddressForm from "../profile/AddressForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
@@ -570,7 +571,7 @@ const OrderPage = () => {
               wrapperCol={{ span: 24 }}>
               <Input />
             </Form.Item>
-            <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
+            {/* <label className="block text-gray-700 text-sm font-bold mb-2 uppercase text-center">
               Thông tin bổ sung
             </label>
             <Form.Item
@@ -579,7 +580,7 @@ const OrderPage = () => {
               labelCol={{ span: 24 }}
               wrapperCol={{ span: 24 }}>
               <Input.TextArea />
-            </Form.Item>
+            </Form.Item> */}
           </Form>
 
           {/* Address Modal */}
@@ -610,7 +611,9 @@ const OrderPage = () => {
           {cartItems.length > 0 ? (
             cartItems.map((item, index) => (
               <div key={index} className="grid grid-cols-3 gap-4 mb-2">
-                <p>{item.name}</p>
+                <p>
+                  {item.name} ({translateUnit(item.unit)})
+                </p>
                 <p className="text-center">{item.quantity}</p>
                 <p className="text-right">
                   {(CalcPrice(item.price) * item.quantity).toLocaleString()} VND

@@ -10,10 +10,32 @@ export const createReview = async (data) => {
     console.error("API không trả về dữ liệu hợp lệ:", response);
     return null;
   } catch (error) {
-    if (error.response && error.response.data) {
-      console.error("Lỗi từ BE:", error.response.data.message);
-      throw error.response.data;
+    // Log the full error structure
+    console.error("Full error structure:", error);
+
+    if (error.response) {
+      // For rate limit errors (429)
+      if (error.response.status === 429) {
+        console.error("Rate limit error (429):", error.response.data);
+        throw {
+          status: 429,
+          data: error.response.data,
+          message:
+            error.response.data?.errors?.rateLimit ||
+            "Quá nhiều yêu cầu trong thời gian ngắn",
+        };
+      }
+
+      // For other API errors with response data
+      if (error.response.data) {
+        console.error(
+          "Lỗi từ BE:",
+          error.response.data.message || "Không có thông báo lỗi"
+        );
+        throw error.response.data;
+      }
     }
+
     console.error("Lỗi khi tạo đánh giá:", error);
     throw new Error("Lỗi kết nối đến máy chủ!");
   }

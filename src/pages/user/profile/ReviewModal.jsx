@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StarFilled, PlusOutlined } from "@ant-design/icons";
-import { Image, message, Upload } from "antd";
+import { Image, message, Upload, notification, Modal } from "antd";
 import { createReview } from "../../../services/ReviewService";
 import { cloundinaryURL, cloundinaryPreset } from "../../../api/api";
 
@@ -110,14 +110,25 @@ const ReviewModal = ({ product, onClose, onSubmit }) => {
       onSubmit(reviewData);
       onClose();
     } catch (error) {
-      console.error(
-        "Error creating review:",
-        error.response?.data || error.message
-      );
-      message.error(
-        error.response?.data?.message ||
-          "Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại."
-      );
+      console.error("Error creating review:", error);
+
+      // Kiểm tra lỗi 429 - Too Many Requests
+      if (error.status === 429) {
+        // Sử dụng Modal thay vì notification để đảm bảo hiển thị trên cùng
+        Modal.error({
+          title: "Quá nhiều yêu cầu",
+          content:
+            error.message ||
+            "BẠN ĐÃ GỬI QUÁ NHIỀU ĐÁNH GIÁ TRONG VÒNG 1 PHÚT VUI LÒNG GỬI LẠI SAU",
+          centered: true,
+          zIndex: 9999999,
+          maskStyle: { backgroundColor: "rgba(0, 0, 0, 0.7)" },
+        });
+      } else {
+        message.error(
+          error.message || "Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại."
+        );
+      }
     }
   };
 
@@ -146,8 +157,7 @@ const ReviewModal = ({ product, onClose, onSubmit }) => {
           <div
             className={`flex space-x-1 ${
               ratingError ? "border border-red-500 rounded p-1" : ""
-            }`}
-          >
+            }`}>
             {[1, 2, 3, 4, 5].map((star) => (
               <StarFilled
                 key={star}
@@ -209,14 +219,12 @@ const ReviewModal = ({ product, onClose, onSubmit }) => {
           )}
           <button
             onClick={onClose}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
-          >
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200">
             Hủy
           </button>
           <button
             onClick={handleSubmit}
-            className="bg-green-100 text-green-500 px-4 py-2 rounded hover:bg-green-200"
-          >
+            className="bg-green-100 text-green-500 px-4 py-2 rounded hover:bg-green-200">
             Gửi đánh giá
           </button>
         </div>
