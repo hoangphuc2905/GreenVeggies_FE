@@ -26,6 +26,7 @@ import {
   deleteImage,
 } from "../../../../services/ProductService";
 import { getProducts } from "../../../../services/ProductService";
+import { UNIT_OPTIONS } from "../../../../constants/unitOptions";
 
 const { TextArea } = Input;
 
@@ -328,6 +329,16 @@ const InsertProduct = () => {
                   <InputNumber
                     type="number"
                     className="w-full"
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "e" ||
+                        e.key === "E" ||
+                        e.key === "+" ||
+                        e.key === "-"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={(value) => {
                       const calculatedPrice = CalcPrice(value || 0);
                       form.setFieldsValue({
@@ -352,6 +363,16 @@ const InsertProduct = () => {
                 >
                   <InputNumber
                     className="w-full"
+                    onKeyDown={(e) => {
+                      if (
+                        e.key === "e" ||
+                        e.key === "E" ||
+                        e.key === "+" ||
+                        e.key === "-"
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     onChange={() => clearFieldError("import")}
                   />
                 </Form.Item>
@@ -361,11 +382,11 @@ const InsertProduct = () => {
                   // rules={[{ required: true, message: "Vui lòng chọn đơn vị." }]}
                 >
                   <Select onChange={() => clearFieldError("unit")}>
-                    <Select.Option value="piece">Phần</Select.Option>
-                    <Select.Option value="kg">Kg</Select.Option>
-                    <Select.Option value="gram">Gram</Select.Option>
-                    <Select.Option value="liter">Lít</Select.Option>
-                    <Select.Option value="ml">Ml</Select.Option>
+                    {UNIT_OPTIONS.map((option) => (
+                      <Select.Option key={option.value} value={option.value}>
+                        {option.label}
+                      </Select.Option>
+                    ))}
                   </Select>
                 </Form.Item>
                 <Form.Item label="Trạng thái" name="status">

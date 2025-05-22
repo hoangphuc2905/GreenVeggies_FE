@@ -379,7 +379,13 @@ const OrderDetail = ({
               content: "Đơn hàng đã được hủy thành công.",
             });
 
-            await sendCancelNotify(order.orderID, reason); // Gửi thông báo sau khi hủy đơn hàng
+            // Kiểm tra đã có thông báo hủy chưa
+            const existedNotifies = await fetchCancelledOrderNotifications(
+              order.orderID
+            );
+            if (!existedNotifies || existedNotifies.length === 0) {
+              await sendCancelNotify(order.orderID, reason);
+            }
             setTimeout(() => {
               refreshOrders();
               onClose();
@@ -505,16 +511,14 @@ const OrderDetail = ({
         width={"70%"}
         centered
         footer={[
-          order.status === "Pending" && (
-            <Button
-              className="bg-blue-500 text-white"
-              key="export-invoice"
-              type="default"
-              onClick={() => setShowInvoice(true)}
-            >
-              Xuất hóa đơn
-            </Button>
-          ),
+          <Button
+            className="bg-blue-500 text-white"
+            key="export-invoice"
+            type="default"
+            onClick={() => setShowInvoice(true)}
+          >
+            Xuất hóa đơn
+          </Button>,
           order.status === "Pending" && (
             <Button
               className="bg-red-500 text-white"
