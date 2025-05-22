@@ -1,14 +1,14 @@
 const translateUnit = (unit) => {
   const unitTranslations = {
-    piece: "cái",
-    kg: "kg",
-    gram: "gram",
-    liter: "lít",
-    ml: "ml",
-    pack: "gói",
-    bundle: "bó",
-    bottle: "chai",
-    packet: "túi",
+    piece: "Trái",
+    kg: "Kg",
+    gram: "Gram",
+    liter: "Lít",
+    ml: "Ml",
+    pack: "Hộp",
+    bundle: "Bó",
+    bottle: "Chai",
+    packet: "Gói",
   };
 
   return unitTranslations[unit] || unit;
