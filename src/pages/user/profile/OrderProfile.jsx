@@ -170,7 +170,7 @@ const OrderProfile = () => {
         setMessage(
           statusToUpdate === "Cancelled"
             ? "Đơn hàng đã được hủy thành công!"
-            : "Cập nhật trạng thái thành công!"
+            : "Cập nhật trạng thái thành công rồi !"
         );
 
         setOrders((prev) =>
