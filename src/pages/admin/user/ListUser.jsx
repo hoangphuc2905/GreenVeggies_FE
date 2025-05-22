@@ -15,7 +15,8 @@ import DefaultAVT from "../../../assets/pictures/default.png";
 
 import {
   EyeInvisibleOutlined,
-  EyeOutlined, // Thêm icon mở khóa
+  EyeOutlined,
+  ReloadOutlined, // Thêm icon mở khóa
   SearchOutlined,
 } from "@ant-design/icons";
 import UserDetailModal from "./UserDetailModal";
@@ -50,6 +51,8 @@ const ListUser = () => {
   const [filteredInfo, setFilteredInfo] = useState({});
   const [sortedInfo, setSortedInfo] = useState({});
   const searchInput = useRef(null);
+  const [lockHistory, setLockHistory] = useState([]); // [{userID, timestamp}]
+  const [times, setTimes] = useState(0); // Số lần khóa tài khoản trong 1 phút
 
   /**
    * Lấy danh sách người dùng từ API.
@@ -229,6 +232,44 @@ const ListUser = () => {
     await fetchUsers();
     // setUsers(allUsers);
     setLoading(false);
+  };
+
+  /**
+   * Kiểm tra rate limit: chỉ cho phép khóa 1 tài khoản tối đa 5 lần hoặc 5 tài khoản khác nhau trong 1 phút.
+   * @param {string} userID
+   * @returns {boolean} true nếu được phép khóa, false nếu vượt giới hạn
+   */
+  const canLockAccount = (userID) => {
+    const now = Date.now();
+    // Lọc các thao tác trong 1 phút gần nhất
+    const recent = lockHistory.filter(
+      (item) => now - item.timestamp < 60 * 1000
+    );
+    // Số lần khóa tài khoản này trong 1 phút
+    const lockCountForUser = recent.filter(
+      (item) => item.userID === userID
+    ).length;
+    // Số tài khoản khác nhau đã bị khóa trong 1 phút
+    const uniqueUsers = new Set(recent.map((item) => item.userID));
+    if (
+      lockCountForUser >= 5 ||
+      (uniqueUsers.size >= 5 && !uniqueUsers.has(userID))
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * Ghi nhận thao tác khóa vào lịch sử
+   * @param {string} userID
+   */
+  const recordLockAction = (userID) => {
+    setLockHistory((prev) => [
+      ...prev.filter((item) => Date.now() - item.timestamp < 60 * 1000),
+      { userID, timestamp: Date.now() },
+    ]);
+    setTimes((prev) => prev + 1);
   };
 
   // Định nghĩa các cột cho bảng người dùng
@@ -416,15 +457,15 @@ const ListUser = () => {
         if (record.role === "admin") {
           return null;
         }
-        // Nếu tài khoản đã bị khóa, hiển thị nút mở khóa (EyeOutlined) màu xanh lá với tooltip tiếng Việt
+        // Nếu tài khoản đã bị khóa, hiển thị nút mở khóa
         if (record.accountStatus === "Suspended") {
           return (
             <Space size="middle">
               <Button
                 size="medium"
                 type="primary"
-                icon={<EyeOutlined style={{ color: "#52c41a" }} />}
-                className="bg-[#E6FFFB] text-[#52c41a] font-bold border-[#52c41a]"
+                icon={<EyeInvisibleOutlined />}
+                className="bg-[#D63847] text-[#FFFDFF] font-bold hover:!bg-[#A02B35]"
                 onClick={(e) => {
                   e.stopPropagation();
                   Modal.confirm({
@@ -444,16 +485,22 @@ const ListUser = () => {
             </Space>
           );
         }
-        // Nếu tài khoản đang hoạt động, hiển thị nút khóa (EyeInvisibleOutlined) với tooltip tiếng Việt
+        // Nếu tài khoản đang hoạt động, hiển thị nút khóa (có kiểm tra rate limit)
         return (
           <Space size="middle">
             <Button
               size="medium"
               type="primary"
-              icon={<EyeInvisibleOutlined />}
-              className="bg-[#D63847] text-[#FFFDFF] font-bold hover:!bg-[#A02B35]"
+              icon={<EyeOutlined style={{ color: "#52c41a" }} />}
+              className="bg-[#E6FFFB] text-[#52c41a] font-bold border-[#52c41a]"
               onClick={(e) => {
                 e.stopPropagation();
+                if (!canLockAccount(record.userID)) {
+                  message.warning(
+                    `Tối đa 5 lần, 5 tài khoản Không thể khóa tài khoản này do đã vượt quá giới hạn trong 1 phút!\nTối đa 5 lần, 5 tài khoản`
+                  );
+                  return;
+                }
                 Modal.confirm({
                   title: "Xác nhận khóa tài khoản",
                   content: "Bạn có chắc chắn muốn khóa tài khoản này không?",
@@ -461,6 +508,8 @@ const ListUser = () => {
                   cancelText: "Hủy",
                   onOk: async () => {
                     await handleStatusUser(record.userID, "Suspended");
+                    recordLockAction(record.userID);
+                    console.log("Lịch sử", times);
                     message.success("Đã khóa tài khoản thành công!");
                   },
                 });
@@ -487,8 +536,9 @@ const ListUser = () => {
               onClick={handleResetAll}
               type="default"
               className="font-bold"
+              icon={<ReloadOutlined />}
             >
-              Reset
+              Tải lại
             </Button>
             {hasSelected ? `Selected ${selectedRowKeys.length} items` : null}
           </Flex>
@@ -498,7 +548,17 @@ const ListUser = () => {
               dataSource={users || []}
               rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
               rowKey="_id"
-              pagination={pagination}
+              pagination={{
+                ...pagination,
+                showSizeChanger: true,
+                pageSizeOptions: ["5", "10", "20", "50"],
+                onChange: (page, pageSize) => {
+                  setPagination({
+                    current: page,
+                    pageSize: pageSize,
+                  });
+                },
+              }}
               onChange={(pagination, filters, sorter) => {
                 setPagination({
                   current: pagination.current,

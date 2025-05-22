@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, Router } from "react-router-dom";
 import { App, Layout, theme } from "antd";
 import BreadcrumbNav from "../pages/admin/layout/BreadcrumbNav";
 import Revenue from "../pages/admin/revenue/Revenue";
@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { fetchUser } from "../redux/userSlice";
 import NotificationScreen from "../pages/admin/notification/NotificationScreen";
 import { getUserInfo } from "../services/UserService";
+import ListStock from "../pages/admin/stockEntry/StockEntryList";
 
 const AdminRouter = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -88,6 +89,10 @@ const AdminRouter = () => {
                 <Route
                   path="/notifications"
                   element={<NotificationScreen userID={userInfo.userID} />}
+                />
+                <Route
+                  path="/stock-entries"
+                  element={<ListStock state={{}} />}
                 />
                 <Route
                   path="*"

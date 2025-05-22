@@ -272,3 +272,22 @@ export const deleteImage = async (publicId) => {
     throw new Error("Lỗi kết nối đến máy chủ!");
   }
 };
+//Lấy danh sách phiếu nhập hàng
+export const getStockEntries = async () => {
+  try {
+    const response = await handleProductApi.getStockEntries();
+    if (response && response.data) {
+      return response.data; // Trả về danh sách phiếu nhập hàng
+    }
+
+    console.error("API không trả về dữ liệu hợp lệ:", response);
+    return null;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Ném lỗi chứa danh sách lỗi từ BE
+      throw error.response.data.errors;
+    }
+    console.error("Lỗi khi gọi API getStockEntries:", error);
+    throw new Error("Lỗi kết nối đến máy chủ!");
+  }
+};

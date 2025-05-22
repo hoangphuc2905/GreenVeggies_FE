@@ -20,6 +20,9 @@ import {
   EditFilled,
   PlusCircleOutlined,
   TagFilled,
+  CheckCircleOutlined,
+  PoweroffOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useHandlerClickUpdate } from "../../../components/updateProduct/handlerClickUpdate";
@@ -38,6 +41,7 @@ import {
 import Highlighter from "react-highlight-words";
 import { SearchOutlined } from "@ant-design/icons";
 import { Tooltip } from "antd";
+import { UNIT_OPTIONS } from "../../../constants/unitOptions";
 
 const { Search } = Input;
 
@@ -195,22 +199,10 @@ const Page = () => {
     onChange={handlerFilter}
   />;
 
-  // Hàm chuyển đổi đơn vị sang tiếng Việt (chỉ các đơn vị cho phép)
+  // Hàm chuyển đổi đơn vị sang tiếng Việt (dùng enum dùng chung)
   const getUnitVN = (unit) => {
-    switch (unit) {
-      case "kg":
-        return "Kg";
-      case "gram":
-        return "Gam";
-      case "liter":
-        return "Lít";
-      case "ml":
-        return "Ml";
-      case "piece":
-        return "Phần";
-      default:
-        return unit || "";
-    }
+    const found = UNIT_OPTIONS.find((u) => u.value === unit);
+    return found ? found.label : unit || "";
   };
 
   /**
@@ -330,6 +322,54 @@ const Page = () => {
     } catch (error) {
       setWarningMessage("Có lỗi xảy ra khi ngừng bán sản phẩm");
     }
+  };
+
+  // Thêm hàm mở bán lại sản phẩm
+  const handlerOpenSell = async (product) => {
+    let newStatus = "available";
+    if (product.quantity <= 0) {
+      newStatus = "out_of_stock";
+    }
+    Modal.confirm({
+      title: "Xác nhận mở bán sản phẩm",
+      content:
+        newStatus === "available"
+          ? "Bạn có chắc chắn muốn mở bán sản phẩm này?"
+          : "Sản phẩm hết hàng, mở bán sẽ chuyển trạng thái thành 'Hết hàng'. Bạn có chắc chắn muốn tiếp tục?",
+      okText: "Đồng ý",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          const response = await updateProductStatus(
+            product.productID,
+            newStatus
+          );
+          if (response) {
+            setSuccessMessage(
+              newStatus === "available"
+                ? "Đã mở bán sản phẩm thành công!"
+                : "Đã chuyển sản phẩm về trạng thái 'Hết hàng'!"
+            );
+            setProducts((prevProducts) =>
+              prevProducts.map((p) =>
+                p.productID === product.productID
+                  ? { ...p, status: newStatus }
+                  : p
+              )
+            );
+            setFilteredProducts((prevFilteredProducts) =>
+              prevFilteredProducts.map((p) =>
+                p.productID === product.productID
+                  ? { ...p, status: newStatus }
+                  : p
+              )
+            );
+          }
+        } catch (error) {
+          setWarningMessage("Có lỗi xảy ra khi mở bán sản phẩm");
+        }
+      },
+    });
   };
 
   /**
@@ -653,7 +693,7 @@ const Page = () => {
       title: "Tác vụ",
       key: "action",
       align: "center",
-      width: 120,
+      width: 180,
       fixed: "right",
       render: (text, record) => (
         <Space size="small">
@@ -669,6 +709,7 @@ const Page = () => {
               },
             }}
           >
+            {/* Nút sửa */}
             <Button
               size="small"
               type="default"
@@ -681,6 +722,7 @@ const Page = () => {
               onMouseEnter={(e) => (e.target.style.backgroundColor = "#15803d")}
               onMouseLeave={(e) => (e.target.style.backgroundColor = "#15803d")}
             />
+            {/* Nút nhập hàng */}
             <Button
               size="small"
               type="default"
@@ -693,18 +735,39 @@ const Page = () => {
               onMouseEnter={(e) => (e.target.style.backgroundColor = "#107bff")}
               onMouseLeave={(e) => (e.target.style.backgroundColor = "#138cff")}
             />
-            <Button
-              size="small"
-              type="default"
-              icon={<DeleteFilled />}
-              className="bg-red-500 text-white"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlerStopSell(record);
-              }}
-              onMouseEnter={(e) => (e.target.style.backgroundColor = "#991b1b")}
-              onMouseLeave={(e) => (e.target.style.backgroundColor = "#dc2626")}
-            />
+            {/* Nút ngừng bán hoặc mở bán tùy trạng thái */}
+            {record.status === "unavailable" && (
+              <Button
+                size="small"
+                type="default"
+                icon={<PoweroffOutlined />}
+                className="bg-[#feca39] text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlerOpenSell(record);
+                }}
+              />
+            )}
+            {record.status === "available" && (
+              <>
+                <Button
+                  size="small"
+                  type="default"
+                  icon={<DeleteFilled />}
+                  className="bg-red-500 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlerStopSell(record);
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.target.style.backgroundColor = "#991b1b")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.target.style.backgroundColor = "#dc2626")
+                  }
+                />
+              </>
+            )}
           </ConfigProvider>
         </Space>
       ),
@@ -733,8 +796,12 @@ const Page = () => {
             >
               Thêm sản phẩm
             </Button>
-            <Button onClick={handleResetAll} type="default">
-              Reset
+            <Button
+              onClick={handleResetAll}
+              type="default"
+              icon={<ReloadOutlined />}
+            >
+              Tải lại
             </Button>
             <FilterButton
               columnsVisibility={columnsVisibility}

@@ -5,6 +5,20 @@ import logo from "../../../../assets/pictures/logo.png";
 import PropTypes from "prop-types";
 import { formattedPrice } from "../../../../components/calcSoldPrice/CalcPrice";
 
+// Hàm tính phí vận chuyển giống logic hệ thống
+const calculateShippingFee = (
+  orderTotal,
+  isNewCustomer = false,
+  isVIP = false
+) => {
+  if (isVIP) return 0;
+  if (isNewCustomer) return 50000 * 0.5;
+  if (orderTotal >= 600000) return 0;
+  if (orderTotal >= 400000) return 15000;
+  if (orderTotal >= 200000) return 30000;
+  return 50000;
+};
+
 const ExportInvoice = ({ order, customerName }) => {
   // State lưu tên khách hàng (userName) và tên sản phẩm (productNames)
   const [userName, setUserName] = useState(customerName || "");
@@ -59,6 +73,15 @@ const ExportInvoice = ({ order, customerName }) => {
     (sum, item) => sum + item.quantity,
     0
   );
+
+  // Tính tổng tiền sản phẩm (không bao gồm phí ship)
+  const totalProductPrice = order.orderDetails?.reduce(
+    (sum, item) => sum + item.totalAmount,
+    0
+  );
+
+  // Tính phí vận chuyển
+  const shippingFee = calculateShippingFee(totalProductPrice);
 
   // Hiển thị giao diện hóa đơn xuất PDF
   // - Logo, tên shop, địa chỉ, số điện thoại
@@ -122,10 +145,18 @@ const ExportInvoice = ({ order, customerName }) => {
           <thead>
             <tr>
               <th className="border-b border-gray-300 text-left py-2">Mã SP</th>
-              <th className="border-b border-gray-300 text-left py-2">Tên SP</th>
-              <th className="border-b border-gray-300 text-right py-2">Đơn giá</th>
-              <th className="border-b border-gray-300 text-right py-2">Số lượng</th>
-              <th className="border-b border-gray-300 text-right py-2">Thành tiền</th>
+              <th className="border-b border-gray-300 text-left py-2">
+                Tên SP
+              </th>
+              <th className="border-b border-gray-300 text-right py-2">
+                Đơn giá
+              </th>
+              <th className="border-b border-gray-300 text-right py-2">
+                Số lượng
+              </th>
+              <th className="border-b border-gray-300 text-right py-2">
+                Thành tiền
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -135,9 +166,7 @@ const ExportInvoice = ({ order, customerName }) => {
                 <td className="py-1">{productNames[item.productID] || ""}</td>
                 <td className="py-1 text-right">
                   {formattedPrice(
-                    item.quantity > 0
-                      ? item.totalAmount / item.quantity
-                      : 0
+                    item.quantity > 0 ? item.totalAmount / item.quantity : 0
                   )}
                 </td>
                 <td className="text-right py-1">{item.quantity}</td>
@@ -149,13 +178,23 @@ const ExportInvoice = ({ order, customerName }) => {
           </tbody>
         </table>
       </div>
-      {/* Hàng 5: Tổng tiền và chữ ký */}
+      {/* Hàng 5: Tổng tiền, phí vận chuyển và chữ ký */}
       <div className="flex justify-between items-end mt-10">
-        <div className="text-lg flex items-center gap-2">
-          <span className="font-bold">Tổng tiền hóa đơn: </span>
-          <span className="text-2xl text-green-700 font-bold border border-green-400 rounded px-4 py-2 bg-green-50 shadow-sm">
-            {formattedPrice(order.totalAmount)}
-          </span>
+        <div className="flex flex-col gap-2 text-lg">
+          <div>
+            <span className="font-bold">Tổng tiền sản phẩm: </span>
+            <span>{formattedPrice(totalProductPrice)}</span>
+          </div>
+          <div>
+            <span className="font-bold">Phí vận chuyển: </span>
+            <span>{formattedPrice(shippingFee)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold">Tổng tiền hóa đơn: </span>
+            <span className="text-2xl text-green-700 font-bold border border-green-400 rounded px-4 py-2 bg-green-50 shadow-sm">
+              {formattedPrice(order.totalAmount)}
+            </span>
+          </div>
         </div>
         <div className="text-center">
           <div className="font-bold">Người nhận</div>

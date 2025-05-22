@@ -65,6 +65,12 @@ const AdminSidebar = ({ colorBgContainer }) => {
           icon: <AppstoreAddOutlined />,
           onClick: () => navigate("/admin/add-product"),
         },
+        {
+          key: "/admin/stock-entries",
+          label: "Phiếu nhập",
+          icon: <FileTextOutlined />,
+          onClick: () => navigate("/admin/stock-entries"),
+        },
       ],
     },
     {
