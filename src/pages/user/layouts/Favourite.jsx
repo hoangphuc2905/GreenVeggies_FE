@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 
 import { List, Avatar, Spin } from "antd";
 import {
@@ -25,7 +26,7 @@ const translateUnit = (unit) => {
   return unitTranslations[unit] || unit;
 };
 
-const Favourite = () => {
+const Favourite = ({ categoryID, currentProductID }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -35,11 +36,31 @@ const Favourite = () => {
       setLoading(true);
       try {
         const productsData = await getProducts();
-        // Filter products to only include those with "available" status
-        const availableProducts = productsData.filter(
+
+        // Filter products by status
+        let filteredProducts = productsData.filter(
           (product) => product.status === "available"
         );
-        setProducts(availableProducts);
+
+        // If categoryID is provided, filter by category
+        if (categoryID) {
+          filteredProducts = filteredProducts.filter(
+            (product) =>
+              product.category._id === categoryID ||
+              product.category.id === categoryID
+          );
+
+          // Remove current product if currentProductID is provided
+          if (currentProductID) {
+            filteredProducts = filteredProducts.filter(
+              (product) =>
+                product.productID !== currentProductID &&
+                product._id !== currentProductID
+            );
+          }
+        }
+
+        setProducts(filteredProducts);
       } catch (error) {
         console.error("Failed to fetch products:", error);
       } finally {
@@ -48,7 +69,7 @@ const Favourite = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [categoryID, currentProductID]);
 
   const handleProductClick = (product) => {
     navigate(`/product/${product._id}`, {
@@ -64,7 +85,7 @@ const Favourite = () => {
                bg-gradient-to-r from-[#82AE46] to-[#5A8E1B] 
                rounded-t-lg p-4
                transition duration-300 ease-in-out">
-          Có thể bạn sẽ thích
+          {categoryID ? "Sản phẩm tương tự" : "Có thể bạn sẽ thích"}
         </h2>
       </div>
       <Spin
@@ -112,12 +133,19 @@ const Favourite = () => {
           />
         ) : (
           <div className="p-4 text-center text-gray-500">
-            Không có sản phẩm nào khả dụng
+            {categoryID
+              ? "Không có sản phẩm tương tự"
+              : "Không có sản phẩm nào khả dụng"}
           </div>
         )}
       </Spin>
     </div>
   );
+};
+
+Favourite.propTypes = {
+  categoryID: PropTypes.string,
+  currentProductID: PropTypes.string,
 };
 
 export default Favourite;

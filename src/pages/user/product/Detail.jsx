@@ -868,7 +868,10 @@ const Detail = () => {
                 scrollbarWidth: "thin",
                 scrollbarColor: "#82AE46 #f0f0f0",
               }}>
-              <Favourite />
+              <Favourite
+                categoryID={product?.category?._id}
+                currentProductID={product?.productID}
+              />{" "}
             </div>
           </div>
         </div>
