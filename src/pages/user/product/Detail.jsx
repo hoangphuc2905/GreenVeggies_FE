@@ -17,22 +17,6 @@ import {
 } from "antd";
 import { LeftOutlined, RightOutlined, ZoomInOutlined } from "@ant-design/icons";
 
-// Hàm chuyển đổi đơn vị tính sang tiếng Việt
-const translateUnit = (unit) => {
-  const unitTranslations = {
-    piece: "cái",
-    kg: "kg",
-    gram: "gram",
-    liter: "lít",
-    ml: "ml",
-    pack: "gói",
-    bundle: "bó",
-    bottle: "chai",
-    packet: "túi",
-  };
-
-  return unitTranslations[unit] || unit;
-};
 
 import Favourite from "../layouts/Favourite";
 import { getUserInfo } from "../../../services/UserService"; // Giả sử bạn có hàm này để gọi API lưu thông tin sản phẩm vào order
@@ -47,6 +31,7 @@ import {
   CalcPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import LoginForm from "../../../components/login/login";
+import translateUnit from "../../../components/translateUnit";
 
 // Custom style for notifications
 const customNotificationStyle = `
@@ -789,7 +774,7 @@ const Detail = () => {
                 {formattedPrice(CalcPrice(product.price))}{" "}
                 <span className="text-base text-gray-600 ml-2">
                   {" "}
-                  /1 {translateUnit(product.unit)}{" "}
+                  / 1{translateUnit(product.unit)}{" "}
                 </span>{" "}
               </Typography.Text>
 

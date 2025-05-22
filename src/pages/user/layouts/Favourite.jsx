@@ -8,23 +8,9 @@ import {
   formattedPrice,
 } from "../../../components/calcSoldPrice/CalcPrice";
 import { getProducts } from "../../../services/ProductService";
+import translateUnit from "../../../components/translateUnit";
 
-// Hàm chuyển đổi đơn vị tính sang tiếng Việt
-const translateUnit = (unit) => {
-  const unitTranslations = {
-    piece: "cái",
-    kg: "kg",
-    gram: "gram",
-    liter: "lít",
-    ml: "ml",
-    pack: "gói",
-    bundle: "bó",
-    bottle: "chai",
-    packet: "túi",
-  };
 
-  return unitTranslations[unit] || unit;
-};
 
 const Favourite = ({ categoryID, currentProductID }) => {
   const [products, setProducts] = useState([]);
@@ -123,7 +109,7 @@ const Favourite = ({ categoryID, currentProductID }) => {
                     <span className="text-gray-700">
                       {formattedPrice(CalcPrice(product.price))}
                       <span className="text-gray-500 ml-1">
-                        /1 {translateUnit(product.unit)}
+                        /1{translateUnit(product.unit)}
                       </span>
                     </span>
                   }

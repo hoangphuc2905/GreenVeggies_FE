@@ -26,6 +26,8 @@ import Favourite from "./layouts/Favourite";
 import { formattedPrice } from "../../components/calcSoldPrice/CalcPrice";
 import { ZoomInOutlined } from "@ant-design/icons";
 import { getProducts, getProductById } from "../../services/ProductService";
+import translateUnit from "../../components/translateUnit";
+
 
 const images = [
   {
@@ -329,14 +331,21 @@ const Home = () => {
                       {product.name}
                     </p>
                     <p className="text-gray-700 text-center">
+                      {" "}
                       {product.oldPrice && (
                         <span className="line-through">
-                          {product.oldPrice}đ
+                          {" "}
+                          {product.oldPrice}đ{" "}
                         </span>
                       )}{" "}
                       <span className="text-gray-700">
-                        {formattedPrice(product.price)}
-                      </span>
+                        {" "}
+                        {formattedPrice(product.price)}{" "}
+                        <span className="text-gray-500 ml-1">
+                          {" "}
+                          /1 {translateUnit(product.unit)}{" "}
+                        </span>{" "}
+                      </span>{" "}
                     </p>
                   </div>
                 ))}
