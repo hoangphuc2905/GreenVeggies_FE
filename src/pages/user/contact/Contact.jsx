@@ -1,18 +1,17 @@
+import contac1 from "../../../assets/pictures/thuan2.png";
+import contac2 from "../../../assets/pictures/lienhe.jpg";
+
 const Lienhe = () => {
   return (
     <div className="px-[10%]">
       <div className="container mx-auto relative">
-        <img
-          src="src/assets/pictures/lienhe.jpg"
-          alt="Background"
-          className="w-full h-[550px]"
-        />
+        <img src={contac2} alt="Background" className="w-full h-[550px]" />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <h1 className="text-white text-8xl font-bold shadow-md font-amatic">
             Liên hệ với chúng tôi
           </h1>
           <p className="mt-2 text-lg text-white">
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn!
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn! 
           </p>
         </div>
       </div>
@@ -23,7 +22,7 @@ const Lienhe = () => {
           {/* Thay khung "Gửi tin nhắn" bằng 1 hình ảnh */}
           <div className="flex justify-center ">
             <img
-              src="src/assets/pictures/thuan2.png"
+              src={contac1}
               alt="Hỗ trợ khách hàng"
               className="rounded-lg shadow-lg w-full"
             />
