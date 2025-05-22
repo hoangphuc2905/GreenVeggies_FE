@@ -487,7 +487,7 @@ const ListProductByCatelogyID = ({
         />
       </Spin>
 
-      <div className="w-full flex justify-center mt-6">
+      <div className="w-full flex justify-center mt-6 mb-5">
         <Pagination
           current={currentPage}
           pageSize={pageSize}

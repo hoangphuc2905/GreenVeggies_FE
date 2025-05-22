@@ -506,7 +506,7 @@ const ListProduct = ({
           }}
         />
       </Spin>
-      <div className="w-full flex justify-center mt-6">
+      <div className="w-full flex justify-center mt-5 mb-5">
         <Pagination
           current={currentPage}
           pageSize={pageSize}
